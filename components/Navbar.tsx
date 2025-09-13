@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LogOut, User, Cloud, Settings } from "lucide-react";
+import { LogOut, User, Settings } from "lucide-react";
+import Image from "next/image";
 
 interface NavbarProps {
   user?: {
@@ -58,7 +59,13 @@ export default function Navbar({ user, onLogout, onOpenUserProfile }: NavbarProp
         {/* Logo and Title */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <Cloud className="h-8 w-8 text-blue-600" />
+            <Image
+              src="/logo.svg"
+              alt="Free Clouds Logo"
+              width={32}
+              height={32}
+              className="h-8 w-8"
+            />
             <h1 className="text-xl font-bold text-gray-900">Free Clouds</h1>
           </div>
         </div>

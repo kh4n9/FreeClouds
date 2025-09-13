@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Cloud, Shield, Zap, Users, ArrowRight, Check } from "lucide-react";
+import { Shield, Zap, Users, ArrowRight, Check } from "lucide-react";
+import Image from "next/image";
 import Footer from "../components/Footer";
 
 interface User {
@@ -53,7 +54,13 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center gap-2">
-              <Cloud className="h-8 w-8 text-blue-600" />
+              <Image
+                src="/logo.svg"
+                alt="Free Clouds Logo"
+                width={32}
+                height={32}
+                className="h-8 w-8"
+              />
               <span className="text-2xl font-bold text-gray-900">Free Clouds</span>
             </div>
             <div className="flex items-center gap-4">

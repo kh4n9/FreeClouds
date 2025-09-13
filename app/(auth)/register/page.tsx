@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Cloud, Eye, EyeOff, Mail, Lock, User, AlertCircle, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Footer from "@/components/Footer";
 
 interface RegisterForm {
@@ -207,8 +208,14 @@ export default function RegisterPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-blue-600 p-3 rounded-full">
-              <Cloud className="w-8 h-8 text-white" />
+            <div className="bg-white p-3 rounded-full shadow-lg">
+              <Image
+                src="/logo.svg"
+                alt="Free Clouds Logo"
+                width={32}
+                height={32}
+                className="w-8 h-8"
+              />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>

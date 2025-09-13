@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cloud } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -7,7 +7,13 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <Cloud className="h-6 w-6 text-blue-400" />
+            <Image
+              src="/logo.svg"
+              alt="Free Clouds Logo"
+              width={24}
+              height={24}
+              className="h-6 w-6"
+            />
             <span className="text-xl font-bold text-white">Free Clouds</span>
           </div>
           <div className="flex flex-col md:flex-row items-center gap-4 text-sm text-gray-400">
