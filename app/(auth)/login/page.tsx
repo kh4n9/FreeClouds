@@ -4,7 +4,11 @@ import { useState, useEffect } from "react";
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Head from "next/head";
+import Script from "next/script";
 import Footer from "@/components/Footer";
+import { generateMetadata, generateBreadcrumbs } from "@/lib/seo/utils";
+import { BASE_URL } from "@/lib/seo/config";
 
 interface LoginForm {
   email: string;
@@ -116,7 +120,32 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+    <>
+      {/* Enhanced SEO Head */}
+      <Head>
+        <title>Sign In - Free Clouds | Secure Cloud Storage Login</title>
+        <meta name="description" content="Sign in to your Free Clouds account and access your secure cloud storage. Fast, reliable, and secure file management with enterprise-grade security." />
+        <meta name="keywords" content="login, sign in, cloud storage login, free clouds login, secure login, file storage access" />
+        <link rel="canonical" href={`${BASE_URL}/login`} />
+        <meta property="og:title" content="Sign In - Free Clouds | Secure Cloud Storage Login" />
+        <meta property="og:description" content="Sign in to your Free Clouds account and access your secure cloud storage." />
+        <meta property="og:url" content={`${BASE_URL}/login`} />
+        <meta name="robots" content="noindex, nofollow" />
+      </Head>
+
+      {/* Structured Data */}
+      <Script
+        id="login-breadcrumb"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(generateBreadcrumbs([
+            { name: 'Home', url: '/' },
+            { name: 'Sign In', url: '/login' }
+          ]))
+        }}
+      />
+
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
       <div className="flex-1 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Header */}
@@ -134,6 +163,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
           <p className="text-gray-600">Sign in to your Free Clouds account</p>
+          <p className="text-sm text-gray-500 mt-1 italic">Đăng nhập vào tài khoản Free Clouds của bạn</p>
         </div>
 
         {/* Login Form */}
@@ -141,10 +171,11 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Global Error */}
             {error && !error.field && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3" role="alert">
                 <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm text-red-700">{error.message}</p>
+                  <p className="text-xs text-red-600 mt-1 italic">Vui lòng kiểm tra lại thông tin đăng nhập</p>
                 </div>
               </div>
             )}
@@ -152,7 +183,7 @@ export default function LoginPage() {
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
+                Email Address / Địa chỉ Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -183,7 +214,7 @@ export default function LoginPage() {
             {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
+                Password / Mật khẩu
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -228,14 +259,15 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              aria-label="Sign in to your account"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Signing In...
+                  Signing In... / Đang đăng nhập...
                 </div>
               ) : (
-                "Sign In"
+                "Sign In / Đăng nhập"
               )}
             </button>
           </form>
@@ -245,19 +277,24 @@ export default function LoginPage() {
             <div>
               <a
                 href="/forgot-password"
-                className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+                className="text-sm text-blue-600 hover:text-blue-500 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1"
+                aria-label="Reset your password"
               >
-                Forgot your password?
+                Forgot your password? / Quên mật khẩu?
               </a>
             </div>
             <p className="text-sm text-gray-600">
               Don&apos;t have an account?{" "}
               <a
                 href="/register"
-                className="text-blue-600 hover:text-blue-500 font-medium"
+                className="text-blue-600 hover:text-blue-500 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1"
+                aria-label="Create new account"
               >
-                Sign up
+                Sign up / Đăng ký
               </a>
+            </p>
+            <p className="text-xs text-gray-500 mt-2 italic">
+              Chưa có tài khoản? Tạo tài khoản miễn phí ngay!
             </p>
           </div>
         </div>
@@ -266,15 +303,17 @@ export default function LoginPage() {
         <div className="text-center mt-6">
           <a
             href="/"
-            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-sm text-gray-500 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-3 py-2"
+            aria-label="Go back to homepage"
           >
-            ← Back to Home
+            ← Back to Home / Về trang chủ
           </a>
         </div>
       </div>
       </div>
 
       <Footer />
-    </div>
+      </div>
+    </>
   );
 }

@@ -10,6 +10,14 @@ A modern, secure cloud storage application built with Next.js 14, TypeScript, an
 
 ## ✨ Features
 
+### 🌍 SEO & Multilingual Support
+- **Bilingual Support** - Full English and Vietnamese language support
+- **Advanced SEO** - Dynamic metadata, structured data (JSON-LD), Open Graph
+- **International SEO** - Hreflang tags, multilingual sitemaps, canonical URLs
+- **Performance Optimized** - Core Web Vitals optimization, image optimization
+- **PWA Ready** - Progressive Web App with offline support and app-like experience
+- **Analytics Ready** - Google Analytics 4 integration and Search Console setup
+
 ### 🔐 Authentication & Security
 - **Secure Authentication** - JWT-based auth with HTTP-only cookies
 - **Password Security** - bcryptjs hashing with salt rounds
@@ -48,6 +56,9 @@ A modern, secure cloud storage application built with Next.js 14, TypeScript, an
 - **Responsive Design** - Perfect experience on all devices
 - **Dark Mode Ready** - Modern interface with clean design
 - **Loading States** - Smooth animations and progress indicators
+- **Language Switcher** - Easy switching between English and Vietnamese
+- **Accessibility** - ARIA labels, semantic HTML, keyboard navigation
+- **Cross-browser Compatible** - Works on all modern browsers
 - **Error Handling** - User-friendly error messages and recovery
 - **Accessibility** - WCAG compliant interface design
 
@@ -591,6 +602,7 @@ curl -X PATCH http://localhost:3001/api/user \
 - **🚀 [Deployment Guide](docs/DEPLOYMENT.md)** - Detailed deployment instructions for all platforms
 - **🔍 [Preview System](docs/PREVIEW_SYSTEM.md)** - File preview system documentation
 - **📧 [Email Setup](docs/EMAIL_SETUP.md)** - Email service configuration guide
+- **🌍 [SEO Setup](docs/SEO_SETUP.md)** - SEO optimization and multilingual configuration
 - **🧪 [Testing Checklist](docs/PREVIEW_TEST_CHECKLIST.md)** - Quality assurance procedures
 - **📝 [Changelog](CHANGELOG.md)** - Version history and release notes
 
@@ -600,11 +612,13 @@ curl -X PATCH http://localhost:3001/api/user \
 - **🚀 [Quick Start](#-quick-start)** - Get started in 5 minutes
 - **🔍 [Preview Features](#-preview-system-features)** - File preview capabilities
 - **🛡️ [Security Features](#-security-features)** - Security and privacy information
+- **🌍 [Language Support](#-seo--multilingual-support)** - English/Vietnamese bilingual interface
 
 #### For Developers
 - **📡 [API Documentation](docs/API.md)** - RESTful API reference
 - **🏗️ [Architecture Guide](docs/ARCHITECTURE.md)** - System design and patterns
 - **🔧 [Development Setup](#-development)** - Local development environment
+- **🌍 [SEO Implementation](docs/SEO_SETUP.md)** - SEO and multilingual development guide
 
 #### For DevOps
 - **🚀 [Deployment Options](docs/DEPLOYMENT.md)** - Vercel, Docker, VPS deployment

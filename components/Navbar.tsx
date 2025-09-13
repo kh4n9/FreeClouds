@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { LogOut, User, Settings } from "lucide-react";
 import Image from "next/image";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 interface NavbarProps {
   user?: {
@@ -70,7 +71,10 @@ export default function Navbar({ user, onLogout, onOpenUserProfile }: NavbarProp
           </div>
         </div>
 
-        {/* User Menu */}
+        {/* Language Switcher and User Menu */}
+        <div className="flex items-center gap-3">
+          <LanguageSwitcher variant="compact" className="hidden sm:block" />
+
         {user ? (
           <div className="relative user-dropdown">
             <button
@@ -119,7 +123,8 @@ export default function Navbar({ user, onLogout, onOpenUserProfile }: NavbarProp
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher variant="icon-only" className="sm:hidden" />
             <a
               href="/login"
               className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
@@ -134,6 +139,7 @@ export default function Navbar({ user, onLogout, onOpenUserProfile }: NavbarProp
             </a>
           </div>
         )}
+        </div>
       </div>
     </nav>
   );
