@@ -7,7 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "create-admin": "node scripts/create-admin.js",
+    "setup": "npm run create-admin",
+    "test": "node scripts/run-tests.js",
+    "test:login": "node scripts/run-tests.js login",
+    "test:admin": "node scripts/run-tests.js admin",
+    "test:email": "node scripts/run-tests.js email"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",

@@ -1,10 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/db';
-import { rateLimit } from '@/lib/ratelimit';
-import { verifyToken } from '@/lib/auth';
-import { generateVerificationCode, sendAccountDeletionEmail } from '@/lib/email';
-import { User } from '@/models/User';
-import VerificationCode from '@/models/VerificationCode';
+import { NextRequest, NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/db";
+import { rateLimit } from "@/lib/ratelimit";
+import { getUserFromRequest } from "@/lib/auth";
+import {
+  generateVerificationCode,
+  sendAccountDeletionEmail,
+} from "@/lib/email";
+import { User } from "@/models/User";
+import VerificationCode from "@/models/VerificationCode";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,38 +17,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Too many deletion requests. Please try again later.",
-          retryAfter: rateLimitResult.retryAfter
+          retryAfter: rateLimitResult.retryAfter,
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
     // Verify authentication
-    const authResult = await verifyToken(request);
-    if (!authResult.success || !authResult.user) {
+    const user = await getUserFromRequest(request);
+    if (!user) {
       return NextResponse.json(
         { error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    const userId = authResult.user.id;
-    const userEmail = authResult.user.email;
+    const userId = user.id;
+    const userEmail = user.email;
 
     // Connect to database
     await connectToDatabase();
 
     // Verify user still exists
-    const user = await User.findById(userId);
-    if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+    const dbUser = await User.findById(userId);
+    if (!dbUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Invalidate any existing account deletion codes for this user
-    await VerificationCode.invalidateUserCodes(userEmail, 'account_deletion');
+    await VerificationCode.invalidateUserCodes(userEmail, "account_deletion");
 
     // Generate new verification code
     const code = generateVerificationCode();
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const verificationCode = new VerificationCode({
       email: userEmail.toLowerCase(),
       code,
-      type: 'account_deletion',
+      type: "account_deletion",
       expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
     });
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: "Failed to send confirmation email. Please try again later." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -79,18 +79,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: "A confirmation code has been sent to your email. Please check your inbox to proceed with account deletion.",
+        message:
+          "A confirmation code has been sent to your email. Please check your inbox to proceed with account deletion.",
         // For development only - remove in production
-        ...(process.env.NODE_ENV === 'development' && { code })
+        ...(process.env.NODE_ENV === "development" && { code }),
       },
-      { status: 200 }
+      { status: 200 },
     );
-
   } catch (error) {
-    console.error('Request deletion error:', error);
+    console.error("Request deletion error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

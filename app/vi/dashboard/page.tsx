@@ -103,11 +103,11 @@ export default function DashboardPage() {
         const userData = await response.json();
         setUser(userData);
       } else {
-        router.push("/login");
+        router.push("/vi/login");
       }
     } catch (error) {
-      console.error("Auth check failed:", error);
-      router.push("/login");
+      console.error("Kiểm tra xác thực thất bại:", error);
+      router.push("/vi/login");
     } finally {
       setLoading(false);
     }
@@ -121,11 +121,11 @@ export default function DashboardPage() {
         const data = await response.json();
         setFolders(data);
       } else {
-        throw new Error("Failed to load folders");
+        throw new Error("Không thể tải thư mục");
       }
     } catch (error) {
-      console.error("Error loading folders:", error);
-      setError("Failed to load folders");
+      console.error("Lỗi khi tải thư mục:", error);
+      setError("Không thể tải thư mục");
     } finally {
       setFoldersLoading(false);
     }
@@ -149,11 +149,11 @@ export default function DashboardPage() {
         const data: FilesResponse = await response.json();
         setFiles(data.files);
       } else {
-        throw new Error("Failed to load files");
+        throw new Error("Không thể tải tệp tin");
       }
     } catch (error) {
-      console.error("Error loading files:", error);
-      setError("Failed to load files");
+      console.error("Lỗi khi tải tệp tin:", error);
+      setError("Không thể tải tệp tin");
     } finally {
       setFilesLoading(false);
     }
@@ -196,11 +196,11 @@ export default function DashboardPage() {
         setNewFolderName("");
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to create folder");
+        alert(data.error || "Không thể tạo thư mục");
       }
     } catch (error) {
-      console.error("Error creating folder:", error);
-      alert("Failed to create folder");
+      console.error("Lỗi khi tạo thư mục:", error);
+      alert("Không thể tạo thư mục");
     }
   };
 
@@ -218,11 +218,11 @@ export default function DashboardPage() {
         await loadFolders();
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to rename folder");
+        alert(data.error || "Không thể đổi tên thư mục");
       }
     } catch (error) {
-      console.error("Error renaming folder:", error);
-      alert("Failed to rename folder");
+      console.error("Lỗi khi đổi tên thư mục:", error);
+      alert("Không thể đổi tên thư mục");
     }
   };
 
@@ -230,7 +230,7 @@ export default function DashboardPage() {
     try {
       const folder = folders.find((f) => f.id === folderId);
       if (!folder) {
-        alert("Folder not found");
+        alert("Không tìm thấy thư mục");
         return;
       }
 
@@ -250,23 +250,23 @@ export default function DashboardPage() {
 
       const subfolderCount = countSubfolders(folders, folderId);
 
-      let confirmMessage = `⚠️ DELETE FOLDER: "${folder.name}"\n\n`;
-      confirmMessage += `This will permanently delete:\n`;
-      confirmMessage += `• The folder "${folder.name}"\n`;
+      let confirmMessage = `⚠️ XÓA THƯ MỤC: "${folder.name}"\n\n`;
+      confirmMessage += `Điều này sẽ xóa vĩnh viễn:\n`;
+      confirmMessage += `• Thư mục "${folder.name}"\n`;
 
       if (subfolderCount > 0) {
-        confirmMessage += `• ${subfolderCount} subfolder(s)\n`;
+        confirmMessage += `• ${subfolderCount} thư mục con\n`;
       }
 
-      confirmMessage += `• All files in this folder and subfolders\n\n`;
-      confirmMessage += `❌ This action CANNOT be undone!\n\n`;
-      confirmMessage += `Are you sure you want to continue?`;
+      confirmMessage += `• Tất cả tệp tin trong thư mục này và các thư mục con\n\n`;
+      confirmMessage += `❌ Hành động này KHÔNG THỂ hoàn tác!\n\n`;
+      confirmMessage += `Bạn có chắc chắn muốn tiếp tục?`;
 
       if (!confirm(confirmMessage)) {
         return;
       }
 
-      alert("Deleting folder and contents... This may take a moment.");
+      alert("Đang xóa thư mục và nội dung... Vui lòng đợi trong giây lát.");
 
       const response = await fetch(`/api/folders/${folderId}`, {
         method: "DELETE",
@@ -275,13 +275,13 @@ export default function DashboardPage() {
       if (response.ok) {
         const data = await response.json();
         const stats = data.stats;
-        let message = `✅ Folder deleted successfully!\n\n`;
-        message += `📊 Deletion Summary:\n`;
-        message += `• Folders deleted: ${stats.foldersDeleted}\n`;
-        message += `• Files deleted: ${stats.filesDeleted}`;
+        let message = `✅ Đã xóa thư mục thành công!\n\n`;
+        message += `📊 Tóm tắt việc xóa:\n`;
+        message += `• Thư mục đã xóa: ${stats.foldersDeleted}\n`;
+        message += `• Tệp tin đã xóa: ${stats.filesDeleted}`;
 
         if (stats.errors && stats.errors.length > 0) {
-          message += `\n\n⚠️ Warnings:\n${stats.errors.join("\n")}`;
+          message += `\n\n⚠️ Cảnh báo:\n${stats.errors.join("\n")}`;
         }
 
         alert(message);
@@ -293,11 +293,13 @@ export default function DashboardPage() {
         }
       } else {
         const data = await response.json();
-        alert(`❌ Failed to delete folder: ${data.error || "Unknown error"}`);
+        alert(
+          `❌ Không thể xóa thư mục: ${data.error || "Lỗi không xác định"}`,
+        );
       }
     } catch (error) {
-      console.error("Error deleting folder:", error);
-      alert("❌ Failed to delete folder: Network error");
+      console.error("Lỗi khi xóa thư mục:", error);
+      alert("❌ Không thể xóa thư mục: Lỗi mạng");
     }
   };
 
@@ -323,7 +325,7 @@ export default function DashboardPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to upload ${file.name}`);
+        throw new Error(`Không thể tải lên ${file.name}`);
       }
 
       return response.json();
@@ -334,13 +336,13 @@ export default function DashboardPage() {
       await loadFiles();
       setShowUpload(false);
     } catch (error) {
-      console.error("Upload error:", error);
-      alert("Some files failed to upload. Please try again.");
+      console.error("Lỗi tải lên:", error);
+      alert("Một số tệp tin không thể tải lên. Vui lòng thử lại.");
     }
   };
 
   const handleDeleteFile = async (fileId: string) => {
-    if (!confirm("Are you sure you want to delete this file?")) {
+    if (!confirm("Bạn có chắc chắn muốn xóa tệp tin này?")) {
       return;
     }
 
@@ -353,11 +355,11 @@ export default function DashboardPage() {
         await loadFiles();
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to delete file");
+        alert(data.error || "Không thể xóa tệp tin");
       }
     } catch (error) {
-      console.error("Error deleting file:", error);
-      alert("Failed to delete file");
+      console.error("Lỗi khi xóa tệp tin:", error);
+      alert("Không thể xóa tệp tin");
     }
   };
 
@@ -376,11 +378,11 @@ export default function DashboardPage() {
         document.body.removeChild(a);
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to download file");
+        alert(data.error || "Không thể tải xuống tệp tin");
       }
     } catch (error) {
-      console.error("Download error:", error);
-      alert("Failed to download file");
+      console.error("Lỗi tải xuống:", error);
+      alert("Không thể tải xuống tệp tin");
     }
   };
 
@@ -410,7 +412,7 @@ export default function DashboardPage() {
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               {sidebarOpen && (
-                <h2 className="text-lg font-semibold text-gray-900">Folders</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Thư mục</h2>
               )}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -453,10 +455,10 @@ export default function DashboardPage() {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  {selectedFolder ? `${selectedFolder.name}` : "All Files"}
+                  {selectedFolder ? `${selectedFolder.name}` : "Tất cả tệp tin"}
                   {searchQuery && ` - "${searchQuery}"`}
                 </h1>
-                <p className="text-gray-600">Welcome back, {user.name}</p>
+                <p className="text-gray-600">Chào mừng trở lại, {user.name}</p>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -468,7 +470,7 @@ export default function DashboardPage() {
                   <RefreshCw
                     className={`w-4 h-4 ${filesLoading || foldersLoading ? "animate-spin" : ""}`}
                   />
-                  Refresh
+                  Làm mới
                 </button>
 
                 <button
@@ -476,7 +478,7 @@ export default function DashboardPage() {
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   <Upload className="w-4 h-4" />
-                  Upload
+                  Tải lên
                 </button>
 
                 <button
@@ -484,14 +486,14 @@ export default function DashboardPage() {
                   className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
                   <FolderPlus className="w-4 h-4" />
-                  New Folder
+                  Tạo thư mục
                 </button>
 
                 <button
                   onClick={() => setShowUserProfile(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
-                  Profile
+                  Hồ sơ
                 </button>
               </div>
             </div>
@@ -500,7 +502,7 @@ export default function DashboardPage() {
             <div className="mt-4">
               <input
                 type="text"
-                placeholder="Search files..."
+                placeholder="Tìm kiếm tệp tin..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -509,7 +511,9 @@ export default function DashboardPage() {
 
             {/* View Mode Toggle */}
             <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-gray-600">{files.length} files</div>
+              <div className="text-sm text-gray-600">
+                {files.length} tệp tin
+              </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setViewMode("grid")}
@@ -519,7 +523,7 @@ export default function DashboardPage() {
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  Grid
+                  Lưới
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
@@ -529,7 +533,7 @@ export default function DashboardPage() {
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  List
+                  Danh sách
                 </button>
               </div>
             </div>
@@ -559,10 +563,10 @@ export default function DashboardPage() {
               <div className="text-center py-12">
                 <p className="text-gray-500 text-lg">
                   {searchQuery
-                    ? `No files found matching "${searchQuery}"`
+                    ? `Không tìm thấy tệp tin nào với từ khóa "${searchQuery}"`
                     : selectedFolder
-                      ? "This folder is empty"
-                      : "No files uploaded yet"}
+                      ? "Thư mục này chưa có tệp tin nào"
+                      : "Chưa có tệp tin nào được tải lên"}
                 </p>
               </div>
             ) : (
@@ -586,7 +590,7 @@ export default function DashboardPage() {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Upload Files
+                  Tải lên tệp tin
                 </h3>
                 <button
                   onClick={() => setShowUpload(false)}
@@ -613,7 +617,7 @@ export default function DashboardPage() {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  User Profile
+                  Hồ sơ người dùng
                 </h3>
                 <button
                   onClick={() => setShowUserProfile(false)}
@@ -641,13 +645,13 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">
-                Create New Folder
+                Tạo thư mục mới
               </h3>
             </div>
             <div className="p-6">
               <input
                 type="text"
-                placeholder="Folder name"
+                placeholder="Tên thư mục"
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
@@ -659,14 +663,14 @@ export default function DashboardPage() {
                   onClick={() => setShowCreateFolder(false)}
                   className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button
                   onClick={confirmCreateFolder}
                   disabled={!newFolderName.trim()}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Create
+                  Tạo
                 </button>
               </div>
             </div>

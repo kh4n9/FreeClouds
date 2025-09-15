@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/db';
-import { rateLimit } from '@/lib/ratelimit';
-import { verifyToken } from '@/lib/auth';
-import { User } from '@/models/User';
-import { File } from '@/models/File';
-import { Folder } from '@/models/Folder';
-import VerificationCode from '@/models/VerificationCode';
+import { NextRequest, NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/db";
+import { rateLimit } from "@/lib/ratelimit";
+import { getUserFromRequest } from "@/lib/auth";
+import { User } from "@/models/User";
+import { File } from "@/models/File";
+import { Folder } from "@/models/Folder";
+import VerificationCode from "@/models/VerificationCode";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,23 +15,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Too many deletion attempts. Please try again later.",
-          retryAfter: rateLimitResult.retryAfter
+          retryAfter: rateLimitResult.retryAfter,
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
     // Verify authentication
-    const authResult = await verifyToken(request);
-    if (!authResult.success || !authResult.user) {
+    const user = await getUserFromRequest(request);
+    if (!user) {
       return NextResponse.json(
         { error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    const userId = authResult.user.id;
-    const userEmail = authResult.user.email;
+    const userId = user.id;
+    const userEmail = user.email;
 
     const body = await request.json();
     const { code } = body;
@@ -40,14 +40,14 @@ export async function POST(request: NextRequest) {
     if (!code) {
       return NextResponse.json(
         { error: "Verification code is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (code.length !== 6 || !/^\d{6}$/.test(code)) {
       return NextResponse.json(
         { error: "Invalid verification code format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -58,23 +58,20 @@ export async function POST(request: NextRequest) {
     const verificationCode = await VerificationCode.findValidCode(
       userEmail,
       code,
-      'account_deletion'
+      "account_deletion",
     );
 
     if (!verificationCode) {
       return NextResponse.json(
         { error: "Invalid or expired verification code" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Find user
-    const user = await User.findById(userId);
-    if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+    const dbUser = await User.findById(userId);
+    if (!dbUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Start transaction for account deletion
@@ -103,7 +100,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Delete all verification codes for this user
-        await VerificationCode.deleteMany({ email: userEmail.toLowerCase() }, { session });
+        await VerificationCode.deleteMany(
+          { email: userEmail.toLowerCase() },
+          { session },
+        );
 
         // Finally, delete the user account
         await User.findByIdAndDelete(userId, { session });
@@ -114,9 +114,11 @@ export async function POST(request: NextRequest) {
       // Mark verification code as used (if transaction succeeded)
       verificationCode.used = true;
       await verificationCode.save();
-
     } catch (transactionError) {
-      console.error('Transaction failed during account deletion:', transactionError);
+      console.error(
+        "Transaction failed during account deletion:",
+        transactionError,
+      );
       throw transactionError;
     } finally {
       await session.endSession();
@@ -126,27 +128,27 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json(
       {
         success: true,
-        message: "Your account has been permanently deleted. We're sorry to see you go."
+        message:
+          "Your account has been permanently deleted. We're sorry to see you go.",
       },
-      { status: 200 }
+      { status: 200 },
     );
 
     // Clear the auth cookie
-    response.cookies.set('auth-token', '', {
+    response.cookies.set("auth-token", "", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       maxAge: 0,
-      path: '/',
+      path: "/",
     });
 
     return response;
-
   } catch (error) {
-    console.error('Confirm deletion error:', error);
+    console.error("Confirm deletion error:", error);
     return NextResponse.json(
       { error: "Internal server error. Account deletion failed." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

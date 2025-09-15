@@ -4,7 +4,11 @@ import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/models/User";
 import { signJwt, createAuthCookie } from "@/lib/jwt";
-import { checkRateLimit, createRateLimitResponse, RATE_LIMITS } from "@/lib/ratelimit";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  RATE_LIMITS,
+} from "@/lib/ratelimit";
 import { validateOrigin, createCsrfError } from "@/lib/auth";
 
 const loginSchema = z.object({
@@ -33,12 +37,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Invalid input",
-          details: validation.error.errors.map(err => ({
-            field: err.path.join('.'),
+          details: validation.error.errors.map((err) => ({
+            field: err.path.join("."),
             message: err.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -48,11 +52,11 @@ export async function POST(request: NextRequest) {
     await connectToDatabase();
 
     // Find user by email
-    const user = await User.findByEmail(email);
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
       return NextResponse.json(
         { error: "Invalid email or password" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -61,19 +65,19 @@ export async function POST(request: NextRequest) {
     if (!isPasswordValid) {
       return NextResponse.json(
         { error: "Invalid email or password" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     // Generate JWT token
     const token = signJwt({
-      userId: user._id.toString(),
+      userId: (user._id as any).toString(),
       email: user.email,
     });
 
     // Create response with user data
     const userData = {
-      id: user._id.toString(),
+      id: (user._id as any).toString(),
       email: user.email,
       name: user.name,
     };
@@ -89,29 +93,20 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Login failed. Please try again." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 // Method not allowed for other HTTP methods
 export async function GET() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function PUT() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

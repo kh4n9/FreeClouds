@@ -18,7 +18,7 @@ import {
   type LoginError,
 } from "@/utils/auth-helpers";
 
-export default function LoginPage() {
+export default function VietnameseLoginPage() {
   const [form, setForm] = useState<LoginForm>({
     email: "",
     password: "",
@@ -40,10 +40,29 @@ export default function LoginPage() {
 
   const handleInputChange = createInputChangeHandler(setForm, setError);
 
+  const validateVietnameseForm = (form: LoginForm): LoginError | null => {
+    if (!form.email.trim()) {
+      return { message: "Email là bắt buộc", field: "email" };
+    }
+
+    if (!form.email.includes("@")) {
+      return {
+        message: "Vui lòng nhập địa chỉ email hợp lệ",
+        field: "email",
+      };
+    }
+
+    if (!form.password.trim()) {
+      return { message: "Mật khẩu là bắt buộc", field: "password" };
+    }
+
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const validationError = validateLoginForm(form);
+    const validationError = validateVietnameseForm(form);
     if (validationError) {
       setError(validationError);
       return;
@@ -52,6 +71,11 @@ export default function LoginPage() {
     const user = await login(form);
     if (user) {
       redirectToPage("/dashboard");
+    } else if (!error) {
+      // Set Vietnamese error message if login failed but no specific error was set
+      setError({
+        message: "Đăng nhập thất bại. Vui lòng thử lại.",
+      });
     }
   };
 
@@ -63,25 +87,25 @@ export default function LoginPage() {
     <>
       {/* Enhanced SEO Head */}
       <Head>
-        <title>Sign In - Free Clouds | Secure Cloud Storage Login</title>
+        <title>Đăng Nhập - Free Clouds | Lưu Trữ Đám Mây An Toàn</title>
         <meta
           name="description"
-          content="Sign in to your Free Clouds account and access your secure cloud storage. Fast, reliable, and secure file management with enterprise-grade security."
+          content="Đăng nhập vào tài khoản Free Clouds và truy cập lưu trữ đám mây an toàn. Quản lý file nhanh chóng, đáng tin cậy và bảo mật cấp doanh nghiệp."
         />
         <meta
           name="keywords"
-          content="login, sign in, cloud storage login, free clouds login, secure login, file storage access"
+          content="đăng nhập, sign in, đăng nhập cloud storage, free clouds login, đăng nhập an toàn, truy cập file storage"
         />
-        <link rel="canonical" href={`${BASE_URL}/login`} />
+        <link rel="canonical" href={`${BASE_URL}/vi/login`} />
         <meta
           property="og:title"
-          content="Sign In - Free Clouds | Secure Cloud Storage Login"
+          content="Đăng Nhập - Free Clouds | Lưu Trữ Đám Mây An Toàn"
         />
         <meta
           property="og:description"
-          content="Sign in to your Free Clouds account and access your secure cloud storage."
+          content="Đăng nhập vào tài khoản Free Clouds và truy cập lưu trữ đám mây an toàn."
         />
-        <meta property="og:url" content={`${BASE_URL}/login`} />
+        <meta property="og:url" content={`${BASE_URL}/vi/login`} />
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
@@ -92,8 +116,8 @@ export default function LoginPage() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
             generateBreadcrumbs([
-              { name: "Home", url: "/" },
-              { name: "Sign In", url: "/login" },
+              { name: "Trang Chủ", url: "/vi" },
+              { name: "Đăng Nhập", url: "/vi/login" },
             ]),
           ),
         }}
@@ -116,13 +140,13 @@ export default function LoginPage() {
                 </div>
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Welcome back
+                Chào mừng trở lại
               </h1>
               <p className="text-gray-600">
-                Sign in to your Free Clouds account
+                Đăng nhập vào tài khoản Free Clouds của bạn
               </p>
               <p className="text-sm text-gray-500 mt-1 italic">
-                Đăng nhập vào tài khoản Free Clouds của bạn
+                Sign in to your Free Clouds account
               </p>
             </div>
 
@@ -139,7 +163,7 @@ export default function LoginPage() {
                     <div>
                       <p className="text-sm text-red-700">{error.message}</p>
                       <p className="text-xs text-red-600 mt-1 italic">
-                        Vui lòng kiểm tra lại thông tin đăng nhập
+                        Please check your login information
                       </p>
                     </div>
                   </div>
@@ -151,7 +175,7 @@ export default function LoginPage() {
                     htmlFor="email"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Email Address / Địa chỉ Email
+                    Địa chỉ Email / Email Address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -170,7 +194,7 @@ export default function LoginPage() {
                           ? "border-red-300 bg-red-50"
                           : "border-gray-300 hover:border-gray-400"
                       }`}
-                      placeholder="Enter your email"
+                      placeholder="Nhập địa chỉ email của bạn"
                       disabled={loading}
                     />
                   </div>
@@ -185,7 +209,7 @@ export default function LoginPage() {
                     htmlFor="password"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Password / Mật khẩu
+                    Mật khẩu / Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -204,7 +228,7 @@ export default function LoginPage() {
                           ? "border-red-300 bg-red-50"
                           : "border-gray-300 hover:border-gray-400"
                       }`}
-                      placeholder="Enter your password"
+                      placeholder="Nhập mật khẩu của bạn"
                       disabled={loading}
                     />
                     <button
@@ -230,15 +254,15 @@ export default function LoginPage() {
                   type="submit"
                   disabled={loading}
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                  aria-label="Sign in to your account"
+                  aria-label="Đăng nhập vào tài khoản của bạn"
                 >
                   {loading ? (
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Signing In... / Đang đăng nhập...
+                      Đang đăng nhập...
                     </div>
                   ) : (
-                    "Sign In / Đăng nhập"
+                    "Đăng Nhập"
                   )}
                 </button>
               </form>
@@ -247,25 +271,25 @@ export default function LoginPage() {
               <div className="mt-6 text-center space-y-3">
                 <div>
                   <a
-                    href="/forgot-password"
+                    href="/vi/forgot-password"
                     className="text-sm text-blue-600 hover:text-blue-500 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1"
-                    aria-label="Reset your password"
+                    aria-label="Đặt lại mật khẩu của bạn"
                   >
-                    Forgot your password? / Quên mật khẩu?
+                    Quên mật khẩu?
                   </a>
                 </div>
                 <p className="text-sm text-gray-600">
-                  Don&apos;t have an account?{" "}
+                  Chưa có tài khoản?{" "}
                   <a
-                    href="/register"
+                    href="/vi/register"
                     className="text-blue-600 hover:text-blue-500 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1"
-                    aria-label="Create new account"
+                    aria-label="Tạo tài khoản mới"
                   >
-                    Sign up / Đăng ký
+                    Đăng ký ngay
                   </a>
                 </p>
                 <p className="text-xs text-gray-500 mt-2 italic">
-                  Chưa có tài khoản? Tạo tài khoản miễn phí ngay!
+                  Don't have an account? Create a free account now!
                 </p>
               </div>
             </div>
@@ -273,11 +297,11 @@ export default function LoginPage() {
             {/* Back to Home */}
             <div className="text-center mt-6">
               <a
-                href="/"
+                href="/vi"
                 className="text-sm text-gray-500 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-3 py-2"
-                aria-label="Go back to homepage"
+                aria-label="Quay về trang chủ"
               >
-                ← Back to Home / Về trang chủ
+                ← Về trang chủ
               </a>
             </div>
           </div>
