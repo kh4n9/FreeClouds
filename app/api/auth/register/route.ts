@@ -4,13 +4,23 @@ import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/models/User";
 import { signJwt, createAuthCookie } from "@/lib/jwt";
-import { checkRateLimit, createRateLimitResponse, RATE_LIMITS } from "@/lib/ratelimit";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  RATE_LIMITS,
+} from "@/lib/ratelimit";
 import { validateOrigin, createCsrfError } from "@/lib/auth";
 
 const registerSchema = z.object({
   email: z.string().email("Invalid email address").min(1, "Email is required"),
-  name: z.string().min(2, "Name must be at least 2 characters").max(100, "Name too long"),
-  password: z.string().min(6, "Password must be at least 6 characters").max(128, "Password too long"),
+  name: z
+    .string()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name too long"),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .max(128, "Password too long"),
 });
 
 export async function POST(request: NextRequest) {
@@ -34,12 +44,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Invalid input",
-          details: validation.error.errors.map(err => ({
-            field: err.path.join('.'),
+          details: validation.error.errors.map((err) => ({
+            field: err.path.join("."),
             message: err.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -53,7 +63,7 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       return NextResponse.json(
         { error: "User with this email already exists" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -72,13 +82,13 @@ export async function POST(request: NextRequest) {
 
     // Generate JWT token
     const token = signJwt({
-      userId: user._id.toString(),
+      userId: (user._id as any).toString(),
       email: user.email,
     });
 
     // Create response with user data
     const userData = {
-      id: user._id.toString(),
+      id: (user._id as any).toString(),
       email: user.email,
       name: user.name,
     };
@@ -94,46 +104,40 @@ export async function POST(request: NextRequest) {
 
     // Handle specific MongoDB errors
     if (error instanceof Error) {
-      if (error.message.includes("E11000") || error.message.includes("duplicate key")) {
+      if (
+        error.message.includes("E11000") ||
+        error.message.includes("duplicate key")
+      ) {
         return NextResponse.json(
           { error: "User with this email already exists" },
-          { status: 409 }
+          { status: 409 },
         );
       }
 
       if (error.name === "ValidationError") {
         return NextResponse.json(
           { error: "Invalid user data", details: error.message },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
     return NextResponse.json(
       { error: "Registration failed. Please try again." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 // Method not allowed for other HTTP methods
 export async function GET() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function PUT() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

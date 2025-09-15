@@ -40,14 +40,14 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Get all files (simulating All Files view)
-    const allFiles = await File.findByOwnerWithCount(user.id, {
+    const allFiles = await (File as any).findByOwnerWithCount(user.id, {
       folderId: undefined, // This should return ALL files
       page: 1,
       limit: 100,
     });
 
     // Get root files only (folder = null)
-    const rootFiles = await File.findByOwnerWithCount(user.id, {
+    const rootFiles = await (File as any).findByOwnerWithCount(user.id, {
       folderId: null, // This should return only root files
       page: 1,
       limit: 100,
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         allFilesQuery: allFiles.total,
         rootFilesQuery: rootFiles.total,
       },
-      distribution: filesByFolder.map(item => ({
+      distribution: filesByFolder.map((item: any) => ({
         folderId: item._id ? item._id.toString() : null,
         folderName: item._id ? "In Folder" : "Root",
         count: item.count,
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
         allFiles: {
           count: allFiles.files.length,
           total: allFiles.total,
-          files: allFiles.files.map(f => ({
+          files: allFiles.files.map((f: any) => ({
             name: f.name,
             folder: f.folder?.toString() || null,
           })),
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
         rootFiles: {
           count: rootFiles.files.length,
           total: rootFiles.total,
-          files: rootFiles.files.map(f => ({
+          files: rootFiles.files.map((f: any) => ({
             name: f.name,
             folder: f.folder?.toString() || null,
           })),
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Failed to get debug info" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

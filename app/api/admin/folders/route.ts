@@ -117,15 +117,15 @@ export async function GET(request: NextRequest) {
               $expr: {
                 $and: [
                   { $eq: ["$folder", "$$folderId"] },
-                  { $eq: ["$deletedAt", null] }
-                ]
-              }
-            }
+                  { $eq: ["$deletedAt", null] },
+                ],
+              },
+            },
           },
-          { $count: "fileCount" }
+          { $count: "fileCount" },
         ],
-        as: "filesCount"
-      }
+        as: "filesCount",
+      },
     });
 
     // Count subfolders
@@ -136,13 +136,13 @@ export async function GET(request: NextRequest) {
         pipeline: [
           {
             $match: {
-              $expr: { $eq: ["$parent", "$$folderId"] }
-            }
+              $expr: { $eq: ["$parent", "$$folderId"] },
+            },
           },
-          { $count: "folderCount" }
+          { $count: "folderCount" },
         ],
-        as: "subfoldersCount"
-      }
+        as: "subfoldersCount",
+      },
     });
 
     // Project fields
@@ -155,21 +155,25 @@ export async function GET(request: NextRequest) {
         owner: "$ownerInfo._id",
         ownerName: "$ownerInfo.name",
         ownerEmail: "$ownerInfo.email",
-        parentName: { $arrayElemAt: ["$parentInfo.name", 0] },
         fileCount: {
-          $ifNull: [{ $arrayElemAt: ["$filesCount.fileCount", 0] }, 0]
+          $ifNull: [{ $arrayElemAt: ["$filesCount.fileCount", 0] }, 0],
         },
         subfolderCount: {
-          $ifNull: [{ $arrayElemAt: ["$subfoldersCount.folderCount", 0] }, 0]
+          $ifNull: [{ $arrayElemAt: ["$subfoldersCount.folderCount", 0] }, 0],
         },
         totalItems: {
           $add: [
             { $ifNull: [{ $arrayElemAt: ["$filesCount.fileCount", 0] }, 0] },
-            { $ifNull: [{ $arrayElemAt: ["$subfoldersCount.folderCount", 0] }, 0] }
-          ]
+            {
+              $ifNull: [
+                { $arrayElemAt: ["$subfoldersCount.folderCount", 0] },
+                0,
+              ],
+            },
+          ],
         },
         parentName: { $arrayElemAt: ["$parentInfo.name", 0] },
-        isRootFolder: { $eq: ["$parent", null] }
+        isRootFolder: { $eq: ["$parent", null] },
       },
     });
 
@@ -180,15 +184,18 @@ export async function GET(request: NextRequest) {
           $or: [
             { name: { $regex: search, $options: "i" } },
             { ownerName: { $regex: search, $options: "i" } },
-            { ownerEmail: { $regex: search, $options: "i" } }
-          ]
-        }
+            { ownerEmail: { $regex: search, $options: "i" } },
+          ],
+        },
       });
     }
 
     // Sort stage
     const sortStage: any = {};
-    sortStage[sortBy] = sortOrder === "desc" ? -1 : 1;
+    // Ensure sortBy is a string (zod allows null, so narrow the type here)
+    const sortField =
+      typeof sortBy === "string" && sortBy ? sortBy : "createdAt";
+    sortStage[sortField] = sortOrder === "desc" ? -1 : 1;
     pipeline.push({ $sort: sortStage });
 
     // Count total documents
@@ -294,7 +301,7 @@ export async function DELETE(request: NextRequest) {
 
     for (const folderId of validFolderIds) {
       try {
-        const folder = await Folder.findById(folderId);
+        const folder = await (Folder as any).findById(folderId);
         if (!folder) {
           errors.push(`Folder with ID ${folderId} not found`);
           continue;
@@ -324,7 +331,7 @@ export async function DELETE(request: NextRequest) {
           }
 
           // Delete empty folder
-          await Folder.findByIdAndDelete(folderId);
+          await (Folder as any).findByIdAndDelete(folderId);
           totalFoldersDeleted += 1;
         }
       } catch (error) {

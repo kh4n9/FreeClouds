@@ -1,6 +1,22 @@
 export interface PreviewCapability {
   canPreview: boolean;
-  previewType: 'image' | 'video' | 'audio' | 'text' | 'pdf' | 'office' | 'archive' | 'model3d' | 'font' | 'executable' | 'data' | 'email' | 'calendar' | 'cad' | 'spreadsheet' | 'unsupported';
+  previewType:
+    | "image"
+    | "video"
+    | "audio"
+    | "text"
+    | "pdf"
+    | "office"
+    | "archive"
+    | "model3d"
+    | "font"
+    | "executable"
+    | "data"
+    | "email"
+    | "calendar"
+    | "cad"
+    | "spreadsheet"
+    | "unsupported";
   requiresSpecialHandling: boolean;
   maxPreviewSize: number; // in bytes
   description: string;
@@ -20,490 +36,547 @@ export interface FileTypeDetection {
 // Enhanced MIME type to preview capability mapping
 const PREVIEW_CAPABILITIES: Record<string, PreviewCapability> = {
   // Images
-  'image/jpeg': {
+  "image/jpeg": {
     canPreview: true,
-    previewType: 'image',
+    previewType: "image",
     requiresSpecialHandling: false,
     maxPreviewSize: 50 * 1024 * 1024, // 50MB
-    description: 'Image preview with zoom and rotation controls'
+    description: "Image preview with zoom and rotation controls",
   },
-  'image/png': {
+  "image/png": {
     canPreview: true,
-    previewType: 'image',
+    previewType: "image",
     requiresSpecialHandling: false,
     maxPreviewSize: 50 * 1024 * 1024,
-    description: 'Image preview with transparency support'
+    description: "Image preview with transparency support",
   },
-  'image/gif': {
+  "image/gif": {
     canPreview: true,
-    previewType: 'image',
+    previewType: "image",
     requiresSpecialHandling: false,
     maxPreviewSize: 50 * 1024 * 1024,
-    description: 'Animated GIF preview'
+    description: "Animated GIF preview",
   },
-  'image/webp': {
+  "image/webp": {
     canPreview: true,
-    previewType: 'image',
+    previewType: "image",
     requiresSpecialHandling: false,
     maxPreviewSize: 50 * 1024 * 1024,
-    description: 'WebP image preview'
+    description: "WebP image preview",
   },
-  'image/svg+xml': {
+  "image/svg+xml": {
     canPreview: true,
-    previewType: 'image',
+    previewType: "image",
     requiresSpecialHandling: false,
     maxPreviewSize: 10 * 1024 * 1024,
-    description: 'Scalable vector graphics preview'
+    description: "Scalable vector graphics preview",
   },
-  'image/tiff': {
+  "image/tiff": {
     canPreview: true,
-    previewType: 'image',
+    previewType: "image",
     requiresSpecialHandling: false,
     maxPreviewSize: 100 * 1024 * 1024,
-    description: 'TIFF image preview'
+    description: "TIFF image preview",
   },
-  'image/bmp': {
+  "image/bmp": {
     canPreview: true,
-    previewType: 'image',
+    previewType: "image",
     requiresSpecialHandling: false,
     maxPreviewSize: 50 * 1024 * 1024,
-    description: 'Bitmap image preview'
+    description: "Bitmap image preview",
   },
 
   // Videos
-  'video/mp4': {
+  "video/mp4": {
     canPreview: true,
-    previewType: 'video',
+    previewType: "video",
     requiresSpecialHandling: false,
     maxPreviewSize: 500 * 1024 * 1024, // 500MB
-    description: 'MP4 video with built-in controls'
+    description: "MP4 video with built-in controls",
   },
-  'video/webm': {
+  "video/webm": {
     canPreview: true,
-    previewType: 'video',
+    previewType: "video",
     requiresSpecialHandling: false,
     maxPreviewSize: 500 * 1024 * 1024,
-    description: 'WebM video preview'
+    description: "WebM video preview",
   },
-  'video/ogg': {
+  "video/ogg": {
     canPreview: true,
-    previewType: 'video',
+    previewType: "video",
     requiresSpecialHandling: false,
     maxPreviewSize: 500 * 1024 * 1024,
-    description: 'OGG video preview'
+    description: "OGG video preview",
   },
-  'video/quicktime': {
+  "video/quicktime": {
     canPreview: true,
-    previewType: 'video',
+    previewType: "video",
     requiresSpecialHandling: false,
     maxPreviewSize: 500 * 1024 * 1024,
-    description: 'QuickTime video preview'
+    description: "QuickTime video preview",
   },
-  'video/x-msvideo': {
+  "video/x-msvideo": {
     canPreview: true,
-    previewType: 'video',
+    previewType: "video",
     requiresSpecialHandling: false,
     maxPreviewSize: 500 * 1024 * 1024,
-    description: 'AVI video preview'
+    description: "AVI video preview",
   },
 
   // Audio
-  'audio/mpeg': {
+  "audio/mpeg": {
     canPreview: true,
-    previewType: 'audio',
+    previewType: "audio",
     requiresSpecialHandling: false,
     maxPreviewSize: 100 * 1024 * 1024, // 100MB
-    description: 'MP3 audio with playback controls'
+    description: "MP3 audio with playback controls",
   },
-  'audio/wav': {
+  "audio/wav": {
     canPreview: true,
-    previewType: 'audio',
+    previewType: "audio",
     requiresSpecialHandling: false,
     maxPreviewSize: 100 * 1024 * 1024,
-    description: 'WAV audio preview'
+    description: "WAV audio preview",
   },
-  'audio/ogg': {
+  "audio/ogg": {
     canPreview: true,
-    previewType: 'audio',
+    previewType: "audio",
     requiresSpecialHandling: false,
     maxPreviewSize: 100 * 1024 * 1024,
-    description: 'OGG audio preview'
+    description: "OGG audio preview",
   },
-  'audio/flac': {
+  "audio/flac": {
     canPreview: true,
-    previewType: 'audio',
+    previewType: "audio",
     requiresSpecialHandling: false,
     maxPreviewSize: 100 * 1024 * 1024,
-    description: 'FLAC lossless audio preview'
+    description: "FLAC lossless audio preview",
   },
-  'audio/aac': {
+  "audio/aac": {
     canPreview: true,
-    previewType: 'audio',
+    previewType: "audio",
     requiresSpecialHandling: false,
     maxPreviewSize: 100 * 1024 * 1024,
-    description: 'AAC audio preview'
+    description: "AAC audio preview",
   },
 
   // Documents
-  'application/pdf': {
+  "application/pdf": {
     canPreview: true,
-    previewType: 'pdf',
+    previewType: "pdf",
     requiresSpecialHandling: false,
     maxPreviewSize: 50 * 1024 * 1024,
-    description: 'PDF document with page navigation'
+    description: "PDF document with page navigation",
   },
-  'text/plain': {
+  "text/plain": {
     canPreview: true,
-    previewType: 'text',
+    previewType: "text",
     requiresSpecialHandling: false,
     maxPreviewSize: 5 * 1024 * 1024, // 5MB
-    description: 'Plain text preview'
+    description: "Plain text preview",
   },
-  'text/html': {
+  "text/html": {
     canPreview: true,
-    previewType: 'text',
+    previewType: "text",
     requiresSpecialHandling: false,
     maxPreviewSize: 5 * 1024 * 1024,
-    description: 'HTML source code preview'
+    description: "HTML source code preview",
   },
-  'text/css': {
+  "text/css": {
     canPreview: true,
-    previewType: 'text',
+    previewType: "text",
     requiresSpecialHandling: false,
     maxPreviewSize: 5 * 1024 * 1024,
-    description: 'CSS stylesheet preview'
+    description: "CSS stylesheet preview",
   },
-  'text/javascript': {
+  "text/javascript": {
     canPreview: true,
-    previewType: 'text',
+    previewType: "text",
     requiresSpecialHandling: false,
     maxPreviewSize: 5 * 1024 * 1024,
-    description: 'JavaScript code preview'
+    description: "JavaScript code preview",
   },
-  'application/json': {
+  "application/json": {
     canPreview: true,
-    previewType: 'data',
+    previewType: "data",
     requiresSpecialHandling: true,
     maxPreviewSize: 5 * 1024 * 1024,
-    description: 'JSON data with syntax highlighting'
+    description: "JSON data with syntax highlighting",
   },
-  'text/csv': {
+  "text/csv": {
     canPreview: true,
-    previewType: 'data',
+    previewType: "data",
     requiresSpecialHandling: true,
     maxPreviewSize: 10 * 1024 * 1024,
-    description: 'CSV data in table format'
+    description: "CSV data in table format",
   },
-  'application/xml': {
+  "application/xml": {
     canPreview: true,
-    previewType: 'data',
+    previewType: "data",
     requiresSpecialHandling: true,
     maxPreviewSize: 5 * 1024 * 1024,
-    description: 'XML data with structure highlighting'
+    description: "XML data with structure highlighting",
   },
 
   // Office Documents
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
     canPreview: false,
-    previewType: 'office',
+    previewType: "office",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'Microsoft Word document',
-    recommendations: ['Open in Microsoft Word', 'Open in Google Docs', 'Download to view']
+    description: "Microsoft Word document",
+    recommendations: [
+      "Open in Microsoft Word",
+      "Open in Google Docs",
+      "Download to view",
+    ],
   },
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': {
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": {
     canPreview: false,
-    previewType: 'office',
+    previewType: "office",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'Microsoft PowerPoint presentation',
-    recommendations: ['Open in Microsoft PowerPoint', 'Open in Google Slides', 'Download to view']
+    description: "Microsoft PowerPoint presentation",
+    recommendations: [
+      "Open in Microsoft PowerPoint",
+      "Open in Google Slides",
+      "Download to view",
+    ],
   },
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
     canPreview: false,
-    previewType: 'spreadsheet',
+    previewType: "spreadsheet",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'Microsoft Excel spreadsheet',
-    recommendations: ['Open in Microsoft Excel', 'Open in Google Sheets', 'Download to view']
+    description: "Microsoft Excel spreadsheet",
+    recommendations: [
+      "Open in Microsoft Excel",
+      "Open in Google Sheets",
+      "Download to view",
+    ],
   },
-  'application/msword': {
+  "application/msword": {
     canPreview: false,
-    previewType: 'office',
+    previewType: "office",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'Legacy Microsoft Word document',
-    recommendations: ['Open in Microsoft Word', 'Convert to newer format', 'Download to view']
+    description: "Legacy Microsoft Word document",
+    recommendations: [
+      "Open in Microsoft Word",
+      "Convert to newer format",
+      "Download to view",
+    ],
   },
 
   // Archives
-  'application/zip': {
+  "application/zip": {
     canPreview: false,
-    previewType: 'archive',
+    previewType: "archive",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'ZIP compressed archive',
-    recommendations: ['Extract with archive software', 'View contents after extraction']
+    description: "ZIP compressed archive",
+    recommendations: [
+      "Extract with archive software",
+      "View contents after extraction",
+    ],
   },
-  'application/x-rar-compressed': {
+  "application/x-rar-compressed": {
     canPreview: false,
-    previewType: 'archive',
+    previewType: "archive",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'RAR compressed archive',
-    recommendations: ['Extract with WinRAR or 7-Zip', 'View contents after extraction']
+    description: "RAR compressed archive",
+    recommendations: [
+      "Extract with WinRAR or 7-Zip",
+      "View contents after extraction",
+    ],
   },
-  'application/x-7z-compressed': {
+  "application/x-7z-compressed": {
     canPreview: false,
-    previewType: 'archive',
+    previewType: "archive",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: '7-Zip compressed archive',
-    recommendations: ['Extract with 7-Zip', 'View contents after extraction']
+    description: "7-Zip compressed archive",
+    recommendations: ["Extract with 7-Zip", "View contents after extraction"],
   },
 
   // 3D Models
-  'model/obj': {
+  "model/obj": {
     canPreview: false,
-    previewType: 'model3d',
+    previewType: "model3d",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'OBJ 3D model file',
-    recommendations: ['Open in Blender', 'Open in MeshLab', 'Use 3D modeling software']
+    description: "OBJ 3D model file",
+    recommendations: [
+      "Open in Blender",
+      "Open in MeshLab",
+      "Use 3D modeling software",
+    ],
   },
-  'model/stl': {
+  "model/stl": {
     canPreview: false,
-    previewType: 'model3d',
+    previewType: "model3d",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'STL 3D model for 3D printing',
-    recommendations: ['Open in 3D slicer software', 'View in Blender', 'Use for 3D printing']
+    description: "STL 3D model for 3D printing",
+    recommendations: [
+      "Open in 3D slicer software",
+      "View in Blender",
+      "Use for 3D printing",
+    ],
   },
 
   // Fonts
-  'font/ttf': {
+  "font/ttf": {
     canPreview: false,
-    previewType: 'font',
+    previewType: "font",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'TrueType font file',
-    recommendations: ['Install on system', 'Preview in font manager', 'Use in design software']
+    description: "TrueType font file",
+    recommendations: [
+      "Install on system",
+      "Preview in font manager",
+      "Use in design software",
+    ],
   },
-  'font/otf': {
+  "font/otf": {
     canPreview: false,
-    previewType: 'font',
+    previewType: "font",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'OpenType font file',
-    recommendations: ['Install on system', 'Preview in font manager', 'Use in design software']
+    description: "OpenType font file",
+    recommendations: [
+      "Install on system",
+      "Preview in font manager",
+      "Use in design software",
+    ],
   },
-  'font/woff': {
+  "font/woff": {
     canPreview: false,
-    previewType: 'font',
+    previewType: "font",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'Web font file',
-    recommendations: ['Use in web development', 'Convert for system use']
+    description: "Web font file",
+    recommendations: ["Use in web development", "Convert for system use"],
   },
 
   // Executables
-  'application/x-msdownload': {
+  "application/x-msdownload": {
     canPreview: false,
-    previewType: 'executable',
+    previewType: "executable",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'Windows executable file',
-    recommendations: ['Scan with antivirus', 'Run only from trusted sources', 'Check digital signature']
+    description: "Windows executable file",
+    recommendations: [
+      "Scan with antivirus",
+      "Run only from trusted sources",
+      "Check digital signature",
+    ],
   },
-  'application/x-executable': {
+  "application/x-executable": {
     canPreview: false,
-    previewType: 'executable',
+    previewType: "executable",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'Linux executable file',
-    recommendations: ['Verify permissions', 'Run only from trusted sources', 'Check file integrity']
+    description: "Linux executable file",
+    recommendations: [
+      "Verify permissions",
+      "Run only from trusted sources",
+      "Check file integrity",
+    ],
   },
 
   // Email
-  'message/rfc822': {
+  "message/rfc822": {
     canPreview: true,
-    previewType: 'email',
+    previewType: "email",
     requiresSpecialHandling: true,
     maxPreviewSize: 10 * 1024 * 1024,
-    description: 'Email message with headers and content'
+    description: "Email message with headers and content",
   },
 
   // CAD
-  'application/acad': {
+  "application/acad": {
     canPreview: false,
-    previewType: 'cad',
+    previewType: "cad",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'AutoCAD drawing file',
-    recommendations: ['Open in AutoCAD', 'Use DWG viewer', 'Convert to PDF for sharing']
+    description: "AutoCAD drawing file",
+    recommendations: [
+      "Open in AutoCAD",
+      "Use DWG viewer",
+      "Convert to PDF for sharing",
+    ],
   },
-  'application/dxf': {
+  "application/dxf": {
     canPreview: false,
-    previewType: 'cad',
+    previewType: "cad",
     requiresSpecialHandling: true,
     maxPreviewSize: 0,
-    description: 'Drawing Exchange Format file',
-    recommendations: ['Open in CAD software', 'Use DXF viewer', 'Import into design tools']
-  }
+    description: "Drawing Exchange Format file",
+    recommendations: [
+      "Open in CAD software",
+      "Use DXF viewer",
+      "Import into design tools",
+    ],
+  },
 };
 
 // File extension to MIME type mapping for better detection
 const EXTENSION_TO_MIME: Record<string, string> = {
   // Images
-  'jpg': 'image/jpeg',
-  'jpeg': 'image/jpeg',
-  'png': 'image/png',
-  'gif': 'image/gif',
-  'webp': 'image/webp',
-  'svg': 'image/svg+xml',
-  'tiff': 'image/tiff',
-  'tif': 'image/tiff',
-  'bmp': 'image/bmp',
-  'ico': 'image/x-icon',
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  gif: "image/gif",
+  webp: "image/webp",
+  svg: "image/svg+xml",
+  tiff: "image/tiff",
+  tif: "image/tiff",
+  bmp: "image/bmp",
+  ico: "image/x-icon",
 
   // Videos
-  'mp4': 'video/mp4',
-  'webm': 'video/webm',
-  'ogv': 'video/ogg',
-  'mov': 'video/quicktime',
-  'avi': 'video/x-msvideo',
-  'wmv': 'video/x-ms-wmv',
-  'flv': 'video/x-flv',
-  'mkv': 'video/x-matroska',
+  mp4: "video/mp4",
+  webm: "video/webm",
+  ogv: "video/ogg",
+  mov: "video/quicktime",
+  avi: "video/x-msvideo",
+  wmv: "video/x-ms-wmv",
+  flv: "video/x-flv",
+  mkv: "video/x-matroska",
 
   // Audio
-  'mp3': 'audio/mpeg',
-  'wav': 'audio/wav',
-  'ogg': 'audio/ogg',
-  'flac': 'audio/flac',
-  'aac': 'audio/aac',
-  'm4a': 'audio/mp4',
-  'wma': 'audio/x-ms-wma',
+  mp3: "audio/mpeg",
+  wav: "audio/wav",
+  ogg: "audio/ogg",
+  flac: "audio/flac",
+  aac: "audio/aac",
+  m4a: "audio/mp4",
+  wma: "audio/x-ms-wma",
 
   // Documents
-  'pdf': 'application/pdf',
-  'txt': 'text/plain',
-  'html': 'text/html',
-  'htm': 'text/html',
-  'css': 'text/css',
-  'js': 'text/javascript',
-  'json': 'application/json',
-  'xml': 'application/xml',
-  'csv': 'text/csv',
-  'yaml': 'application/x-yaml',
-  'yml': 'application/x-yaml',
+  pdf: "application/pdf",
+  txt: "text/plain",
+  html: "text/html",
+  htm: "text/html",
+  css: "text/css",
+  js: "text/javascript",
+  json: "application/json",
+  xml: "application/xml",
+  csv: "text/csv",
+  yaml: "application/x-yaml",
+  yml: "application/x-yaml",
 
   // Office
-  'doc': 'application/msword',
-  'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'xls': 'application/vnd.ms-excel',
-  'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'ppt': 'application/vnd.ms-powerpoint',
-  'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  'odt': 'application/vnd.oasis.opendocument.text',
-  'ods': 'application/vnd.oasis.opendocument.spreadsheet',
-  'odp': 'application/vnd.oasis.opendocument.presentation',
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  odt: "application/vnd.oasis.opendocument.text",
+  ods: "application/vnd.oasis.opendocument.spreadsheet",
+  odp: "application/vnd.oasis.opendocument.presentation",
 
   // Archives
-  'zip': 'application/zip',
-  'rar': 'application/x-rar-compressed',
-  '7z': 'application/x-7z-compressed',
-  'tar': 'application/x-tar',
-  'gz': 'application/gzip',
-  'bz2': 'application/x-bzip2',
+  zip: "application/zip",
+  rar: "application/x-rar-compressed",
+  "7z": "application/x-7z-compressed",
+  tar: "application/x-tar",
+  gz: "application/gzip",
+  bz2: "application/x-bzip2",
 
   // 3D Models
-  'obj': 'model/obj',
-  'stl': 'model/stl',
-  'ply': 'model/ply',
-  'gltf': 'model/gltf+json',
-  'glb': 'model/gltf-binary',
-  'fbx': 'model/fbx',
-  'dae': 'model/vnd.collada+xml',
-  '3ds': 'model/3ds',
+  obj: "model/obj",
+  stl: "model/stl",
+  ply: "model/ply",
+  gltf: "model/gltf+json",
+  glb: "model/gltf-binary",
+  fbx: "model/fbx",
+  dae: "model/vnd.collada+xml",
+  "3ds": "model/3ds",
 
   // Fonts
-  'ttf': 'font/ttf',
-  'otf': 'font/otf',
-  'woff': 'font/woff',
-  'woff2': 'font/woff2',
-  'eot': 'application/vnd.ms-fontobject',
+  ttf: "font/ttf",
+  otf: "font/otf",
+  woff: "font/woff",
+  woff2: "font/woff2",
+  eot: "application/vnd.ms-fontobject",
 
   // Executables
-  'exe': 'application/x-msdownload',
-  'msi': 'application/x-msdownload',
-  'deb': 'application/x-deb',
-  'rpm': 'application/x-rpm',
-  'dmg': 'application/x-apple-diskimage',
-  'pkg': 'application/x-newton-compatible-pkg',
-  'jar': 'application/java-archive',
-  'app': 'application/x-executable',
+  exe: "application/x-msdownload",
+  msi: "application/x-msdownload",
+  deb: "application/x-deb",
+  rpm: "application/x-rpm",
+  dmg: "application/x-apple-diskimage",
+  pkg: "application/x-newton-compatible-pkg",
+  jar: "application/java-archive",
+  app: "application/x-executable",
 
   // Email
-  'eml': 'message/rfc822',
-  'msg': 'application/vnd.ms-outlook',
-  'mbox': 'application/mbox',
+  eml: "message/rfc822",
+  msg: "application/vnd.ms-outlook",
+  mbox: "application/mbox",
 
   // Calendar
-  'ics': 'text/calendar',
-  'vcs': 'text/x-vcalendar',
-  'vcf': 'text/vcard',
+  ics: "text/calendar",
+  vcs: "text/x-vcalendar",
+  vcf: "text/vcard",
 
   // CAD
-  'dwg': 'application/acad',
-  'dxf': 'application/dxf',
-  'step': 'application/step',
-  'stp': 'application/step',
-  'iges': 'application/iges',
-  'igs': 'application/iges',
+  dwg: "application/acad",
+  dxf: "application/dxf",
+  step: "application/step",
+  stp: "application/step",
+  iges: "application/iges",
+  igs: "application/iges",
 
   // Code files
-  'ts': 'text/typescript',
-  'tsx': 'text/typescript',
-  'jsx': 'text/javascript',
-  'py': 'text/x-python',
-  'java': 'text/x-java-source',
-  'cpp': 'text/x-c++src',
-  'c': 'text/x-csrc',
-  'h': 'text/x-chdr',
-  'php': 'text/x-php',
-  'rb': 'text/x-ruby',
-  'go': 'text/x-go',
-  'rs': 'text/x-rust',
-  'swift': 'text/x-swift',
-  'kt': 'text/x-kotlin',
-  'scala': 'text/x-scala',
-  'r': 'text/x-r',
-  'sql': 'text/x-sql',
-  'sh': 'text/x-shellscript',
-  'bat': 'text/x-msdos-batch',
-  'ps1': 'text/x-powershell',
+  ts: "text/typescript",
+  tsx: "text/typescript",
+  jsx: "text/javascript",
+  py: "text/x-python",
+  java: "text/x-java-source",
+  cpp: "text/x-c++src",
+  c: "text/x-csrc",
+  h: "text/x-chdr",
+  php: "text/x-php",
+  rb: "text/x-ruby",
+  go: "text/x-go",
+  rs: "text/x-rust",
+  swift: "text/x-swift",
+  kt: "text/x-kotlin",
+  scala: "text/x-scala",
+  r: "text/x-r",
+  sql: "text/x-sql",
+  sh: "text/x-shellscript",
+  bat: "text/x-msdos-batch",
+  ps1: "text/x-powershell",
 
   // Configuration files
-  'ini': 'text/plain',
-  'conf': 'text/plain',
-  'cfg': 'text/plain',
-  'toml': 'text/plain',
-  'env': 'text/plain',
-  'gitignore': 'text/plain',
-  'dockerignore': 'text/plain',
-  'editorconfig': 'text/plain',
+  ini: "text/plain",
+  conf: "text/plain",
+  cfg: "text/plain",
+  toml: "text/plain",
+  env: "text/plain",
+  gitignore: "text/plain",
+  dockerignore: "text/plain",
+  editorconfig: "text/plain",
 
   // Data formats
-  'sqlite': 'application/x-sqlite3',
-  'db': 'application/x-sqlite3',
-  'sql': 'text/x-sql'
+  sqlite: "application/x-sqlite3",
+  db: "application/x-sqlite3",
 };
 
-export function getPreviewCapability(fileName: string, mimeType?: string): PreviewCapability {
+export function getPreviewCapability(
+  fileName: string,
+  mimeType?: string,
+): PreviewCapability {
   // Try to get MIME type from extension if not provided
-  const extension = fileName.split('.').pop()?.toLowerCase();
-  const detectedMime = mimeType || (extension ? EXTENSION_TO_MIME[extension] : undefined);
+  const extension = fileName.split(".").pop()?.toLowerCase();
+  const detectedMime =
+    mimeType || (extension ? EXTENSION_TO_MIME[extension] : undefined);
 
   // Check direct MIME type mapping
   if (detectedMime && PREVIEW_CAPABILITIES[detectedMime]) {
@@ -513,35 +586,69 @@ export function getPreviewCapability(fileName: string, mimeType?: string): Previ
   // Check by extension for special cases
   if (extension) {
     // Code files (treat as text)
-    if (['ts', 'tsx', 'jsx', 'py', 'java', 'cpp', 'c', 'h', 'php', 'rb', 'go', 'rs', 'swift', 'kt', 'scala', 'r', 'sql', 'sh', 'bat', 'ps1'].includes(extension)) {
+    if (
+      [
+        "ts",
+        "tsx",
+        "jsx",
+        "py",
+        "java",
+        "cpp",
+        "c",
+        "h",
+        "php",
+        "rb",
+        "go",
+        "rs",
+        "swift",
+        "kt",
+        "scala",
+        "r",
+        "sql",
+        "sh",
+        "bat",
+        "ps1",
+      ].includes(extension)
+    ) {
       return {
         canPreview: true,
-        previewType: 'text',
+        previewType: "text",
         requiresSpecialHandling: false,
         maxPreviewSize: 5 * 1024 * 1024,
-        description: `${extension.toUpperCase()} source code preview`
+        description: `${extension.toUpperCase()} source code preview`,
       };
     }
 
     // Configuration files (treat as text)
-    if (['ini', 'conf', 'cfg', 'toml', 'env', 'gitignore', 'dockerignore', 'editorconfig'].includes(extension)) {
+    if (
+      [
+        "ini",
+        "conf",
+        "cfg",
+        "toml",
+        "env",
+        "gitignore",
+        "dockerignore",
+        "editorconfig",
+      ].includes(extension)
+    ) {
       return {
         canPreview: true,
-        previewType: 'text',
+        previewType: "text",
         requiresSpecialHandling: false,
         maxPreviewSize: 1 * 1024 * 1024,
-        description: 'Configuration file preview'
+        description: "Configuration file preview",
       };
     }
 
     // Calendar files
-    if (['ics', 'vcs', 'vcf'].includes(extension)) {
+    if (["ics", "vcs", "vcf"].includes(extension)) {
       return {
         canPreview: true,
-        previewType: 'calendar',
+        previewType: "calendar",
         requiresSpecialHandling: true,
         maxPreviewSize: 5 * 1024 * 1024,
-        description: 'Calendar events preview'
+        description: "Calendar events preview",
       };
     }
   }
@@ -549,15 +656,19 @@ export function getPreviewCapability(fileName: string, mimeType?: string): Previ
   // Default fallback
   return {
     canPreview: false,
-    previewType: 'unsupported',
+    previewType: "unsupported",
     requiresSpecialHandling: false,
     maxPreviewSize: 0,
-    description: 'File type not supported for preview',
-    recommendations: ['Download to view with appropriate software']
+    description: "File type not supported for preview",
+    recommendations: ["Download to view with appropriate software"],
   };
 }
 
-export function canPreviewFile(fileName: string, fileSize: number, mimeType?: string): boolean {
+export function canPreviewFile(
+  fileName: string,
+  fileSize: number,
+  mimeType?: string,
+): boolean {
   const capability = getPreviewCapability(fileName, mimeType);
 
   if (!capability.canPreview) {
@@ -571,12 +682,19 @@ export function canPreviewFile(fileName: string, fileSize: number, mimeType?: st
   return true;
 }
 
-export function getPreviewRecommendations(fileName: string, mimeType?: string): string[] {
+export function getPreviewRecommendations(
+  fileName: string,
+  mimeType?: string,
+): string[] {
   const capability = getPreviewCapability(fileName, mimeType);
   return capability.recommendations || [];
 }
 
-export function isPreviewSizeLimitExceeded(fileName: string, fileSize: number, mimeType?: string): boolean {
+export function isPreviewSizeLimitExceeded(
+  fileName: string,
+  fileSize: number,
+  mimeType?: string,
+): boolean {
   const capability = getPreviewCapability(fileName, mimeType);
   return capability.maxPreviewSize > 0 && fileSize > capability.maxPreviewSize;
 }
@@ -587,9 +705,9 @@ export function getMaxPreviewSize(fileName: string, mimeType?: string): number {
 }
 
 export function formatPreviewSizeLimit(maxSize: number): string {
-  if (maxSize === 0) return 'No limit';
+  if (maxSize === 0) return "No limit";
 
-  const units = ['B', 'KB', 'MB', 'GB'];
+  const units = ["B", "KB", "MB", "GB"];
   let size = maxSize;
   let unitIndex = 0;
 
@@ -602,17 +720,34 @@ export function formatPreviewSizeLimit(maxSize: number): string {
 }
 
 // Security check for file types
-export function isSecureForPreview(fileName: string, mimeType?: string): boolean {
-  const extension = fileName.split('.').pop()?.toLowerCase();
+export function isSecureForPreview(
+  fileName: string,
+  mimeType?: string,
+): boolean {
+  const extension = fileName.split(".").pop()?.toLowerCase();
   const capability = getPreviewCapability(fileName, mimeType);
 
   // Never preview executable files
-  if (capability.previewType === 'executable') {
+  if (capability.previewType === "executable") {
     return false;
   }
 
   // Be careful with certain extensions
-  const dangerousExtensions = ['exe', 'scr', 'bat', 'cmd', 'com', 'pif', 'vbs', 'js', 'jar', 'app', 'deb', 'rpm', 'msi'];
+  const dangerousExtensions = [
+    "exe",
+    "scr",
+    "bat",
+    "cmd",
+    "com",
+    "pif",
+    "vbs",
+    "js",
+    "jar",
+    "app",
+    "deb",
+    "rpm",
+    "msi",
+  ];
   if (extension && dangerousExtensions.includes(extension)) {
     return false;
   }
@@ -621,25 +756,27 @@ export function isSecureForPreview(fileName: string, mimeType?: string): boolean
 }
 
 // Get appropriate icon for preview type
-export function getPreviewIcon(previewType: PreviewCapability['previewType']): string {
+export function getPreviewIcon(
+  previewType: PreviewCapability["previewType"],
+): string {
   const iconMap = {
-    'image': 'Image',
-    'video': 'Video',
-    'audio': 'Music',
-    'text': 'FileText',
-    'pdf': 'FileText',
-    'office': 'FileText',
-    'archive': 'Archive',
-    'model3d': 'Box',
-    'font': 'Type',
-    'executable': 'AlertTriangle',
-    'data': 'Database',
-    'email': 'Mail',
-    'calendar': 'Calendar',
-    'cad': 'PenTool',
-    'spreadsheet': 'BarChart3',
-    'unsupported': 'File'
+    image: "Image",
+    video: "Video",
+    audio: "Music",
+    text: "FileText",
+    pdf: "FileText",
+    office: "FileText",
+    archive: "Archive",
+    model3d: "Box",
+    font: "Type",
+    executable: "AlertTriangle",
+    data: "Database",
+    email: "Mail",
+    calendar: "Calendar",
+    cad: "PenTool",
+    spreadsheet: "BarChart3",
+    unsupported: "File",
   };
 
-  return iconMap[previewType] || 'File';
+  return iconMap[previewType] || "File";
 }

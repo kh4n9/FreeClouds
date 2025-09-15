@@ -7,8 +7,16 @@ import { requireAuth, AuthError, createAuthResponse } from "@/lib/auth";
 const querySchema = z.object({
   folderId: z.string().nullable().optional(),
   q: z.string().nullable().optional(),
-  page: z.string().nullable().transform(val => parseInt(val || "1") || 1).optional(),
-  limit: z.string().nullable().transform(val => Math.min(parseInt(val || "50") || 50, 100)).optional(),
+  page: z
+    .string()
+    .nullable()
+    .transform((val) => parseInt(val || "1") || 1)
+    .optional(),
+  limit: z
+    .string()
+    .nullable()
+    .transform((val) => Math.min(parseInt(val || "50") || 50, 100))
+    .optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -32,30 +40,42 @@ export async function GET(request: NextRequest) {
     if (!validation.success) {
       return NextResponse.json(
         { error: "Invalid query parameters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { folderId, q: search, page = 1, limit = 50 } = validation.data;
 
     // Validate folderId if provided
-    if (folderId && folderId !== "null" && !/^[0-9a-fA-F]{24}$/.test(folderId)) {
+    if (
+      folderId &&
+      folderId !== "null" &&
+      !/^[0-9a-fA-F]{24}$/.test(folderId)
+    ) {
       return NextResponse.json(
         { error: "Invalid folder ID format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Get files with pagination
     // For "All Files", don't filter by folder (pass undefined)
-    const finalFolderId = folderId ? (folderId === "null" ? null : folderId) : undefined;
+    const finalFolderId = folderId
+      ? folderId === "null"
+        ? null
+        : folderId
+      : undefined;
 
-    const result = await File.findByOwnerWithCount(user.id, {
-      folderId: finalFolderId,
-      search,
-      page,
-      limit,
-    });
+    // Build options object conditionally to avoid passing `undefined` for exact optional property types
+    const options: any = { page, limit };
+    if (finalFolderId !== undefined) {
+      options.folderId = finalFolderId;
+    }
+    if (search !== undefined && search !== null) {
+      options.search = search;
+    }
+
+    const result = await File.findByOwnerWithCount(user.id, options);
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
@@ -65,10 +85,7 @@ export async function GET(request: NextRequest) {
       return createAuthResponse(error);
     }
 
-    return NextResponse.json(
-      { error: "Failed to get files" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to get files" }, { status: 500 });
   }
 }
 
@@ -85,7 +102,7 @@ export async function POST(request: NextRequest) {
     // Currently, files are created through the upload endpoint
     return NextResponse.json(
       { error: "Use /api/upload to create files" },
-      { status: 405 }
+      { status: 405 },
     );
   } catch (error) {
     console.error("Create file metadata error:", error);
@@ -96,22 +113,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Failed to create file" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 // Method not allowed for other HTTP methods
 export async function PUT() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

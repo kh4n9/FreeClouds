@@ -48,7 +48,7 @@ folderSchema.index({ createdAt: -1 });
 
 // Virtual for id
 folderSchema.virtual("id").get(function () {
-  return this._id.toHexString();
+  return (this._id as any).toHexString();
 });
 
 // Ensure virtual fields are serialized
@@ -56,10 +56,10 @@ folderSchema.set("toJSON", {
   virtuals: true,
   transform: function (doc, ret) {
     delete ret._id;
-    delete ret.__v;
+    delete (ret as any).__v;
     // Convert parent ObjectId to string
     if (ret.parent) {
-      ret.parent = ret.parent.toString();
+      (ret as any).parent = ret.parent.toString();
     }
     return ret;
   },
@@ -77,7 +77,7 @@ folderSchema.pre("save", function (next) {
 folderSchema.pre("save", async function (next) {
   if (this.isModified("parent") && this.parent) {
     // Check if parent exists and belongs to the same owner
-    const parent = await this.constructor.findOne({
+    const parent = await (this.constructor as any).findOne({
       _id: this.parent,
       owner: this.owner,
     });
@@ -88,7 +88,10 @@ folderSchema.pre("save", async function (next) {
 
     // Check for circular reference
     let currentParent = parent.parent;
-    const visited = new Set([this._id.toString(), this.parent.toString()]);
+    const visited = new Set([
+      (this._id as any).toString(),
+      this.parent.toString(),
+    ]);
 
     while (currentParent) {
       if (visited.has(currentParent.toString())) {
@@ -97,7 +100,9 @@ folderSchema.pre("save", async function (next) {
 
       visited.add(currentParent.toString());
 
-      const nextParent = await this.constructor.findById(currentParent).select("parent");
+      const nextParent = await (this.constructor as any)
+        .findById(currentParent)
+        .select("parent");
       if (!nextParent) break;
 
       currentParent = nextParent.parent;
@@ -107,7 +112,10 @@ folderSchema.pre("save", async function (next) {
 });
 
 // Static methods
-folderSchema.statics.findByOwner = function (ownerId: string, parentId?: string | null) {
+folderSchema.statics.findByOwner = function (
+  ownerId: string,
+  parentId?: string | null,
+) {
   const query: any = { owner: ownerId };
 
   // If parentId is provided, filter by parent
@@ -120,7 +128,7 @@ folderSchema.statics.findByOwner = function (ownerId: string, parentId?: string 
 
 folderSchema.statics.findByPath = async function (
   ownerId: string,
-  folderPath: string[]
+  folderPath: string[],
 ): Promise<IFolder | null> {
   if (folderPath.length === 0) return null;
 
@@ -148,7 +156,7 @@ folderSchema.statics.getFolderTree = async function (ownerId: string) {
   const rootFolders: any[] = [];
 
   // Create folder map
-  folders.forEach((folder) => {
+  folders.forEach((folder: any) => {
     folderMap.set(folder._id.toString(), {
       ...folder.toJSON(),
       children: [],
@@ -156,7 +164,7 @@ folderSchema.statics.getFolderTree = async function (ownerId: string) {
   });
 
   // Build tree structure
-  folders.forEach((folder) => {
+  folders.forEach((folder: any) => {
     const folderData = folderMap.get(folder._id.toString());
 
     if (folder.parent) {
@@ -172,7 +180,9 @@ folderSchema.statics.getFolderTree = async function (ownerId: string) {
   return rootFolders;
 };
 
-folderSchema.statics.getFolderPath = async function (folderId: string): Promise<string[]> {
+folderSchema.statics.getFolderPath = async function (
+  folderId: string,
+): Promise<string[]> {
   const path: string[] = [];
   let currentFolder = await this.findById(folderId);
 
@@ -190,12 +200,14 @@ folderSchema.statics.getFolderPath = async function (folderId: string): Promise<
 
 // Instance methods
 folderSchema.methods.getFullPath = async function (): Promise<string> {
-  const path = await this.constructor.getFolderPath(this._id);
+  const path = await (this.constructor as any).getFolderPath(this._id);
   return "/" + path.join("/");
 };
 
-folderSchema.methods.hasChild = async function (childName: string): Promise<boolean> {
-  const child = await this.constructor.findOne({
+folderSchema.methods.hasChild = async function (
+  childName: string,
+): Promise<boolean> {
+  const child = await (this.constructor as any).findOne({
     parent: this._id,
     name: childName,
     owner: this.owner,
@@ -204,13 +216,18 @@ folderSchema.methods.hasChild = async function (childName: string): Promise<bool
 };
 
 folderSchema.methods.getChildren = function () {
-  return this.constructor.find({
-    parent: this._id,
-    owner: this.owner,
-  }).sort({ name: 1 });
+  return (this.constructor as any)
+    .find({
+      parent: this._id,
+      owner: this.owner,
+    })
+    .sort({ name: 1 });
 };
 
-folderSchema.methods.canBeDeleted = async function (): Promise<{ canDelete: boolean; reason?: string }> {
+folderSchema.methods.canBeDeleted = async function (): Promise<{
+  canDelete: boolean;
+  reason?: string;
+}> {
   // Always allow deletion - we'll handle recursive deletion
   return { canDelete: true };
 };
@@ -218,16 +235,16 @@ folderSchema.methods.canBeDeleted = async function (): Promise<{ canDelete: bool
 folderSchema.methods.deleteRecursively = async function (): Promise<{
   foldersDeleted: number;
   filesDeleted: number;
-  errors: string[]
+  errors: string[];
 }> {
   const stats = {
     foldersDeleted: 0,
     filesDeleted: 0,
-    errors: [] as string[]
+    errors: [] as string[],
   };
 
   // First, get all child folders
-  const childFolders = await this.constructor.find({
+  const childFolders = await (this.constructor as any).find({
     parent: this._id,
   });
 
@@ -239,7 +256,7 @@ folderSchema.methods.deleteRecursively = async function (): Promise<{
       stats.filesDeleted += childStats.filesDeleted;
       stats.errors.push(...childStats.errors);
     } catch (error) {
-      const errorMsg = `Failed to delete child folder ${childFolder.name}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      const errorMsg = `Failed to delete child folder ${childFolder.name}: ${error instanceof Error ? error.message : "Unknown error"}`;
       console.error(errorMsg);
       stats.errors.push(errorMsg);
     }
@@ -258,17 +275,17 @@ folderSchema.methods.deleteRecursively = async function (): Promise<{
 
     stats.filesDeleted += deletedFilesResult.deletedCount || 0;
   } catch (error) {
-    const errorMsg = `Could not delete files in folder ${this.name}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    const errorMsg = `Could not delete files in folder ${this.name}: ${error instanceof Error ? error.message : "Unknown error"}`;
     console.warn(errorMsg);
     stats.errors.push(errorMsg);
   }
 
   // Finally, delete this folder
   try {
-    await this.constructor.findByIdAndDelete(this._id);
+    await (this.constructor as any).findByIdAndDelete(this._id);
     stats.foldersDeleted += 1;
   } catch (error) {
-    const errorMsg = `Could not delete folder ${this.name}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    const errorMsg = `Could not delete folder ${this.name}: ${error instanceof Error ? error.message : "Unknown error"}`;
     console.error(errorMsg);
     stats.errors.push(errorMsg);
   }
@@ -284,7 +301,7 @@ folderSchema.methods.countContents = async function (): Promise<{
   let totalFiles = 0;
 
   // Count child folders recursively
-  const childFolders = await this.constructor.find({
+  const childFolders = await (this.constructor as any).find({
     parent: this._id,
   });
 
@@ -312,4 +329,5 @@ folderSchema.methods.countContents = async function (): Promise<{
   return { totalFolders, totalFiles };
 };
 
-export const Folder = mongoose.models.Folder || mongoose.model<IFolder>("Folder", folderSchema);
+export const Folder =
+  mongoose.models.Folder || mongoose.model<IFolder>("Folder", folderSchema);

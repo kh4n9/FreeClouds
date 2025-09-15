@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
-import { requireAuth, AuthError, createAuthResponse, verifyOwnership } from "@/lib/auth";
+import {
+  requireAuth,
+  AuthError,
+  createAuthResponse,
+  verifyOwnership,
+} from "@/lib/auth";
 import { telegramAPI, TelegramError } from "@/lib/telegram";
 
 interface RouteParams {
@@ -21,28 +26,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Validate file ID
     const fileId = params.id;
     if (!fileId || fileId.length !== 24) {
-      return NextResponse.json(
-        { error: "Invalid file ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
 
     // Find file
     const file = await File.findById(fileId);
 
     if (!file || file.deletedAt) {
-      return NextResponse.json(
-        { error: "File not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
     // Verify ownership
     if (!(await verifyOwnership(user.id, file))) {
-      return NextResponse.json(
-        { error: "Access denied" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Get file stream from Telegram
@@ -56,13 +52,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       if (error instanceof TelegramError) {
         return NextResponse.json(
           { error: "File temporarily unavailable" },
-          { status: 503 }
+          { status: 503 },
         );
       }
 
       return NextResponse.json(
         { error: "Failed to download file" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -74,7 +70,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Set content disposition for download
     const encodedFileName = encodeURIComponent(file.name);
-    headers.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
+    headers.set(
+      "Content-Disposition",
+      `attachment; filename*=UTF-8''${encodedFileName}`,
+    );
 
     // Set content length if available
     if (file.size) {
@@ -83,7 +82,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Set cache headers
     headers.set("Cache-Control", "private, max-age=3600");
-    headers.set("ETag", `"${file._id.toString()}-${file.createdAt.getTime()}"`);
+    headers.set(
+      "ETag",
+      `"${(file._id as any).toString()}-${file.createdAt.getTime()}"`,
+    );
 
     // Security headers
     headers.set("X-Content-Type-Options", "nosniff");
@@ -95,8 +97,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       // Parse range header (basic implementation)
       const match = range.match(/bytes=(\d+)-(\d*)/);
       if (match) {
-        const start = parseInt(match[1], 10);
-        const end = match[2] ? parseInt(match[2], 10) : file.size - 1;
+        const [, startStr, endStr] = match;
+        const start = parseInt(startStr!, 10);
+        const end = endStr ? parseInt(endStr, 10) : file.size - 1;
 
         if (start < file.size && end < file.size && start <= end) {
           headers.set("Content-Range", `bytes ${start}-${end}/${file.size}`);
@@ -116,7 +119,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       status: 200,
       headers,
     });
-
   } catch (error) {
     console.error("Download file error:", error);
 
@@ -126,36 +128,24 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(
       { error: "Failed to download file" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 // Method not allowed for other HTTP methods
 export async function POST() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function PUT() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function PATCH() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

@@ -140,7 +140,7 @@ export const getCookie = (name: string): string | null => {
   const cookie = document.cookie
     .split(";")
     .find((c) => c.trim().startsWith(`${name}=`));
-  return cookie ? cookie.split("=")[1] : null;
+  return cookie ? cookie.split("=")[1] || null : null;
 };
 
 export const clearAuthCookie = () => {
@@ -150,7 +150,7 @@ export const clearAuthCookie = () => {
 // Shared form input handler
 export const createInputChangeHandler = (
   setForm: React.Dispatch<React.SetStateAction<LoginForm>>,
-  setError: React.Dispatch<React.SetStateAction<LoginError | null>>
+  setError: React.Dispatch<React.SetStateAction<LoginError | null>>,
 ) => {
   return (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

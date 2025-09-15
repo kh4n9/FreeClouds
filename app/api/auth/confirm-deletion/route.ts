@@ -69,44 +69,44 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user
-    const dbUser = await User.findById(userId);
+    const dbUser = await (User as any).findById(userId);
     if (!dbUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Start transaction for account deletion
-    const session = await User.startSession();
+    const session = await (User as any).startSession();
 
     try {
       await session.withTransaction(async () => {
         // Delete all user's files
-        const userFiles = await File.find({ userId });
+        const userFiles = await (File as any).find({ userId });
         const fileCount = userFiles.length;
 
         if (fileCount > 0) {
           // In a real implementation, you would also delete the actual files from storage
           // For now, we'll just delete the database records
-          await File.deleteMany({ userId }, { session });
+          await (File as any).deleteMany({ userId }, { session });
           console.log(`Deleted ${fileCount} files for user ${userEmail}`);
         }
 
         // Delete all user's folders
-        const userFolders = await Folder.find({ userId });
+        const userFolders = await (Folder as any).find({ userId });
         const folderCount = userFolders.length;
 
         if (folderCount > 0) {
-          await Folder.deleteMany({ userId }, { session });
+          await (Folder as any).deleteMany({ userId }, { session });
           console.log(`Deleted ${folderCount} folders for user ${userEmail}`);
         }
 
         // Delete all verification codes for this user
-        await VerificationCode.deleteMany(
+        await (VerificationCode as any).deleteMany(
           { email: userEmail.toLowerCase() },
           { session },
         );
 
         // Finally, delete the user account
-        await User.findByIdAndDelete(userId, { session });
+        await (User as any).findByIdAndDelete(userId, { session });
 
         console.log(`Account deletion completed for user: ${userEmail}`);
       });

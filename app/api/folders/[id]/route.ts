@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { Folder } from "@/models/Folder";
-import { requireAuth, AuthError, createAuthResponse, validateOrigin, createCsrfError, verifyOwnership } from "@/lib/auth";
+import {
+  requireAuth,
+  AuthError,
+  createAuthResponse,
+  validateOrigin,
+  createCsrfError,
+  verifyOwnership,
+} from "@/lib/auth";
 
 interface RouteParams {
   params: {
@@ -11,7 +18,11 @@ interface RouteParams {
 }
 
 const updateFolderSchema = z.object({
-  name: z.string().min(1, "Folder name is required").max(100, "Folder name too long").trim(),
+  name: z
+    .string()
+    .min(1, "Folder name is required")
+    .max(100, "Folder name too long")
+    .trim(),
 });
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
@@ -30,10 +41,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Validate folder ID
     const folderId = params.id;
     if (!folderId || folderId.length !== 24) {
-      return NextResponse.json(
-        { error: "Invalid folder ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
     }
 
     // Parse and validate request body
@@ -44,37 +52,31 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: "Invalid input",
-          details: validation.error.errors.map(err => ({
-            field: err.path.join('.'),
+          details: validation.error.errors.map((err) => ({
+            field: err.path.join("."),
             message: err.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { name } = validation.data;
 
     // Find folder
-    const folder = await Folder.findById(folderId);
+    const folder = await (Folder as any).findById(folderId);
 
     if (!folder) {
-      return NextResponse.json(
-        { error: "Folder not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Folder not found" }, { status: 404 });
     }
 
     // Verify ownership
     if (!(await verifyOwnership(user.id, folder))) {
-      return NextResponse.json(
-        { error: "Access denied" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Check for duplicate folder name in the same parent
-    const existingFolder = await Folder.findOne({
+    const existingFolder = await (Folder as any).findOne({
       _id: { $ne: folderId },
       owner: user.id,
       parent: folder.parent,
@@ -83,8 +85,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     if (existingFolder) {
       return NextResponse.json(
-        { error: "A folder with this name already exists in the same location" },
-        { status: 409 }
+        {
+          error: "A folder with this name already exists in the same location",
+        },
+        { status: 409 },
       );
     }
 
@@ -110,24 +114,27 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // Handle specific MongoDB errors
     if (error instanceof Error) {
-      if (error.message.includes("E11000") || error.message.includes("duplicate key")) {
+      if (
+        error.message.includes("E11000") ||
+        error.message.includes("duplicate key")
+      ) {
         return NextResponse.json(
           { error: "A folder with this name already exists" },
-          { status: 409 }
+          { status: 409 },
         );
       }
 
       if (error.name === "ValidationError") {
         return NextResponse.json(
           { error: "Invalid folder data", details: error.message },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
     return NextResponse.json(
       { error: "Failed to update folder" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -148,48 +155,45 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // Validate folder ID
     const folderId = params.id;
     if (!folderId || folderId.length !== 24) {
-      return NextResponse.json(
-        { error: "Invalid folder ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
     }
 
     // Find folder
-    const folder = await Folder.findById(folderId);
+    const folder = await (Folder as any).findById(folderId);
 
     if (!folder) {
-      return NextResponse.json(
-        { error: "Folder not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Folder not found" }, { status: 404 });
     }
 
     // Verify ownership
     if (!(await verifyOwnership(user.id, folder))) {
-      return NextResponse.json(
-        { error: "Access denied" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Recursively delete the folder and all its contents
     const deletionStats = await folder.deleteRecursively();
 
-    console.log(`Folder "${folder.name}" deletion completed: ${deletionStats.foldersDeleted} folders, ${deletionStats.filesDeleted} files deleted`);
+    console.log(
+      `Folder "${folder.name}" deletion completed: ${deletionStats.foldersDeleted} folders, ${deletionStats.filesDeleted} files deleted`,
+    );
 
     if (deletionStats.errors.length > 0) {
       console.warn(`Deletion warnings:`, deletionStats.errors);
     }
 
     // Return deletion statistics
-    return NextResponse.json({
-      message: "Folder deleted successfully",
-      stats: {
-        foldersDeleted: deletionStats.foldersDeleted,
-        filesDeleted: deletionStats.filesDeleted,
-        errors: deletionStats.errors.length > 0 ? deletionStats.errors : undefined
-      }
-    }, { status: 200 });
+    return NextResponse.json(
+      {
+        message: "Folder deleted successfully",
+        stats: {
+          foldersDeleted: deletionStats.foldersDeleted,
+          filesDeleted: deletionStats.filesDeleted,
+          errors:
+            deletionStats.errors.length > 0 ? deletionStats.errors : undefined,
+        },
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Delete folder error:", error);
 
@@ -199,29 +203,20 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(
       { error: "Failed to delete folder" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 // Method not allowed for other HTTP methods
 export async function GET() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function POST() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function PUT() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

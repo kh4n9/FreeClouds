@@ -11,14 +11,17 @@ class RateLimiter {
 
   constructor() {
     // Clean up expired entries every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup();
-    }, 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanup();
+      },
+      5 * 60 * 1000,
+    );
   }
 
   private cleanup(): void {
     const now = Date.now();
-    for (const [key, record] of this.cache.entries()) {
+    for (const [key, record] of Array.from(this.cache.entries())) {
       if (now > record.resetTime) {
         this.cache.delete(key);
       }
@@ -96,7 +99,7 @@ export const RATE_LIMITS = {
 
 export function checkRateLimit(
   request: Request,
-  config: { maxRequests: number; windowMs: number }
+  config: { maxRequests: number; windowMs: number },
 ): {
   allowed: boolean;
   remaining: number;
@@ -108,12 +111,12 @@ export function checkRateLimit(
   const allowed = rateLimiter.check(
     identifier,
     config.maxRequests,
-    config.windowMs
+    config.windowMs,
   );
 
   const remaining = rateLimiter.getRemainingRequests(
     identifier,
-    config.maxRequests
+    config.maxRequests,
   );
 
   const resetTime = rateLimiter.getResetTime(identifier);
@@ -127,7 +130,7 @@ export function checkRateLimit(
 
 export function createRateLimitResponse(
   remaining: number,
-  resetTime: number | null
+  resetTime: number | null,
 ): Response {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -137,7 +140,9 @@ export function createRateLimitResponse(
 
   if (resetTime) {
     headers["X-RateLimit-Reset"] = Math.ceil(resetTime / 1000).toString();
-    headers["Retry-After"] = Math.ceil((resetTime - Date.now()) / 1000).toString();
+    headers["Retry-After"] = Math.ceil(
+      (resetTime - Date.now()) / 1000,
+    ).toString();
   }
 
   return new Response(
@@ -149,7 +154,7 @@ export function createRateLimitResponse(
     {
       status: 429,
       headers,
-    }
+    },
   );
 }
 
@@ -157,7 +162,7 @@ export function createRateLimitResponse(
 export async function rateLimit(
   request: Request,
   maxRequests: number,
-  windowMs: number
+  windowMs: number,
 ): Promise<{
   success: boolean;
   retryAfter?: number;
@@ -181,13 +186,13 @@ export async function rateLimit(
 }
 
 // Cleanup on process exit - check if listeners already exist to prevent memory leak
-if (!process.listenerCount('SIGINT')) {
+if (!process.listenerCount("SIGINT")) {
   process.on("SIGINT", () => {
     rateLimiter.destroy();
   });
 }
 
-if (!process.listenerCount('SIGTERM')) {
+if (!process.listenerCount("SIGTERM")) {
   process.on("SIGTERM", () => {
     rateLimiter.destroy();
   });

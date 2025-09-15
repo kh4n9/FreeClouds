@@ -186,7 +186,10 @@ export async function GET(request: NextRequest) {
 
     // Sort stage
     const sortStage: any = {};
-    sortStage[sortBy] = sortOrder === "desc" ? -1 : 1;
+    // Ensure sortBy is a string (zod allows null, so narrow the type here)
+    const sortField =
+      typeof sortBy === "string" && sortBy ? sortBy : "createdAt";
+    sortStage[sortField] = sortOrder === "desc" ? -1 : 1;
     pipeline.push({ $sort: sortStage });
 
     // Count total documents
@@ -295,12 +298,12 @@ export async function DELETE(request: NextRequest) {
     let result: any;
     if (permanent) {
       // Permanent deletion
-      result = await File.deleteMany({
+      result = await (File as any).deleteMany({
         _id: { $in: validFileIds.map((id) => new mongoose.Types.ObjectId(id)) },
       });
     } else {
       // Soft deletion
-      result = await File.updateMany(
+      result = await (File as any).updateMany(
         {
           _id: {
             $in: validFileIds.map((id) => new mongoose.Types.ObjectId(id)),
@@ -379,7 +382,7 @@ export async function PATCH(request: NextRequest) {
     let result: any;
     if (action === "restore") {
       // Restore files
-      result = await File.updateMany(
+      result = await (File as any).updateMany(
         {
           _id: {
             $in: validFileIds.map((id) => new mongoose.Types.ObjectId(id)),

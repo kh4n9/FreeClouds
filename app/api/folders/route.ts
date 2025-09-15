@@ -2,10 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { Folder } from "@/models/Folder";
-import { requireAuth, AuthError, createAuthResponse, validateOrigin, createCsrfError, verifyOwnership } from "@/lib/auth";
+import {
+  requireAuth,
+  AuthError,
+  createAuthResponse,
+  validateOrigin,
+  createCsrfError,
+  verifyOwnership,
+} from "@/lib/auth";
 
 const createFolderSchema = z.object({
-  name: z.string().min(1, "Folder name is required").max(100, "Folder name too long").trim(),
+  name: z
+    .string()
+    .min(1, "Folder name is required")
+    .max(100, "Folder name too long")
+    .trim(),
   parent: z.string().optional().nullable(),
 });
 
@@ -27,12 +38,11 @@ export async function GET(request: NextRequest) {
       parent: searchParams.get("parent"),
     };
 
-
     const validation = querySchema.safeParse(queryParams);
     if (!validation.success) {
       return NextResponse.json(
         { error: "Invalid query parameters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,11 +50,11 @@ export async function GET(request: NextRequest) {
 
     // Verify parent folder ownership if parent is specified
     if (parent && parent !== "null") {
-      const parentFolder = await Folder.findById(parent);
+      const parentFolder = await (Folder as any).findById(parent);
       if (!parentFolder || !(await verifyOwnership(user.id, parentFolder))) {
         return NextResponse.json(
           { error: "Parent folder not found or access denied" },
-          { status: 404 }
+          { status: 404 },
         );
       }
     }
@@ -52,9 +62,16 @@ export async function GET(request: NextRequest) {
     // Get folders by owner and parent
     // If no parent specified, return all folders for tree building
     const hasParentParam = searchParams.has("parent");
-    const finalParentValue = hasParentParam ? (parent === "null" ? null : parent) : undefined;
+    const finalParentValue = hasParentParam
+      ? parent === "null"
+        ? null
+        : parent
+      : undefined;
 
-    const folders = await Folder.findByOwner(user.id, finalParentValue);
+    const folders = await (Folder as any).findByOwner(
+      user.id,
+      finalParentValue,
+    );
 
     return NextResponse.json(folders, { status: 200 });
   } catch (error) {
@@ -66,7 +83,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Failed to get folders" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -92,12 +109,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Invalid input",
-          details: validation.error.errors.map(err => ({
-            field: err.path.join('.'),
+          details: validation.error.errors.map((err) => ({
+            field: err.path.join("."),
             message: err.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -105,17 +122,17 @@ export async function POST(request: NextRequest) {
 
     // Verify parent folder ownership if parent is specified
     if (parent) {
-      const parentFolder = await Folder.findById(parent);
+      const parentFolder = await (Folder as any).findById(parent);
       if (!parentFolder || !(await verifyOwnership(user.id, parentFolder))) {
         return NextResponse.json(
           { error: "Parent folder not found or access denied" },
-          { status: 404 }
+          { status: 404 },
         );
       }
     }
 
     // Check for duplicate folder name in the same parent
-    const existingFolder = await Folder.findOne({
+    const existingFolder = await (Folder as any).findOne({
       owner: user.id,
       parent: parent || null,
       name: name,
@@ -123,8 +140,11 @@ export async function POST(request: NextRequest) {
 
     if (existingFolder) {
       return NextResponse.json(
-        { error: "A folder with this name already exists in the specified location" },
-        { status: 409 }
+        {
+          error:
+            "A folder with this name already exists in the specified location",
+        },
+        { status: 409 },
       );
     }
 
@@ -155,46 +175,43 @@ export async function POST(request: NextRequest) {
 
     // Handle specific MongoDB errors
     if (error instanceof Error) {
-      if (error.message.includes("E11000") || error.message.includes("duplicate key")) {
+      if (
+        error.message.includes("E11000") ||
+        error.message.includes("duplicate key")
+      ) {
         return NextResponse.json(
           { error: "A folder with this name already exists" },
-          { status: 409 }
+          { status: 409 },
         );
       }
 
       if (error.name === "ValidationError") {
         return NextResponse.json(
           { error: "Invalid folder data", details: error.message },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       if (error.message.includes("Circular folder reference")) {
         return NextResponse.json(
           { error: "Cannot create folder: circular reference detected" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
     return NextResponse.json(
       { error: "Failed to create folder" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 // Method not allowed for other HTTP methods
 export async function PUT() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

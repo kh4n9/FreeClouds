@@ -9,7 +9,49 @@ export interface IFile extends Document {
   folder: Types.ObjectId | null;
   deletedAt: Date | null;
   createdAt: Date;
+
+  // Instance methods (typed) so TypeScript recognizes document methods
+  softDelete(): Promise<IFile>;
+  restore(): Promise<IFile>;
+  isDeleted(): boolean;
+  getFolderPath(): Promise<string>;
+  canBeAccessed(userId: string): boolean;
 }
+
+export interface IFileStatics {
+  findByOwner(
+    ownerId: string,
+    options?: {
+      folderId?: string | null;
+      includeDeleted?: boolean;
+      search?: string;
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<IFile[]>;
+  findByOwnerWithCount(
+    ownerId: string,
+    options?: {
+      folderId?: string | null;
+      includeDeleted?: boolean;
+      search?: string;
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<{
+    files: IFile[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>;
+  getStorageUsage(
+    ownerId: string,
+  ): Promise<{ totalSize: number; totalFiles: number }>;
+  findDuplicates(ownerId: string): Promise<any[]>;
+}
+
+export interface IFileModel extends mongoose.Model<IFile>, IFileStatics {}
 
 const fileSchema = new Schema<IFile>({
   name: {
@@ -38,10 +80,7 @@ const fileSchema = new Schema<IFile>({
     required: [true, "MIME type is required"],
     trim: true,
     lowercase: true,
-    match: [
-      /^[a-z]+\/[a-z0-9\-\+\.]+$/i,
-      "Invalid MIME type format",
-    ],
+    match: [/^[a-z]+\/[a-z0-9\-\+\.]+$/i, "Invalid MIME type format"],
   },
   fileId: {
     type: String,
@@ -79,8 +118,8 @@ fileSchema.index({ createdAt: -1 });
 fileSchema.index({ deletedAt: 1, createdAt: -1 });
 
 // Virtual for id
-fileSchema.virtual("id").get(function () {
-  return this._id.toHexString();
+fileSchema.virtual("id").get(function (this: IFile) {
+  return (this._id as Types.ObjectId).toHexString();
 });
 
 // Virtual for formatted size
@@ -103,9 +142,10 @@ fileSchema.virtual("nameWithoutExtension").get(function () {
 // Ensure virtual fields are serialized
 fileSchema.set("toJSON", {
   virtuals: true,
-  transform: function (doc, ret) {
-    delete ret._id;
-    delete ret.__v;
+  transform: function (doc: any, ret: any) {
+    // explicit any to satisfy TypeScript and allow safe deletions
+    delete (ret as any)._id;
+    delete (ret as any).__v;
     return ret;
   },
 });
@@ -151,7 +191,7 @@ fileSchema.statics.findByOwner = function (
     search?: string;
     page?: number;
     limit?: number;
-  } = {}
+  } = {},
 ) {
   const {
     folderId,
@@ -195,7 +235,7 @@ fileSchema.statics.findByOwnerWithCount = async function (
     search?: string;
     page?: number;
     limit?: number;
-  } = {}
+  } = {},
 ) {
   const {
     folderId,
@@ -220,7 +260,7 @@ fileSchema.statics.findByOwnerWithCount = async function (
   }
 
   const [files, total] = await Promise.all([
-    this.findByOwner(ownerId, options),
+    (this as any).findByOwner(ownerId, options),
     this.countDocuments(query),
   ]);
 
@@ -318,4 +358,6 @@ function formatFileSize(bytes: number): string {
   return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
 }
 
-export const File = mongoose.models.File || mongoose.model<IFile>("File", fileSchema);
+export const File =
+  (mongoose.models.File as unknown as IFileModel) ||
+  (mongoose.model<IFile, IFileModel>("File", fileSchema) as IFileModel);

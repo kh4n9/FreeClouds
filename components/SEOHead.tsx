@@ -50,15 +50,15 @@ export default function SEOHead({
   hreflangLinks = [],
 }: SEOHeadProps) {
   const metadata = generateMetadata({
-    language,
-    page,
-    title,
-    description,
-    keywords,
-    image,
-    url,
-    noIndex,
-    canonical,
+    language: language ?? "en",
+    page: (page ?? "home") as any,
+    title: title ?? "",
+    description: description ?? "",
+    keywords: keywords ?? [],
+    image: image ?? `${BASE_URL}/logo-with-text.png`,
+    url: url ?? BASE_URL,
+    noIndex: !!noIndex,
+    canonical: canonical ?? url ?? BASE_URL,
   });
 
   const webAppStructuredData = generateWebApplicationStructuredData(language);
@@ -95,7 +95,7 @@ export default function SEOHead({
     <>
       <Head>
         {/* Primary Meta Tags */}
-        <title>{metadata.title}</title>
+        <title>{metadata.title as any}</title>
         <meta name="title" content={metadata.title as string} />
         <meta name="description" content={metadata.description as string} />
         <meta

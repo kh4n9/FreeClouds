@@ -3,9 +3,26 @@ import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import { Folder } from "@/models/Folder";
-import { requireAuth, AuthError, createAuthResponse, validateOrigin, createCsrfError, verifyOwnership } from "@/lib/auth";
-import { checkRateLimit, createRateLimitResponse, RATE_LIMITS } from "@/lib/ratelimit";
-import { telegramAPI, isAllowedFileType, validateFileName, sanitizeFileName, TELEGRAM_FILE_SIZE_LIMIT } from "@/lib/telegram";
+import {
+  requireAuth,
+  AuthError,
+  createAuthResponse,
+  validateOrigin,
+  createCsrfError,
+  verifyOwnership,
+} from "@/lib/auth";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  RATE_LIMITS,
+} from "@/lib/ratelimit";
+import {
+  telegramAPI,
+  isAllowedFileType,
+  validateFileName,
+  sanitizeFileName,
+  TELEGRAM_FILE_SIZE_LIMIT,
+} from "@/lib/telegram";
 
 const uploadSchema = z.object({
   folderId: z.string().optional().nullable(),
@@ -37,10 +54,7 @@ export async function POST(request: NextRequest) {
 
     // Validate file presence
     if (!file) {
-      return NextResponse.json(
-        { error: "No file provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     // Validate folder ID if provided
@@ -50,7 +64,7 @@ export async function POST(request: NextRequest) {
       if (!validation.success) {
         return NextResponse.json(
           { error: "Invalid folder ID" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       folderId = validation.data.folderId || null;
@@ -58,11 +72,11 @@ export async function POST(request: NextRequest) {
 
     // Verify folder ownership if folderId is provided
     if (folderId) {
-      const folder = await Folder.findById(folderId);
+      const folder = await (Folder as any).findById(folderId);
       if (!folder || !(await verifyOwnership(user.id, folder))) {
         return NextResponse.json(
           { error: "Folder not found or access denied" },
-          { status: 404 }
+          { status: 404 },
         );
       }
     }
@@ -70,15 +84,17 @@ export async function POST(request: NextRequest) {
     // Validate file size
     if (file.size > TELEGRAM_FILE_SIZE_LIMIT) {
       return NextResponse.json(
-        { error: `File size exceeds maximum limit (${Math.round(TELEGRAM_FILE_SIZE_LIMIT / (1024 * 1024))}MB)` },
-        { status: 413 }
+        {
+          error: `File size exceeds maximum limit (${Math.round(TELEGRAM_FILE_SIZE_LIMIT / (1024 * 1024))}MB)`,
+        },
+        { status: 413 },
       );
     }
 
     if (file.size === 0) {
       return NextResponse.json(
         { error: "Empty file not allowed" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -93,12 +109,12 @@ export async function POST(request: NextRequest) {
     if (!isAllowedFileType(mimeType, fileName)) {
       return NextResponse.json(
         { error: "File type not allowed for security reasons" },
-        { status: 415 }
+        { status: 415 },
       );
     }
 
     // Check for duplicate file name in the same folder
-    const existingFile = await File.findOne({
+    const existingFile = await (File as any).findOne({
       owner: user.id,
       folder: folderId,
       name: fileName,
@@ -120,17 +136,21 @@ export async function POST(request: NextRequest) {
     // Upload to Telegram
     let telegramResponse;
     try {
-      telegramResponse = await telegramAPI.sendDocument(buffer, fileName, mimeType);
+      telegramResponse = await telegramAPI.sendDocument(
+        buffer,
+        fileName,
+        mimeType,
+      );
     } catch (error) {
       console.error("Telegram upload failed:", error);
       return NextResponse.json(
         { error: "File upload failed. Please try again." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     // Save file metadata to database
-    const fileRecord = new File({
+    const fileRecord = new (File as any)({
       name: fileName,
       size: file.size,
       mime: mimeType,
@@ -164,36 +184,27 @@ export async function POST(request: NextRequest) {
       if (error.name === "ValidationError") {
         return NextResponse.json(
           { error: "Invalid file data", details: error.message },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
     return NextResponse.json(
       { error: "Upload failed. Please try again." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 // Method not allowed for other HTTP methods
 export async function GET() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function PUT() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

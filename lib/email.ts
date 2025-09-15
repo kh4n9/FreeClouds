@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 interface EmailOptions {
   to: string;
@@ -10,14 +10,14 @@ interface EmailOptions {
 interface VerificationCodeData {
   email: string;
   code: string;
-  type: 'password_reset' | 'account_deletion';
+  type: "password_reset" | "account_deletion";
   expiresAt: Date;
 }
 
 // Create transporter for Gmail
 const createTransporter = () => {
   return nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS, // App password, not regular password
@@ -37,8 +37,8 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 
     const mailOptions = {
       from: {
-        name: 'Free Clouds',
-        address: process.env.EMAIL_USER || '',
+        name: "Free Clouds",
+        address: process.env.EMAIL_USER || "",
       },
       to: options.to,
       subject: options.subject,
@@ -47,17 +47,20 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', result.messageId);
+    console.log("Email sent successfully:", result.messageId);
     return true;
   } catch (error) {
-    console.error('Failed to send email:', error);
+    console.error("Failed to send email:", error);
     return false;
   }
 }
 
 // Send password reset email
-export async function sendPasswordResetEmail(email: string, code: string): Promise<boolean> {
-  const subject = 'Mã đặt lại mật khẩu Free Clouds';
+export async function sendPasswordResetEmail(
+  email: string,
+  code: string,
+): Promise<boolean> {
+  const subject = "Mã đặt lại mật khẩu Free Clouds";
 
   const html = `
     <!DOCTYPE html>
@@ -217,8 +220,11 @@ export async function sendPasswordResetEmail(email: string, code: string): Promi
 }
 
 // Send account deletion confirmation email
-export async function sendAccountDeletionEmail(email: string, code: string): Promise<boolean> {
-  const subject = 'Xác nhận xóa tài khoản Free Clouds';
+export async function sendAccountDeletionEmail(
+  email: string,
+  code: string,
+): Promise<boolean> {
+  const subject = "Xác nhận xóa tài khoản Free Clouds";
 
   const html = `
     <!DOCTYPE html>
@@ -399,7 +405,7 @@ export function isValidEmail(email: string): boolean {
 
 // Check if email is from Gmail (optional additional validation)
 export function isGmailAddress(email: string): boolean {
-  return email.toLowerCase().endsWith('@gmail.com');
+  return email.toLowerCase().endsWith("@gmail.com");
 }
 
-export { VerificationCodeData };
+export type { VerificationCodeData };
