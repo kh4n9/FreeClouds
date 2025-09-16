@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronRight,
   ChevronDown,
@@ -62,7 +62,7 @@ function FolderItem({
     if (isSelected) return true;
 
     const checkChildren = (children: FolderData[]): boolean => {
-      return children.some(child => {
+      return children.some((child) => {
         if (child.id === selectedFolderId) return true;
         if (child.children && child.children.length > 0) {
           return checkChildren(child.children);
@@ -268,7 +268,70 @@ export default function FolderTree({
     x: number;
     y: number;
     show: boolean;
-  }>({ x: 0, y: 0, show: false });
+  }>({
+    x: 0,
+    y: 0,
+    show: false,
+  });
+
+  // Sidebar resize state and refs
+  const defaultWidth = 320; // default width in px (larger default)
+  const minWidth = 200;
+  const maxWidth = 640;
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    if (typeof window === "undefined") return defaultWidth;
+    try {
+      const stored = localStorage.getItem("folderSidebarWidth");
+      return stored
+        ? Math.min(maxWidth, Math.max(minWidth, parseInt(stored, 10)))
+        : defaultWidth;
+    } catch {
+      return defaultWidth;
+    }
+  });
+
+  const resizingRef = useRef(false);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(sidebarWidth);
+
+  // persist width and keep startWidthRef in sync
+  useEffect(() => {
+    startWidthRef.current = sidebarWidth;
+    try {
+      localStorage.setItem("folderSidebarWidth", String(sidebarWidth));
+    } catch {}
+  }, [sidebarWidth]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    resizingRef.current = true;
+    startXRef.current = e.clientX;
+    startWidthRef.current = sidebarWidth;
+    document.body.style.userSelect = "none";
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!resizingRef.current) return;
+      const dx = e.clientX - startXRef.current;
+      let newWidth = Math.round(startWidthRef.current + dx);
+      if (newWidth < minWidth) newWidth = minWidth;
+      if (newWidth > maxWidth) newWidth = maxWidth;
+      setSidebarWidth(newWidth);
+    };
+    const handleMouseUp = () => {
+      if (resizingRef.current) {
+        resizingRef.current = false;
+        document.body.style.userSelect = "";
+      }
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
 
   // Build folder tree structure
   const buildTree = (folders: FolderData[]): FolderData[] => {
@@ -331,7 +394,10 @@ export default function FolderTree({
 
   if (loading) {
     return (
-      <div className="w-64 bg-gray-50 border-r border-gray-200 p-4">
+      <div
+        className="bg-gray-50 border-r border-gray-200 p-4"
+        style={{ width: sidebarWidth }}
+      >
         <div className="animate-pulse">
           <div className="h-4 bg-gray-200 rounded mb-3"></div>
           <div className="space-y-2">
@@ -345,7 +411,10 @@ export default function FolderTree({
   }
 
   return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
+    <div
+      className="bg-gray-50 border-r border-gray-200 flex flex-col relative"
+      style={{ width: sidebarWidth }}
+    >
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between mb-2">
@@ -372,6 +441,14 @@ export default function FolderTree({
           </div>
         </div>
       </div>
+
+      {/* Resize Handle - draggable area on the right edge */}
+      <div
+        onMouseDown={handleMouseDown}
+        className="absolute right-0 top-0 h-full w-2 cursor-col-resize"
+        style={{ touchAction: "none" }}
+        aria-hidden="true"
+      />
 
       {/* Folder Tree */}
       <div

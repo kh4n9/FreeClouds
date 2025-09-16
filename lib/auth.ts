@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { connectToDatabase } from "./db";
 import { verifyJwt, extractTokenFromRequest, JwtPayload } from "./jwt";
 import { User } from "@/models/User";
+import { env } from "./env";
 
 export interface AuthUser {
   id: string;
@@ -87,9 +88,7 @@ export function validateOrigin(request: NextRequest): boolean {
     return true;
   }
 
-  const allowedOrigins = [
-    process.env.ALLOWED_ORIGIN || "http://localhost:3000",
-  ];
+  const allowedOrigins = [env.ALLOWED_ORIGIN];
 
   if (origin && allowedOrigins.includes(origin)) {
     return true;
