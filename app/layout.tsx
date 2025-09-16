@@ -1,37 +1,42 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
-import { generateMetadata as generateSEOMetadata, generateWebApplicationStructuredData, generateOrganizationStructuredData } from "@/lib/seo/utils";
+import {
+  generateMetadata as generateSEOMetadata,
+  generateWebApplicationStructuredData,
+  generateOrganizationStructuredData,
+} from "@/lib/seo/utils";
 import "../styles/globals.css";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
 export const metadata: Metadata = generateSEOMetadata({
-  language: 'en',
-  title: 'Free Clouds - Secure Cloud Storage & File Sharing Platform',
-  description: 'Free secure cloud storage powered by Telegram. Upload, organize, and share your files with enterprise-grade security. 50MB file limit, unlimited folders, blazing-fast access, and cross-platform compatibility.',
+  language: "en",
+  title: "Free Clouds - Secure Cloud Storage & File Sharing Platform",
+  description:
+    "Free secure cloud storage powered by Telegram. Upload, organize, and share your files with enterprise-grade security. 50MB file limit, unlimited folders, blazing-fast access, and cross-platform compatibility.",
   keywords: [
-    'cloud storage',
-    'file sharing',
-    'free storage',
-    'telegram storage',
-    'secure file upload',
-    'online storage',
-    'file management',
-    'cloud backup',
-    'file organization',
-    'digital storage',
-    'remote access',
-    'file sync',
-    'data storage',
-    'document storage',
-    'photo storage',
-    'video storage',
-    'file hosting',
-    'cloud drive',
-    'online backup',
-    'file security'
-  ]
+    "cloud storage",
+    "file sharing",
+    "free storage",
+    "telegram storage",
+    "secure file upload",
+    "online storage",
+    "file management",
+    "cloud backup",
+    "file organization",
+    "digital storage",
+    "remote access",
+    "file sync",
+    "data storage",
+    "document storage",
+    "photo storage",
+    "video storage",
+    "file hosting",
+    "cloud drive",
+    "online backup",
+    "file security",
+  ],
 });
 
 export const viewport = {
@@ -47,7 +52,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const webAppStructuredData = generateWebApplicationStructuredData('en');
+  const webAppStructuredData = generateWebApplicationStructuredData("en");
   const organizationStructuredData = generateOrganizationStructuredData();
 
   return (
@@ -68,13 +73,29 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
 
         {/* Language alternatives */}
-        <link rel="alternate" href="https://free-clouds.vercel.app/" hrefLang="x-default" />
-        <link rel="alternate" href="https://free-clouds.vercel.app/en" hrefLang="en" />
-        <link rel="alternate" href="https://free-clouds.vercel.app/vi" hrefLang="vi" />
+        <link
+          rel="alternate"
+          href="https://free-clouds.vercel.app/"
+          hrefLang="x-default"
+        />
+        <link
+          rel="alternate"
+          href="https://free-clouds.vercel.app/en"
+          hrefLang="en"
+        />
+        <link
+          rel="alternate"
+          href="https://free-clouds.vercel.app/vi"
+          hrefLang="vi"
+        />
 
         {/* Preconnect to external domains */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
 
         {/* DNS prefetch for performance */}
         <link rel="dns-prefetch" href="//api.telegram.org" />
@@ -86,7 +107,7 @@ export default function RootLayout({
           type="application/ld+json"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(webAppStructuredData)
+            __html: JSON.stringify(webAppStructuredData),
           }}
         />
 
@@ -96,7 +117,7 @@ export default function RootLayout({
           type="application/ld+json"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationStructuredData)
+            __html: JSON.stringify(organizationStructuredData),
           }}
         />
       </head>

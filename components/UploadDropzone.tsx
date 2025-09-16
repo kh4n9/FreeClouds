@@ -88,6 +88,7 @@ function validateFile(
 export default function UploadDropzone({
   onUpload,
   folderId = null,
+  // Default client-side max file size (50MB)
   maxFileSize = 50 * 1024 * 1024, // 50MB default
   acceptedFileTypes = [],
   multiple = true,

@@ -13,7 +13,7 @@ Free Clouds features a comprehensive file preview system that allows users to vi
 - **Features**: 
   - Zoom controls (25% - 300%)
   - Rotation (90° increments)
-  - High-quality preview up to 50MB
+  - High-quality preview up to 50MB for images
   - Thumbnail generation in file grid
   - Animated GIF support
 

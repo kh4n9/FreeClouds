@@ -6,7 +6,11 @@ import Image from "next/image";
 import Head from "next/head";
 import Script from "next/script";
 import Footer from "../../components/Footer";
-import { generateMetadata, generateWebApplicationStructuredData, generateBreadcrumbs } from "@/lib/seo/utils";
+import {
+  generateMetadata,
+  generateWebApplicationStructuredData,
+  generateBreadcrumbs,
+} from "@/lib/seo/utils";
 import { BASE_URL } from "@/lib/seo/config";
 
 interface User {
@@ -51,9 +55,9 @@ export default function VietnameseHomePage() {
     return null;
   }
 
-  const structuredData = generateWebApplicationStructuredData('vi');
+  const structuredData = generateWebApplicationStructuredData("vi");
   const breadcrumbData = generateBreadcrumbs([
-    { name: 'Trang Chủ', url: '/vi' }
+    { name: "Trang Chủ", url: "/vi" },
   ]);
 
   return (
@@ -61,18 +65,27 @@ export default function VietnameseHomePage() {
       {/* Enhanced SEO Head */}
       <Head>
         <title>Free Clouds - Lưu Trữ Đám Mây An Toàn & Chia Sẻ File</title>
-        <meta name="description" content="Lưu trữ đám mây miễn phí và bảo mật được hỗ trợ bởi Telegram. Tải lên, tổ chức và chia sẻ file với bảo mật cấp doanh nghiệp. Giới hạn file 50MB, thư mục không giới hạn." />
-        <meta name="keywords" content="lưu trữ đám mây, chia sẻ file, lưu trữ miễn phí, telegram storage, tải file an toàn, lưu trữ trực tuyến, quản lý file, sao lưu đám mây" />
+        <meta
+          name="description"
+          content="Lưu trữ đám mây miễn phí và bảo mật được hỗ trợ bởi Telegram. Tải lên, tổ chức và chia sẻ file với bảo mật cấp doanh nghiệp. Giới hạn file 50MB, thư mục không giới hạn."
+        />
+        <meta
+          name="keywords"
+          content="lưu trữ đám mây, chia sẻ file, lưu trữ miễn phí, telegram storage, tải file an toàn, lưu trữ trực tuyến, quản lý file, sao lưu đám mây"
+        />
         <link rel="canonical" href={`${BASE_URL}/vi`} />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="Free Clouds - Lưu Trữ Đám Mây An Toàn & Chia Sẻ File" />
-        <meta property="og:description" content="Lưu trữ đám mây miễn phí và bảo mật được hỗ trợ bởi Telegram. Tải lên, tổ chức và chia sẻ file với bảo mật cấp doanh nghiệp." />
+        <meta
+          property="og:title"
+          content="Free Clouds - Lưu Trữ Đám Mây An Toàn & Chia Sẻ File"
+        />
+        <meta
+          property="og:description"
+          content="Lưu trữ đám mây miễn phí và bảo mật được hỗ trợ bởi Telegram. Tải lên, tổ chức và chia sẻ file với bảo mật cấp doanh nghiệp."
+        />
         <meta property="og:url" content={`${BASE_URL}/vi`} />
         <meta property="og:image" content={`${BASE_URL}/logo-with-text.png`} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Free Clouds - Lưu Trữ Đám Mây An Toàn & Chia Sẻ File" />
-        <meta name="twitter:description" content="Lưu trữ đám mây miễn phí và bảo mật được hỗ trợ bởi Telegram. Tải lên, tổ chức và chia sẻ file với bảo mật cấp doanh nghiệp." />
-        <meta name="twitter:image" content={`${BASE_URL}/logo-with-text.png`} />
       </Head>
 
       {/* Structured Data */}
@@ -80,7 +93,7 @@ export default function VietnameseHomePage() {
         id="homepage-structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([structuredData, breadcrumbData])
+          __html: JSON.stringify([structuredData, breadcrumbData]),
         }}
       />
 
@@ -98,9 +111,15 @@ export default function VietnameseHomePage() {
                   className="h-8 w-8"
                   priority
                 />
-                <h1 className="text-2xl font-bold text-gray-900">Free Clouds</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Free Clouds
+                </h1>
               </div>
-              <nav className="flex items-center gap-4" role="navigation" aria-label="Điều hướng chính">
+              <nav
+                className="flex items-center gap-4"
+                role="navigation"
+                aria-label="Điều hướng chính"
+              >
                 <a
                   href="/vi/login"
                   className="text-gray-600 hover:text-gray-900 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-3 py-2"
@@ -121,7 +140,10 @@ export default function VietnameseHomePage() {
         </header>
 
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-20" role="main">
+        <section
+          className="bg-gradient-to-br from-blue-50 to-indigo-100 py-20"
+          role="main"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
@@ -129,8 +151,9 @@ export default function VietnameseHomePage() {
                 <span className="text-blue-600"> Mọi Nơi</span>
               </h2>
               <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                Lưu trữ, tổ chức và truy cập file của bạn một cách an toàn trên đám mây.
-                Được hỗ trợ bởi hạ tầng mạnh mẽ của Telegram với bảo mật cấp doanh nghiệp.
+                Lưu trữ, tổ chức và truy cập file của bạn một cách an toàn trên
+                đám mây. Được hỗ trợ bởi hạ tầng mạnh mẽ của Telegram với bảo
+                mật cấp doanh nghiệp.
                 <span className="block mt-2 text-lg">
                   🇻🇳 <em>Made in Vietnam - Sản phẩm Việt Nam</em>
                 </span>
@@ -157,60 +180,79 @@ export default function VietnameseHomePage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-20 bg-white" aria-labelledby="features-heading">
+        <section
+          id="features"
+          className="py-20 bg-white"
+          aria-labelledby="features-heading"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 id="features-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              <h2
+                id="features-heading"
+                className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+              >
                 Mọi thứ bạn cần để lưu trữ file
               </h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Lưu trữ đám mây đơn giản, an toàn và đáng tin cậy với đầy đủ tính năng bạn mong đợi.
+                Lưu trữ đám mây đơn giản, an toàn và đáng tin cậy với đầy đủ
+                tính năng bạn mong đợi.
                 <span className="block mt-2 text-lg text-gray-500">
-                  <em>Simple, secure, and reliable cloud storage with all the features you expect</em>
+                  <em>
+                    Simple, secure, and reliable cloud storage with all the
+                    features you expect
+                  </em>
                 </span>
               </p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
               <article className="text-center p-6">
-                <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+                <div
+                  className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  aria-hidden="true"
+                >
                   <Shield className="w-8 h-8 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   Bảo Mật & Riêng Tư
                 </h3>
                 <p className="text-gray-600 mb-2">
-                  File của bạn được mã hóa và lưu trữ an toàn. Chỉ bạn mới có quyền truy cập dữ liệu của mình.
+                  File của bạn được mã hóa và lưu trữ an toàn. Chỉ bạn mới có
+                  quyền truy cập dữ liệu của mình.
                 </p>
-                <p className="text-sm text-gray-500 italic">
-                  Secure & Private
-                </p>
+                <p className="text-sm text-gray-500 italic">Secure & Private</p>
               </article>
 
               <article className="text-center p-6">
-                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+                <div
+                  className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  aria-hidden="true"
+                >
                   <Zap className="w-8 h-8 text-green-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   Tốc Độ Nhanh Chóng
                 </h3>
                 <p className="text-gray-600 mb-2">
-                  Tải lên và tải xuống file với tốc độ nhanh như chớp nhờ hạ tầng được tối ưu hóa.
+                  Tải lên và tải xuống file với tốc độ nhanh như chớp nhờ hạ
+                  tầng được tối ưu hóa.
                 </p>
-                <p className="text-sm text-gray-500 italic">
-                  Lightning Fast
-                </p>
+                <p className="text-sm text-gray-500 italic">Lightning Fast</p>
               </article>
 
               <article className="text-center p-6">
-                <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+                <div
+                  className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  aria-hidden="true"
+                >
                   <Users className="w-8 h-8 text-purple-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   Tổ Chức Dễ Dàng
                 </h3>
                 <p className="text-gray-600 mb-2">
-                  Tổ chức file với thư mục và tìm kiếm những gì bạn cần một cách nhanh chóng.
+                  Tổ chức file với thư mục và tìm kiếm những gì bạn cần một cách
+                  nhanh chóng.
                 </p>
                 <p className="text-sm text-gray-500 italic">
                   Easy Organization
@@ -224,7 +266,10 @@ export default function VietnameseHomePage() {
         <section className="py-20 bg-gray-50" aria-labelledby="pricing-heading">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 id="pricing-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              <h2
+                id="pricing-heading"
+                className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+              >
                 Giá cả đơn giản, minh bạch
               </h2>
               <p className="text-xl text-gray-600 mb-2">
@@ -238,34 +283,35 @@ export default function VietnameseHomePage() {
             <div className="bg-white rounded-2xl shadow-lg p-8 border-2 border-blue-600">
               <div className="text-center">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  Gói Miễn Phí <span className="text-lg text-gray-500">/ Free Plan</span>
+                  Gói Miễn Phí{" "}
+                  <span className="text-lg text-gray-500">/ Free Plan</span>
                 </h3>
                 <div className="text-4xl font-bold text-blue-600 mb-6">
                   0₫<span className="text-lg text-gray-500">/tháng</span>
                 </div>
 
-              <ul className="space-y-4 mb-8 text-left max-w-sm mx-auto">
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Giới hạn file 50MB</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Thư mục không giới hạn</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Lưu trữ file an toàn</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Tổ chức file</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Chức năng tìm kiếm</span>
-                </li>
-              </ul>
+                <ul className="space-y-4 mb-8 text-left max-w-sm mx-auto">
+                  <li className="flex items-center gap-3">
+                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    <span>Giới hạn file 50MB</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    <span>Thư mục không giới hạn</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    <span>Lưu trữ file an toàn</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    <span>Tổ chức file</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    <span>Chức năng tìm kiếm</span>
+                  </li>
+                </ul>
 
                 <a
                   href="/vi/register"
@@ -282,11 +328,15 @@ export default function VietnameseHomePage() {
         {/* CTA Section */}
         <section className="py-20 bg-blue-600" aria-labelledby="cta-heading">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2
+              id="cta-heading"
+              className="text-3xl md:text-4xl font-bold text-white mb-4"
+            >
               Sẵn sàng bắt đầu?
             </h2>
             <p className="text-xl text-blue-100 mb-4">
-              Tham gia cùng hàng nghìn người dùng tin tưởng Free Clouds với file của họ.
+              Tham gia cùng hàng nghìn người dùng tin tưởng Free Clouds với file
+              của họ.
             </p>
             <p className="text-lg text-blue-200 mb-8 italic">
               Join thousands of users who trust Free Clouds with their files

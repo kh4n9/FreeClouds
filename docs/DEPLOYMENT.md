@@ -18,7 +18,7 @@ This guide provides comprehensive instructions for deploying Free Clouds to vari
 - **Node.js**: 18.0 or higher
 - **npm**: 8.0 or higher (or yarn 1.22+)
 - **MongoDB**: 5.0 or higher
-- **Memory**: Minimum 512MB RAM (2GB+ recommended)
+- **Memory**: Minimum 512MB RAM (1GB+ recommended)
 - **Storage**: 1GB+ available space
 
 ### Required Services

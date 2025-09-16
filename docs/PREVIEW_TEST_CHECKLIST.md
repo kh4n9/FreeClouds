@@ -312,7 +312,7 @@ This document provides a comprehensive testing checklist for the Free Clouds pre
 - [ ] **Small files** (<1MB) load instantly
 - [ ] **Medium files** (1-10MB) load within 3 seconds
 - [ ] **Large files** (10-50MB) show progress indicator
-- [ ] **Very large files** (>50MB) handle gracefully
+- [ ] **Very large files** (>50MB) handled gracefully (show clear error or fallback)
 
 ### Memory Usage
 - [ ] **Multiple previews** don't cause memory leaks
