@@ -70,6 +70,9 @@ interface FileItemProps {
   onDownload: (fileId: string, fileName: string) => void;
   onDelete: (fileId: string) => void;
   onPreview: (file: FileData) => void;
+  // New props for bulk selection support
+  selected?: boolean;
+  onToggleSelect?: (fileId: string) => void;
 }
 
 function getFileIcon(fileName: string, mimeType: string) {
@@ -129,6 +132,8 @@ function FileItem({
   onDownload,
   onDelete,
   onPreview,
+  selected = false,
+  onToggleSelect,
 }: FileItemProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -156,6 +161,13 @@ function FileItem({
 
   const handlePreview = () => {
     onPreview(file);
+  };
+
+  const handleCheckboxClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (onToggleSelect) {
+      onToggleSelect(file.id);
+    }
   };
 
   // Load image thumbnail automatically for images
@@ -207,6 +219,19 @@ function FileItem({
           className={`group relative border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer ${getFileTypeColorClasses(file.name, file.mime)}`}
           onClick={handlePreview}
         >
+          {/* Selection checkbox (top-left) */}
+          <div className="absolute top-2 left-2 z-20">
+            <input
+              type="checkbox"
+              checked={!!selected}
+              onClick={handleCheckboxClick}
+              onChange={() => {}}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              title="Select file"
+              aria-label={`Select ${file.name}`}
+            />
+          </div>
+
           {/* File Icon or Image Preview */}
           <div className="flex justify-center mb-3 relative">
             {isImage && imageUrl ? (
@@ -332,6 +357,22 @@ function FileItem({
         className={`group flex items-center gap-3 p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer`}
         onClick={handlePreview}
       >
+        {/* Selection checkbox */}
+        <div className="flex-shrink-0 mr-2">
+          <input
+            type="checkbox"
+            checked={!!selected}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCheckboxClick(e as any);
+            }}
+            onChange={() => {}}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            title="Select file"
+            aria-label={`Select ${file.name}`}
+          />
+        </div>
+
         {/* File Icon or Image Thumbnail */}
         <div className="flex-shrink-0 relative">
           {isImage && imageUrl ? (
@@ -446,6 +487,185 @@ export default function FileGrid({
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+
+  // Bulk selection state
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  // Download / progress state for bulk archive creation
+  const [downloading, setDownloading] = useState(false);
+  const [progressVisible, setProgressVisible] = useState(false);
+  const [progressMessage, setProgressMessage] = useState("");
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+  const [downloadedBytes, setDownloadedBytes] = useState(0);
+  const [downloadTotalBytes, setDownloadTotalBytes] = useState<number | null>(
+    null,
+  );
+
+  const handleSelectFile = (fileId: string) => {
+    setSelectedFiles((prev) =>
+      prev.includes(fileId)
+        ? prev.filter((id) => id !== fileId)
+        : [...prev, fileId],
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedFiles.length === files.length) {
+      setSelectedFiles([]);
+    } else {
+      setSelectedFiles(files.map((f) => f.id));
+    }
+  };
+
+  const handleBulkDownload = async () => {
+    if (selectedFiles.length === 0) return;
+
+    setDownloading(true);
+    setProgressVisible(true);
+    setProgressMessage("Preparing archive...");
+    setDownloadProgress(null);
+    setDownloadedBytes(0);
+    setDownloadTotalBytes(null);
+
+    // Compute estimated total using per-file sizes (metadata available in `files`)
+    const selectedMeta = files.filter((f) => selectedFiles.includes(f.id));
+    const estimatedTotal =
+      selectedMeta.reduce((s, f) => s + (f.size || 0), 0) || 1;
+    const overhead = selectedMeta.length * 1024 * 10; // ~10KB overhead per file for zip metadata
+    const estimatedTotalWithOverhead = estimatedTotal + overhead;
+
+    // Use estimated total as initial displayed total while server may not provide content-length
+    setDownloadTotalBytes(estimatedTotalWithOverhead);
+
+    try {
+      const response = await fetch("/api/files/bulk-download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileIds: selectedFiles }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        alert(data.error || "Failed to create archive");
+        setProgressVisible(false);
+        setDownloading(false);
+        return;
+      }
+
+      // Server accepted request; update message
+      setProgressMessage("Server is compressing files...");
+
+      const contentLengthHeader = response.headers.get("content-length");
+      const serverTotal = contentLengthHeader
+        ? parseInt(contentLengthHeader, 10)
+        : null;
+
+      // If server provides a content-length, prefer it as the authoritative total.
+      // Otherwise we'll continue to use our estimated total.
+      const effectiveTotal =
+        serverTotal && !isNaN(serverTotal)
+          ? serverTotal
+          : estimatedTotalWithOverhead;
+
+      if (serverTotal && !isNaN(serverTotal)) {
+        setDownloadTotalBytes(serverTotal);
+      } else {
+        // keep the estimated total shown
+        setDownloadTotalBytes(estimatedTotalWithOverhead);
+      }
+
+      // Stream the response body to show progress while downloading the zip
+      if (!response.body) {
+        // Fallback: read blob at once
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `files-${new Date().toISOString().split("T")[0]}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        setSelectedFiles([]);
+        setProgressVisible(false);
+        setDownloading(false);
+        return;
+      }
+
+      setProgressMessage("Downloading archive...");
+
+      const reader = response.body.getReader();
+      const chunks: Uint8Array[] = [];
+      let received = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          chunks.push(value);
+          received += value.length;
+          setDownloadedBytes(received);
+
+          // Use effectiveTotal (serverTotal if available, otherwise estimatedTotalWithOverhead)
+          if (effectiveTotal && effectiveTotal > 0) {
+            const percent = Math.round((received / effectiveTotal) * 100);
+            setDownloadProgress(Math.min(100, percent));
+            if (serverTotal && !isNaN(serverTotal)) {
+              setProgressMessage(`Downloading archive... ${percent}%`);
+            } else {
+              // indicate this is an estimate based on file sizes
+              setProgressMessage(
+                `Downloading archive... ${percent}% (estimated)`,
+              );
+            }
+          } else {
+            // Shouldn't happen because we set estimated total, but fallback anyway
+            setDownloadProgress(null);
+            setProgressMessage(
+              `Downloading archive... (${(received / 1024 / 1024).toFixed(2)} MB received)`,
+            );
+          }
+        }
+      }
+
+      // Combine chunks into a blob
+      // Combine chunks into a single Uint8Array and create a Blob from its ArrayBuffer.
+      // This avoids passing SharedArrayBuffer values directly into the Blob constructor
+      // which can cause type incompatibilities in strict TypeScript configurations.
+      const combinedArray = new Uint8Array(received);
+      let offset = 0;
+      for (const chunk of chunks) {
+        combinedArray.set(chunk, offset);
+        offset += chunk.length;
+      }
+      const combined = new Blob([combinedArray.buffer], {
+        type: response.headers.get("content-type") || "application/zip",
+      });
+      const url = URL.createObjectURL(combined);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `files-${new Date().toISOString().split("T")[0]}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setSelectedFiles([]);
+      setProgressVisible(false);
+    } catch (err) {
+      console.error("Bulk download failed:", err);
+      alert("Bulk download failed");
+      setProgressVisible(false);
+    } finally {
+      setDownloading(false);
+      // reset progress after a short delay so the UI doesn't flicker
+      setTimeout(() => {
+        setDownloadProgress(null);
+        setDownloadedBytes(0);
+        setDownloadTotalBytes(null);
+      }, 400);
+    }
+  };
 
   // Debounced search
   useEffect(() => {
@@ -613,31 +833,57 @@ export default function FileGrid({
             )}
           </div>
 
-          {/* View Mode Toggle */}
+          {/* View Mode Toggle + Bulk Download */}
           {onViewModeChange && (
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => onViewModeChange("grid")}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-                title="Grid view"
-              >
-                <Grid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onViewModeChange("list")}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === "list"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-                title="List view"
-              >
-                <List className="w-4 h-4" />
-              </button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => onViewModeChange("grid")}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === "grid"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  title="Grid view"
+                >
+                  <Grid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => onViewModeChange("list")}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === "list"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  title="List view"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleBulkDownload}
+                  disabled={selectedFiles.length === 0}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                    selectedFiles.length > 0
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  <Download className="w-4 h-4" />
+                  Download selected ({selectedFiles.length})
+                </button>
+                <button
+                  onClick={handleSelectAll}
+                  className="px-2 py-1 rounded text-sm bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  title="Select all"
+                >
+                  {selectedFiles.length === files.length && files.length > 0
+                    ? "Deselect all"
+                    : "Select all"}
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -673,6 +919,8 @@ export default function FileGrid({
                     onDownload={onDownload}
                     onDelete={onDelete}
                     onPreview={handleFilePreview}
+                    selected={selectedFiles.includes(file.id)}
+                    onToggleSelect={handleSelectFile}
                   />
                 ))}
               </div>
@@ -686,6 +934,8 @@ export default function FileGrid({
                     onDownload={onDownload}
                     onDelete={onDelete}
                     onPreview={handleFilePreview}
+                    selected={selectedFiles.includes(file.id)}
+                    onToggleSelect={handleSelectFile}
                   />
                 ))}
               </div>
@@ -702,6 +952,81 @@ export default function FileGrid({
         onClose={closePreview}
         onDownload={onDownload}
       />
+
+      {/* Bulk download progress modal */}
+      {progressVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-0">
+                <svg
+                  className="animate-spin h-6 w-6 text-blue-600"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8z"
+                  ></path>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-medium text-gray-900 mb-1">
+                  Preparing download
+                </h3>
+                <p className="text-sm text-gray-600 mb-3">{progressMessage}</p>
+
+                <div className="w-full bg-gray-100 rounded h-3 overflow-hidden">
+                  {downloadProgress !== null ? (
+                    <div
+                      className="h-3 bg-blue-600 transition-all"
+                      style={{ width: `${downloadProgress}%` }}
+                    />
+                  ) : (
+                    <div
+                      className="h-3 bg-blue-600 animate-pulse"
+                      style={{ width: "40%" }}
+                    />
+                  )}
+                </div>
+
+                {downloadTotalBytes ? (
+                  <div className="text-xs text-gray-500 mt-2">
+                    {(downloadedBytes / 1024 / 1024).toFixed(2)} MB /{" "}
+                    {(downloadTotalBytes / 1024 / 1024).toFixed(2)} MB
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500 mt-2">
+                    {(downloadedBytes / 1024 / 1024).toFixed(2)} MB received
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  // allow user to close the modal while download continues in background,
+                  // but keep the downloading state (they can re-open by re-initiating)
+                  setProgressVisible(false);
+                }}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

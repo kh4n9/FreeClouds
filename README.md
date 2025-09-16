@@ -465,6 +465,23 @@ Soft delete a file (marks as deleted, doesn't remove from Telegram).
 #### GET `/api/files/[id]/download`
 Download file content directly from Telegram storage.
 
+#### POST `/api/files/bulk-download`
+Create a ZIP archive containing multiple files on the server and stream it to the client.
+
+- Request (JSON):
+  ```
+  {
+    "fileIds": ["<fileId1>", "<fileId2>", "..."]
+  }
+  ```
+- Response:
+  - Success: `200` with `Content-Type: application/zip` and a streamed ZIP attachment (server-side archive).
+  - Error: JSON `{ error: string }` with appropriate 4xx/5xx status codes.
+- Notes:
+  - Authentication is required. The server verifies ownership for each requested file.
+  - If an individual file cannot be fetched from Telegram, a small text file describing the error will be included in the ZIP instead of failing the whole archive.
+  - The endpoint is implemented at `/api/files/bulk-download` and is intended for bulk download use (select multiple files in the UI and request a single ZIP).
+
 ### Upload Endpoint
 
 #### POST `/api/upload`
