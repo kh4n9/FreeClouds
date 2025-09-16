@@ -126,11 +126,9 @@ function FolderItem({
   };
 
   const handleDelete = () => {
-    if (
-      confirm(`Are you sure you want to delete the folder "${folder.name}"?`)
-    ) {
-      onDelete(folder.id);
-    }
+    // Delegate confirmation and deletion to the parent component so the UI
+    // can present a nicer in-app confirmation modal instead of the browser confirm.
+    onDelete(folder.id);
     setIsMenuOpen(false);
   };
 

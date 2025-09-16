@@ -139,9 +139,8 @@ function FileItem({
   };
 
   const handleDelete = () => {
-    if (confirm(`Are you sure you want to delete "${file.name}"?`)) {
-      onDelete(file.id);
-    }
+    // Delegate confirmation to parent (in-app modal). Parent will show a nicer confirmation UI.
+    onDelete(file.id);
     setIsMenuOpen(false);
   };
 
@@ -413,9 +412,8 @@ function FileItem({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (confirm(`Are you sure you want to delete "${file.name}"?`)) {
-                onDelete(file.id);
-              }
+              // Delegate confirmation to parent (in-app modal) and trigger deletion flow.
+              onDelete(file.id);
             }}
             className="opacity-0 group-hover:opacity-100 p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-all"
             title="Delete"

@@ -75,6 +75,35 @@ export default function DashboardPage() {
   );
   const [newFolderName, setNewFolderName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // In-app delete confirmation modal state (folders)
+  const [deleteModal, setDeleteModal] = useState<{
+    show: boolean;
+    folderId?: string | null;
+    folderName?: string;
+    subfolderCount?: number;
+  }>({ show: false });
+  const [deleting, setDeleting] = useState(false);
+
+  // In-app delete confirmation modal state (files)
+  const [fileDeleteModal, setFileDeleteModal] = useState<{
+    show: boolean;
+    fileId?: string | undefined;
+    fileName?: string | undefined;
+  }>({ show: false });
+  const [fileDeleting, setFileDeleting] = useState(false);
+
+  // Simple toast state
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type?: "success" | "error" | "info";
+  }>({
+    show: false,
+    message: "",
+    type: "info",
+  });
+
   const router = useRouter();
 
   // Check authentication
@@ -226,80 +255,101 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeleteFolder = async (folderId: string) => {
+  // Open an in-app confirmation modal for deleting a folder.
+  // Actual deletion is performed by confirmDeleteFolder().
+  const handleDeleteFolder = (folderId: string) => {
+    const folder = folders.find((f) => f.id === folderId);
+    if (!folder) {
+      setToast({
+        show: true,
+        message: "Không tìm thấy thư mục",
+        type: "error",
+      });
+      setTimeout(
+        () => setToast({ show: false, message: "", type: "info" }),
+        3000,
+      );
+      return;
+    }
+
+    const countSubfolders = (
+      folders: FolderData[],
+      parentId: string,
+    ): number => {
+      const children = folders.filter((f) => f.parent === parentId);
+      return (
+        children.length +
+        children.reduce(
+          (sum, child) => sum + countSubfolders(folders, child.id),
+          0,
+        )
+      );
+    };
+
+    const subfolderCount = countSubfolders(folders, folderId);
+
+    setDeleteModal({
+      show: true,
+      folderId,
+      folderName: folder.name,
+      subfolderCount,
+    });
+  };
+
+  // Called when user confirms deletion of a folder in the in-app modal
+  const confirmDeleteFolder = async () => {
+    if (!deleteModal.folderId) return;
+    setDeleting(true);
+    setToast({
+      show: true,
+      message: "Đang xóa thư mục và nội dung...",
+      type: "info",
+    });
+
     try {
-      const folder = folders.find((f) => f.id === folderId);
-      if (!folder) {
-        alert("Không tìm thấy thư mục");
-        return;
-      }
-
-      const countSubfolders = (
-        folders: FolderData[],
-        parentId: string,
-      ): number => {
-        const children = folders.filter((f) => f.parent === parentId);
-        return (
-          children.length +
-          children.reduce(
-            (sum, child) => sum + countSubfolders(folders, child.id),
-            0,
-          )
-        );
-      };
-
-      const subfolderCount = countSubfolders(folders, folderId);
-
-      let confirmMessage = `⚠️ XÓA THƯ MỤC: "${folder.name}"\n\n`;
-      confirmMessage += `Điều này sẽ xóa vĩnh viễn:\n`;
-      confirmMessage += `• Thư mục "${folder.name}"\n`;
-
-      if (subfolderCount > 0) {
-        confirmMessage += `• ${subfolderCount} thư mục con\n`;
-      }
-
-      confirmMessage += `• Tất cả tệp tin trong thư mục này và các thư mục con\n\n`;
-      confirmMessage += `❌ Hành động này KHÔNG THỂ hoàn tác!\n\n`;
-      confirmMessage += `Bạn có chắc chắn muốn tiếp tục?`;
-
-      if (!confirm(confirmMessage)) {
-        return;
-      }
-
-      alert("Đang xóa thư mục và nội dung... Vui lòng đợi trong giây lát.");
-
-      const response = await fetch(`/api/folders/${folderId}`, {
+      const response = await fetch(`/api/folders/${deleteModal.folderId}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
         const data = await response.json();
         const stats = data.stats;
-        let message = `✅ Đã xóa thư mục thành công!\n\n`;
-        message += `📊 Tóm tắt việc xóa:\n`;
-        message += `• Thư mục đã xóa: ${stats.foldersDeleted}\n`;
-        message += `• Tệp tin đã xóa: ${stats.filesDeleted}`;
-
+        let message = `Đã xóa: ${deleteModal.folderName}. Thư mục: ${stats.foldersDeleted}, Tệp: ${stats.filesDeleted}.`;
         if (stats.errors && stats.errors.length > 0) {
-          message += `\n\n⚠️ Cảnh báo:\n${stats.errors.join("\n")}`;
+          message += ` Cảnh báo: ${stats.errors.join("; ")}`;
+          setToast({ show: true, message, type: "info" });
+        } else {
+          setToast({ show: true, message, type: "success" });
         }
 
-        alert(message);
         await loadFolders();
         await loadFiles();
 
-        if (selectedFolderId === folderId) {
+        if (selectedFolderId === deleteModal.folderId) {
           setSelectedFolderId(null);
         }
       } else {
         const data = await response.json();
-        alert(
-          `❌ Không thể xóa thư mục: ${data.error || "Lỗi không xác định"}`,
-        );
+        setToast({
+          show: true,
+          message: data.error || "Không thể xóa thư mục",
+          type: "error",
+        });
       }
     } catch (error) {
       console.error("Lỗi khi xóa thư mục:", error);
-      alert("❌ Không thể xóa thư mục: Lỗi mạng");
+      setToast({
+        show: true,
+        message: "Không thể xóa thư mục: Lỗi mạng",
+        type: "error",
+      });
+    } finally {
+      setDeleting(false);
+      setDeleteModal({ show: false });
+      setTimeout(
+        () => setToast({ show: false, message: "", type: "info" }),
+        3500,
+      );
     }
   };
 
@@ -341,25 +391,54 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeleteFile = async (fileId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa tệp tin này?")) {
-      return;
+  // Open in-app confirmation modal for deleting a file. Actual deletion happens in confirmDeleteFile.
+  const handleDeleteFile = (fileId: string) => {
+    const file = files.find((f) => f.id === fileId);
+    if (file) {
+      setFileDeleteModal({
+        show: true,
+        fileId,
+        fileName: file.name,
+      });
+    } else {
+      setFileDeleteModal({
+        show: true,
+        fileId,
+      });
     }
+  };
+
+  const confirmDeleteFile = async () => {
+    if (!fileDeleteModal.fileId) return;
+    setFileDeleting(true);
+    setToast({ show: true, message: "Đang xóa tệp tin...", type: "info" });
 
     try {
-      const response = await fetch(`/api/files/${fileId}`, {
+      const response = await fetch(`/api/files/${fileDeleteModal.fileId}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
         await loadFiles();
+        setToast({ show: true, message: "Đã xóa tệp tin", type: "success" });
       } else {
         const data = await response.json();
-        alert(data.error || "Không thể xóa tệp tin");
+        setToast({
+          show: true,
+          message: data.error || "Không thể xóa tệp tin",
+          type: "error",
+        });
       }
     } catch (error) {
       console.error("Lỗi khi xóa tệp tin:", error);
-      alert("Không thể xóa tệp tin");
+      setToast({ show: true, message: "Không thể xóa tệp tin", type: "error" });
+    } finally {
+      setFileDeleting(false);
+      setFileDeleteModal({ show: false });
+      setTimeout(
+        () => setToast({ show: false, message: "", type: "info" }),
+        3000,
+      );
     }
   };
 
@@ -645,13 +724,13 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">
-                Tạo thư mục mới
+                Create New Folder
               </h3>
             </div>
             <div className="p-6">
               <input
                 type="text"
-                placeholder="Tên thư mục"
+                placeholder="Folder name"
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
@@ -663,17 +742,164 @@ export default function DashboardPage() {
                   onClick={() => setShowCreateFolder(false)}
                   className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
                 >
-                  Hủy
+                  Cancel
                 </button>
                 <button
                   onClick={confirmCreateFolder}
                   disabled={!newFolderName.trim()}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Tạo
+                  Create
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Folder Modal (in-app) */}
+      {deleteModal.show && deleteModal.folderId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Xóa thư mục
+              </h3>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-700 mb-2">
+                Bạn sắp xóa vĩnh viễn thư mục{" "}
+                <span className="font-semibold">{deleteModal.folderName}</span>.
+              </p>
+              {typeof deleteModal.subfolderCount === "number" &&
+                deleteModal.subfolderCount > 0 && (
+                  <p className="text-sm text-gray-600 mb-2">
+                    Đồng thời sẽ xóa {deleteModal.subfolderCount} thư mục con và
+                    toàn bộ tệp bên trong.
+                  </p>
+                )}
+              <p className="text-sm text-red-600 mb-4">
+                Hành động này không thể hoàn tác.
+              </p>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setDeleteModal({ show: false })}
+                  className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                  disabled={deleting}
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={confirmDeleteFolder}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  disabled={deleting}
+                >
+                  {deleting ? (
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    "Xóa"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* File Delete Modal (in-app) */}
+      {fileDeleteModal.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Xóa tệp tin
+              </h3>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-700 mb-4">
+                Bạn có chắc chắn muốn xóa tệp{" "}
+                <span className="font-semibold">
+                  {fileDeleteModal.fileName}
+                </span>
+                ? Hành động này không thể hoàn tác.
+              </p>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setFileDeleteModal({ show: false })}
+                  className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                  disabled={fileDeleting}
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={confirmDeleteFile}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  disabled={fileDeleting}
+                >
+                  {fileDeleting ? (
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    "Xóa"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast.show && (
+        <div className="fixed right-6 top-6 z-60">
+          <div
+            className={`px-4 py-2 rounded shadow-lg text-sm flex items-center gap-3 ${
+              toast.type === "success"
+                ? "bg-green-600 text-white"
+                : toast.type === "error"
+                  ? "bg-red-600 text-white"
+                  : "bg-blue-600 text-white"
+            }`}
+          >
+            <div>{toast.message}</div>
+            <button
+              onClick={() =>
+                setToast({ show: false, message: "", type: "info" })
+              }
+              className="ml-2 opacity-90 hover:opacity-100"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}

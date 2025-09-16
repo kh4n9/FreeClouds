@@ -75,6 +75,30 @@ export default function DashboardPage() {
   );
   const [newFolderName, setNewFolderName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // In-app delete confirmation modal state
+  const [deleteModal, setDeleteModal] = useState<{
+    show: boolean;
+    folder?: FolderData;
+    subfolderCount?: number;
+  }>({ show: false });
+
+  // File delete modal state (for deleting individual files with in-app UI)
+  const [fileDeleteModal, setFileDeleteModal] = useState<{
+    show: boolean;
+    fileId?: string;
+    fileName?: string;
+  }>({ show: false });
+
+  // Spinner / state used while deleting a file (controlled by confirmDeleteFile)
+  const [deleting, setDeleting] = useState(false);
+
+  // Simple toast notifications (used after delete result)
+  const [toast, setToast] = useState<{
+    type: "success" | "error" | "info";
+    message: string;
+  } | null>(null);
+
   const router = useRouter();
 
   // Check authentication
@@ -226,47 +250,47 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeleteFolder = async (folderId: string) => {
+  // Open a custom in-app confirmation modal for deleting a folder.
+  // The actual deletion occurs in `confirmDeleteFolder`.
+  const handleDeleteFolder = (folderId: string) => {
+    const folder = folders.find((f) => f.id === folderId);
+    if (!folder) {
+      setToast({ type: "error", message: "Folder not found" });
+      return;
+    }
+
+    const countSubfolders = (
+      folders: FolderData[],
+      parentId: string,
+    ): number => {
+      const children = folders.filter((f) => f.parent === parentId);
+      return (
+        children.length +
+        children.reduce(
+          (sum, child) => sum + countSubfolders(folders, child.id),
+          0,
+        )
+      );
+    };
+
+    const subfolderCount = countSubfolders(folders, folderId);
+
+    setDeleteModal({
+      show: true,
+      folder,
+      subfolderCount,
+    });
+  };
+
+  // Called when user confirms deletion in the in-app modal
+  const confirmDeleteFolder = async () => {
+    if (!deleteModal.folder) return;
+
+    const folderId = deleteModal.folder.id;
+
     try {
-      const folder = folders.find((f) => f.id === folderId);
-      if (!folder) {
-        alert("Folder not found");
-        return;
-      }
-
-      const countSubfolders = (
-        folders: FolderData[],
-        parentId: string,
-      ): number => {
-        const children = folders.filter((f) => f.parent === parentId);
-        return (
-          children.length +
-          children.reduce(
-            (sum, child) => sum + countSubfolders(folders, child.id),
-            0,
-          )
-        );
-      };
-
-      const subfolderCount = countSubfolders(folders, folderId);
-
-      let confirmMessage = `⚠️ DELETE FOLDER: "${folder.name}"\n\n`;
-      confirmMessage += `This will permanently delete:\n`;
-      confirmMessage += `• The folder "${folder.name}"\n`;
-
-      if (subfolderCount > 0) {
-        confirmMessage += `• ${subfolderCount} subfolder(s)\n`;
-      }
-
-      confirmMessage += `• All files in this folder and subfolders\n\n`;
-      confirmMessage += `❌ This action CANNOT be undone!\n\n`;
-      confirmMessage += `Are you sure you want to continue?`;
-
-      if (!confirm(confirmMessage)) {
-        return;
-      }
-
-      alert("Deleting folder and contents... This may take a moment.");
+      // Show info toast that deletion is in progress
+      setToast({ type: "info", message: "Deleting folder and contents..." });
 
       const response = await fetch(`/api/folders/${folderId}`, {
         method: "DELETE",
@@ -275,16 +299,17 @@ export default function DashboardPage() {
       if (response.ok) {
         const data = await response.json();
         const stats = data.stats;
-        let message = `✅ Folder deleted successfully!\n\n`;
-        message += `📊 Deletion Summary:\n`;
-        message += `• Folders deleted: ${stats.foldersDeleted}\n`;
-        message += `• Files deleted: ${stats.filesDeleted}`;
+        let message = `Folder deleted: ${deleteModal.folder.name}. `;
+        message += `Folders deleted: ${stats.foldersDeleted}, Files deleted: ${stats.filesDeleted}.`;
 
         if (stats.errors && stats.errors.length > 0) {
-          message += `\n\n⚠️ Warnings:\n${stats.errors.join("\n")}`;
+          message += ` Warnings: ${stats.errors.join("; ")}`;
+          setToast({ type: "info", message });
+        } else {
+          setToast({ type: "success", message });
         }
 
-        alert(message);
+        // Refresh data
         await loadFolders();
         await loadFiles();
 
@@ -293,11 +318,21 @@ export default function DashboardPage() {
         }
       } else {
         const data = await response.json();
-        alert(`❌ Failed to delete folder: ${data.error || "Unknown error"}`);
+        setToast({
+          type: "error",
+          message: `Failed to delete folder: ${data.error || "Unknown error"}`,
+        });
       }
     } catch (error) {
       console.error("Error deleting folder:", error);
-      alert("❌ Failed to delete folder: Network error");
+      setToast({
+        type: "error",
+        message: "Failed to delete folder: Network error",
+      });
+    } finally {
+      setDeleteModal({ show: false });
+      // auto-dismiss toast after a few seconds
+      setTimeout(() => setToast(null), 4000);
     }
   };
 
@@ -339,25 +374,51 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeleteFile = async (fileId: string) => {
-    if (!confirm("Are you sure you want to delete this file?")) {
-      return;
+  // Open in-app confirmation modal for file deletion. Actual delete happens in confirmDeleteFile.
+  const handleDeleteFile = (fileId: string) => {
+    const file = files.find((f) => f.id === fileId);
+    if (file) {
+      setFileDeleteModal({
+        show: true,
+        fileId,
+        fileName: file.name,
+      });
+    } else {
+      setFileDeleteModal({
+        show: true,
+        fileId,
+      });
     }
+  };
 
+  // Called when user confirms deletion of a file in the UI modal
+  const confirmDeleteFile = async () => {
+    if (!fileDeleteModal.fileId) return;
+    setDeleting(true);
     try {
-      const response = await fetch(`/api/files/${fileId}`, {
+      setToast({ type: "info", message: "Deleting file..." });
+      const response = await fetch(`/api/files/${fileDeleteModal.fileId}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
         await loadFiles();
+        setToast({ type: "success", message: "File deleted" });
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to delete file");
+        setToast({
+          type: "error",
+          message: data.error || "Failed to delete file",
+        });
       }
     } catch (error) {
       console.error("Error deleting file:", error);
-      alert("Failed to delete file");
+      setToast({ type: "error", message: "Failed to delete file" });
+    } finally {
+      setDeleting(false);
+      setFileDeleteModal({ show: false });
+      // auto-dismiss toast after a short delay
+      setTimeout(() => setToast(null), 3000);
     }
   };
 
@@ -667,6 +728,137 @@ export default function DashboardPage() {
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Create
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Folder Modal (in-app, nicer than browser confirm) */}
+      {deleteModal.show && deleteModal.folder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Delete Folder
+              </h3>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-700 mb-3">
+                You are about to permanently delete the folder
+                <span className="font-semibold">
+                  {" "}
+                  "{deleteModal.folder.name}"
+                </span>
+                .
+              </p>
+              {deleteModal.subfolderCount && deleteModal.subfolderCount > 0 && (
+                <p className="text-sm text-gray-600 mb-3">
+                  This will also delete {deleteModal.subfolderCount}{" "}
+                  subfolder(s) and all files inside.
+                </p>
+              )}
+              <p className="text-sm text-red-600 mb-4">
+                This action cannot be undone.
+              </p>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setDeleteModal({ show: false })}
+                  className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteFolder}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed right-6 top-6 z-60">
+          <div
+            className={`px-4 py-2 rounded shadow-lg text-sm flex items-center gap-3 ${
+              toast.type === "success"
+                ? "bg-green-600 text-white"
+                : toast.type === "error"
+                  ? "bg-red-600 text-white"
+                  : "bg-blue-600 text-white"
+            }`}
+          >
+            <div>{toast.message}</div>
+            <button
+              onClick={() => setToast(null)}
+              className="ml-2 opacity-90 hover:opacity-100"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* File Delete Modal (in-app confirmation) */}
+      {fileDeleteModal.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Delete File
+              </h3>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-700 mb-3">
+                You are about to permanently delete the file{" "}
+                <span className="font-semibold">
+                  "{fileDeleteModal.fileName}"
+                </span>
+                .
+              </p>
+              <p className="text-sm text-red-600 mb-4">
+                This action cannot be undone.
+              </p>
+
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setFileDeleteModal({ show: false })}
+                  className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteFile}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                  disabled={deleting}
+                >
+                  {deleting ? (
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    "Delete"
+                  )}
                 </button>
               </div>
             </div>
