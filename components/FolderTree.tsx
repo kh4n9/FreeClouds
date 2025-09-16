@@ -12,6 +12,7 @@ import {
   Expand,
   Minimize2,
 } from "lucide-react";
+import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 
 interface FolderData {
   id: string;
@@ -54,6 +55,7 @@ function FolderItem({
   onDelete,
   expandAll = false,
 }: FolderItemProps) {
+  const { t } = useTranslation();
   const isSelected = selectedFolderId === folder.id;
 
   // Check if this folder or any descendant is selected
@@ -207,21 +209,21 @@ function FolderItem({
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-md"
                 >
                   <FolderPlus className="w-4 h-4" />
-                  New Folder
+                  {t("newFolder", commonTranslations.newFolder)}
                 </button>
                 <button
                   onClick={handleRename}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <Edit2 className="w-4 h-4" />
-                  Rename
+                  {t("rename", commonTranslations.rename)}
                 </button>
                 <button
                   onClick={handleDelete}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 last:rounded-b-md"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete
+                  {t("delete", commonTranslations.delete)}
                 </button>
               </div>
             )}
@@ -271,6 +273,7 @@ export default function FolderTree({
     y: 0,
     show: false,
   });
+  const { t } = useTranslation();
 
   // Sidebar resize state and refs
   const defaultWidth = 320; // default width in px (larger default)
@@ -416,12 +419,21 @@ export default function FolderTree({
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="font-semibold text-gray-900">Folders</h2>
+          <h2 className="font-semibold text-gray-900">
+            {t("folders", commonTranslations.folders)}
+          </h2>
           <div className="flex items-center gap-1">
             <button
               onClick={() => onExpandAllChange?.(!expandAll)}
               className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors"
-              title={expandAll ? "Collapse all" : "Expand all"}
+              title={
+                expandAll
+                  ? t("collapseAll", {
+                      en: "Collapse all",
+                      vi: "Thu gọn tất cả",
+                    })
+                  : t("expandAll", { en: "Expand all", vi: "Mở rộng tất cả" })
+              }
             >
               {expandAll ? (
                 <Minimize2 className="w-4 h-4" />
@@ -432,7 +444,10 @@ export default function FolderTree({
             <button
               onClick={() => onCreateFolder(null)}
               className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors"
-              title="Create new folder"
+              title={t("createNewFolder", {
+                en: "Create new folder",
+                vi: "Tạo thư mục mới",
+              })}
             >
               <FolderPlus className="w-4 h-4" />
             </button>
@@ -463,16 +478,23 @@ export default function FolderTree({
           onClick={() => onFolderSelect(null)}
         >
           <Folder className="w-4 h-4 flex-shrink-0 text-blue-500" />
-          <span className="flex-1 text-sm font-medium">All Files</span>
+          <span className="flex-1 text-sm font-medium">
+            {t("allFiles", commonTranslations.allFiles)}
+          </span>
         </div>
 
         {/* Folder tree */}
         {folderTree.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Folder className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No folders yet</p>
+            <p className="text-sm">
+              {t("noFoldersYet", commonTranslations.noFoldersYet)}
+            </p>
             <p className="text-xs text-gray-400 mt-1">
-              Create your first folder to organize files
+              {t("createFirstFolder", {
+                en: "Create your first folder to organize files",
+                vi: "Tạo thư mục đầu tiên để sắp xếp tệp",
+              })}
             </p>
           </div>
         ) : (
@@ -511,7 +533,7 @@ export default function FolderTree({
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
           >
             <FolderPlus className="w-4 h-4" />
-            New Folder
+            {t("newFolder", commonTranslations.newFolder)}
           </button>
         </div>
       )}

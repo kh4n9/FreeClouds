@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 
 interface FolderData {
   id: string;
@@ -89,6 +90,7 @@ function FolderNode({
   onDelete,
   globalExpandAll,
 }: FolderNodeProps) {
+  const { t } = useTranslation();
   const hasChildren = node.children && node.children.length > 0;
   const [expanded, setExpanded] = useState<boolean>(!!globalExpandAll || false);
   const [editing, setEditing] = useState(false);
@@ -219,7 +221,11 @@ function FolderNode({
             handleToggle(e);
           }}
           aria-label={
-            hasChildren ? (expanded ? "Collapse" : "Expand") : "No children"
+            hasChildren
+              ? expanded
+                ? t("collapse", { en: "Collapse", vi: "Thu gọn" })
+                : t("expand", { en: "Expand", vi: "Mở rộng" })
+              : t("noChildren", { en: "No children", vi: "Không có thư con" })
           }
           className="flex items-center justify-center"
           style={{
@@ -299,7 +305,7 @@ function FolderNode({
                 e.stopPropagation();
                 onCreate(node.id);
               }}
-              title="New folder"
+              title={t("newFolder", commonTranslations.newFolder)}
               className="text-xs px-2 py-1 rounded hover:bg-gray-100"
             >
               ➕
@@ -311,7 +317,7 @@ function FolderNode({
                 e.stopPropagation();
                 setEditing(true);
               }}
-              title="Rename"
+              title={t("rename", commonTranslations.rename)}
               className="text-xs px-2 py-1 rounded hover:bg-gray-100"
             >
               ✎
@@ -320,7 +326,7 @@ function FolderNode({
           {onDelete && (
             <button
               onClick={handleDelete}
-              title="Delete"
+              title={t("delete", commonTranslations.delete)}
               className="text-xs px-2 py-1 rounded hover:bg-red-50 text-red-600"
             >
               🗑
@@ -370,6 +376,7 @@ export default function PlainFolderTree({
   loading = false,
   expandAll,
 }: PlainFolderTreeProps) {
+  const { t } = useTranslation();
   const tree = useMemo(() => buildTree(folders), [folders]);
   const [rootExpanded, setRootExpanded] = useState(true);
 
@@ -424,14 +431,20 @@ export default function PlainFolderTree({
             transition: "transform 180ms ease",
           }}
           aria-label={
-            tree.length ? (rootExpanded ? "Collapse" : "Expand") : "No folders"
+            tree.length
+              ? rootExpanded
+                ? t("collapse", { en: "Collapse", vi: "Thu gọn" })
+                : t("expand", { en: "Expand", vi: "Mở rộng" })
+              : t("noFolders", { en: "No folders", vi: "Không có thư mục" })
           }
         >
           {tree.length ? "▸" : "•"}
         </button>
 
         <span style={{ width: 16, display: "inline-block" }}>📁</span>
-        <div style={{ flex: 1, minWidth: 0, fontWeight: 600 }}>All Files</div>
+        <div style={{ flex: 1, minWidth: 0, fontWeight: 600 }}>
+          {t("allFiles", commonTranslations.allFiles)}
+        </div>
 
         {onCreateFolder && (
           <button
@@ -439,7 +452,7 @@ export default function PlainFolderTree({
               e.stopPropagation();
               onCreateFolder(null);
             }}
-            title="New folder"
+            title={t("newFolder", commonTranslations.newFolder)}
             className="text-xs px-2 py-1 rounded hover:bg-gray-100"
           >
             ➕
@@ -464,7 +477,9 @@ export default function PlainFolderTree({
           ))}
 
         {tree.length === 0 && (
-          <div className="plain-folder-empty">No folders yet</div>
+          <div className="plain-folder-empty">
+            {t("noFoldersYet", commonTranslations.noFoldersYet)}
+          </div>
         )}
       </div>
     </nav>

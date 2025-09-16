@@ -286,18 +286,34 @@ export const commonTranslations = {
   save: { en: "Save", vi: "Lưu" },
   cancel: { en: "Cancel", vi: "Hủy" },
   confirm: { en: "Confirm", vi: "Xác Nhận" },
+  preview: { en: "Preview", vi: "Xem trước" },
+  dismiss: { en: "Dismiss", vi: "Đóng" },
 
   // File management
   files: { en: "Files", vi: "Tệp Tin" },
   folders: { en: "Folders", vi: "Thư Mục" },
   newFolder: { en: "New Folder", vi: "Thư Mục Mới" },
   rename: { en: "Rename", vi: "Đổi Tên" },
+  allFiles: { en: "All Files", vi: "Tất cả tệp" },
+  noFoldersYet: { en: "No folders yet", vi: "Chưa có thư mục nào" },
 
   // Messages
   loading: { en: "Loading...", vi: "Đang tải..." },
   error: { en: "Error", vi: "Lỗi" },
   success: { en: "Success", vi: "Thành Công" },
   noResults: { en: "No results found", vi: "Không tìm thấy kết quả" },
+  cannotUndo: {
+    en: "This action cannot be undone.",
+    vi: "Hành động này không thể hoàn tác.",
+  },
+  deleteFolderConfirm: {
+    en: "You are about to permanently delete the folder",
+    vi: "Bạn sắp vĩnh viễn xóa thư mục",
+  },
+  deleteFileConfirm: {
+    en: "You are about to permanently delete the file",
+    vi: "Bạn sắp vĩnh viễn xóa tệp tin",
+  },
 
   // Forms
   email: { en: "Email", vi: "Email" },
@@ -324,4 +340,86 @@ export const commonTranslations = {
   storageUsed: { en: "Storage Used", vi: "Đã Sử Dụng" },
   storageRemaining: { en: "Remaining", vi: "Còn Lại" },
   unlimited: { en: "Unlimited", vi: "Không Giới Hạn" },
+
+  // Additional small labels
+  previewFile: { en: "Preview file", vi: "Xem trước tệp" },
+
+  // Preview controls
+  zoomIn: { en: "Zoom In", vi: "Phóng to" },
+  zoomOut: { en: "Zoom Out", vi: "Thu nhỏ" },
+  rotate: { en: "Rotate", vi: "Xoay" },
+  resetView: { en: "Reset", vi: "Đặt lại" },
+  fullscreen: { en: "Fullscreen", vi: "Toàn màn hình" },
+  previousPage: { en: "Previous Page", vi: "Trang trước" },
+  nextPage: { en: "Next Page", vi: "Trang sau" },
+  openInNewTab: { en: "Open in New Tab", vi: "Mở trong tab mới" },
+
+  // Media controls
+  play: { en: "Play", vi: "Phát" },
+  pause: { en: "Pause", vi: "Tạm dừng" },
+  mute: { en: "Mute", vi: "Tắt tiếng" },
+  unmute: { en: "Unmute", vi: "Bật tiếng" },
+
+  // Preview errors / warnings
+  fileTooLargeForPreview: {
+    en: "File is too large for preview. Maximum size: {size}",
+    vi: "Tệp quá lớn để xem trước. Kích thước tối đa: {size}",
+  },
+  cannotPreviewFile: {
+    en: "This file type cannot be previewed.",
+    vi: "Loại tệp này không thể xem trước.",
+  },
+  failedToLoadFile: {
+    en: "Failed to load file for preview.",
+    vi: "Tải tệp để xem trước thất bại.",
+  },
+  securityWarningExecutable: {
+    en: "This file type may contain executable code and cannot be previewed for security reasons.",
+    vi: "Loại tệp này có thể chứa mã thực thi và không thể xem trước vì lý do bảo mật.",
+  },
+
+  // User profile / settings translations
+  userSettings: { en: "User Settings", vi: "Cài đặt người dùng" },
+  profileTab: { en: "Profile", vi: "Hồ sơ" },
+  passwordTab: { en: "Password", vi: "Mật khẩu" },
+  accountTab: { en: "Account", vi: "Tài khoản" },
+
+  // Profile form
+  fullName: { en: "Full Name", vi: "Họ và tên" },
+  enterFullName: { en: "Enter your full name", vi: "Nhập họ và tên của bạn" },
+  emailAddress: { en: "Email Address", vi: "Địa chỉ Email" },
+  enterEmailAddress: {
+    en: "Enter your email address",
+    vi: "Nhập địa chỉ email của bạn",
+  },
+
+  // Password / account messages
+  profileUpdated: {
+    en: "Profile updated successfully!",
+    vi: "Cập nhật hồ sơ thành công!",
+  },
+  passwordChanged: {
+    en: "Password changed successfully!",
+    vi: "Đổi mật khẩu thành công!",
+  },
+
+  // Account deletion / verification
+  verificationCodeSent: {
+    en: "Verification code sent to your email",
+    vi: "Mã xác nhận đã được gửi đến email của bạn",
+  },
+  enter6DigitCode: {
+    en: "Please enter the 6-digit verification code",
+    vi: "Vui lòng nhập mã xác minh 6 chữ số",
+  },
+  newVerificationCodeSent: {
+    en: "New verification code sent!",
+    vi: "Đã gửi mã xác minh mới!",
+  },
+  resendCode: { en: "Resend code", vi: "Gửi lại mã" },
+  confirmDeletion: {
+    en: "Confirm account deletion",
+    vi: "Xác nhận xóa tài khoản",
+  },
+  deleteAccount: { en: "Delete account", vi: "Xóa tài khoản" },
 };

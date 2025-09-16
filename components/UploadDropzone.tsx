@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Upload, X, File, AlertCircle, CheckCircle } from "lucide-react";
+import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 
 interface UploadFile {
   file: File;
@@ -94,6 +95,7 @@ export default function UploadDropzone({
   className = "",
 }: UploadDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const { t } = useTranslation();
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -288,23 +290,39 @@ export default function UploadDropzone({
 
         <div className="space-y-2">
           <p className="text-lg font-medium text-gray-900">
-            {isDragging ? "Drop files here" : "Upload files"}
+            {isDragging
+              ? t("dropFilesHere", {
+                  en: "Drop files here",
+                  vi: "Thả tệp vào đây",
+                })
+              : t("upload", commonTranslations.upload)}
           </p>
           <p className="text-sm text-gray-500">
             {isDragging
-              ? "Release to upload"
-              : `Drag and drop files here, or click to select${multiple ? " files" : " a file"}`}
+              ? t("releaseToUpload", {
+                  en: "Release to upload",
+                  vi: "Thả để tải lên",
+                })
+              : `${t("dragDropClick", { en: "Drag and drop files here, or click to select", vi: "Kéo thả tệp vào đây, hoặc nhấp để chọn" })}${multiple ? " " + t("files", commonTranslations.files) : " " + t("files", commonTranslations.files)}`}
           </p>
 
           {maxFileSize && (
             <p className="text-xs text-gray-400">
-              Maximum file size: {formatFileSize(maxFileSize)}
+              {t("maxFileSize", {
+                en: "Maximum file size:",
+                vi: "Kích thước tối đa:",
+              })}{" "}
+              {formatFileSize(maxFileSize)}
             </p>
           )}
 
           {acceptedFileTypes.length > 0 && (
             <p className="text-xs text-gray-400">
-              Accepted types: {acceptedFileTypes.join(", ")}
+              {t("acceptedTypes", {
+                en: "Accepted types:",
+                vi: "Loại được chấp nhận:",
+              })}{" "}
+              {acceptedFileTypes.join(", ")}
             </p>
           )}
         </div>
@@ -314,7 +332,8 @@ export default function UploadDropzone({
       {uploadFiles.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-gray-900">
-            Upload Queue ({uploadFiles.length})
+            {t("uploadQueue", { en: "Upload Queue", vi: "Hàng đợi tải lên" })} (
+            {uploadFiles.length})
           </h4>
 
           <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -335,16 +354,27 @@ export default function UploadDropzone({
                     <span>{formatFileSize(uploadFile.file.size)}</span>
 
                     {uploadFile.status === "uploading" && (
-                      <span className="text-blue-600">Uploading...</span>
+                      <span className="text-blue-600">
+                        {t("uploading", {
+                          en: "Uploading...",
+                          vi: "Đang tải...",
+                        })}
+                      </span>
                     )}
 
                     {uploadFile.status === "success" && (
-                      <span className="text-green-600">Uploaded</span>
+                      <span className="text-green-600">
+                        {t("uploaded", { en: "Uploaded", vi: "Đã tải lên" })}
+                      </span>
                     )}
 
                     {uploadFile.status === "error" && (
                       <span className="text-red-600">
-                        {uploadFile.error || "Upload failed"}
+                        {uploadFile.error ||
+                          t("uploadFailed", {
+                            en: "Upload failed",
+                            vi: "Tải lên thất bại",
+                          })}
                       </span>
                     )}
                   </div>
@@ -377,7 +407,7 @@ export default function UploadDropzone({
                         className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded"
                         disabled={isUploading}
                       >
-                        Retry
+                        {t("retry", { en: "Retry", vi: "Thử lại" })}
                       </button>
                       <AlertCircle className="w-5 h-5 text-red-500" />
                     </div>

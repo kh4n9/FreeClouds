@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   Shield,
 } from "lucide-react";
+import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 
 interface UserData {
   id: string;
@@ -42,7 +43,10 @@ export default function UserProfile({
   user,
   onUserUpdate,
 }: UserProfileProps) {
-  const [activeTab, setActiveTab] = useState<"profile" | "password" | "account">("profile");
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<
+    "profile" | "password" | "account"
+  >("profile");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -68,7 +72,9 @@ export default function UserProfile({
   });
 
   // Account deletion state
-  const [deletionStep, setDeletionStep] = useState<"confirm" | "code" | "deleting">("confirm");
+  const [deletionStep, setDeletionStep] = useState<
+    "confirm" | "code" | "deleting"
+  >("confirm");
   const [deletionCode, setDeletionCode] = useState("");
   const [showDeletionModal, setShowDeletionModal] = useState(false);
   const [deletionCountdown, setDeletionCountdown] = useState(0);
@@ -123,7 +129,10 @@ export default function UserProfile({
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (deletionCountdown > 0) {
-      timer = setTimeout(() => setDeletionCountdown(deletionCountdown - 1), 1000);
+      timer = setTimeout(
+        () => setDeletionCountdown(deletionCountdown - 1),
+        1000,
+      );
     }
     return () => clearTimeout(timer);
   }, [deletionCountdown]);
@@ -150,10 +159,10 @@ export default function UserProfile({
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess("Profile updated successfully!");
+        setSuccess(t("profileUpdated", commonTranslations.profileUpdated));
         onUserUpdate(data.user);
       } else {
-        setError(data.error || "Failed to update profile");
+        setError(data.error || t("error", commonTranslations.error));
       }
     } catch (error) {
       console.error("Profile update error:", error);
@@ -186,14 +195,14 @@ export default function UserProfile({
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess("Password changed successfully!");
+        setSuccess(t("passwordChanged", commonTranslations.passwordChanged));
         setPasswordForm({
           currentPassword: "",
           newPassword: "",
           confirmPassword: "",
         });
       } else {
-        setError(data.error || "Failed to change password");
+        setError(data.error || t("error", commonTranslations.error));
       }
     } catch (error) {
       console.error("Password change error:", error);
@@ -218,9 +227,11 @@ export default function UserProfile({
       if (response.ok) {
         setDeletionStep("code");
         setDeletionCountdown(60);
-        setSuccess("Verification code sent to your email");
+        setSuccess(
+          t("verificationCodeSent", commonTranslations.verificationCodeSent),
+        );
       } else {
-        setError(data.error || "Failed to request account deletion");
+        setError(data.error || t("error", commonTranslations.error));
       }
     } catch (error) {
       setError("Network error. Please try again.");
@@ -231,7 +242,7 @@ export default function UserProfile({
 
   const handleConfirmDeletion = async () => {
     if (!deletionCode || deletionCode.length !== 6) {
-      setError("Please enter the 6-digit verification code");
+      setError(t("enter6DigitCode", commonTranslations.enter6DigitCode));
       return;
     }
 
@@ -275,10 +286,15 @@ export default function UserProfile({
 
       if (response.ok) {
         setDeletionCountdown(60);
-        setSuccess("New verification code sent!");
+        setSuccess(
+          t(
+            "newVerificationCodeSent",
+            commonTranslations.newVerificationCodeSent,
+          ),
+        );
       } else {
         const data = await response.json();
-        setError(data.error || "Failed to resend code");
+        setError(data.error || t("error", commonTranslations.error));
       }
     } catch (error) {
       setError("Network error. Please try again.");
@@ -288,7 +304,7 @@ export default function UserProfile({
   };
 
   const togglePasswordVisibility = (field: "current" | "new" | "confirm") => {
-    setShowPasswords(prev => ({
+    setShowPasswords((prev) => ({
       ...prev,
       [field]: !prev[field],
     }));
@@ -303,7 +319,9 @@ export default function UserProfile({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Settings className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-semibold text-gray-900">User Settings</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {t("userSettings", commonTranslations.userSettings)}
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -323,7 +341,7 @@ export default function UserProfile({
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            Profile
+            {t("profileTab", commonTranslations.profileTab)}
           </button>
           <button
             onClick={() => setActiveTab("password")}
@@ -333,7 +351,7 @@ export default function UserProfile({
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            Password
+            {t("passwordTab", commonTranslations.passwordTab)}
           </button>
           <button
             onClick={() => setActiveTab("account")}
@@ -343,7 +361,7 @@ export default function UserProfile({
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            Account
+            {t("accountTab", commonTranslations.accountTab)}
           </button>
         </div>
 
@@ -366,8 +384,11 @@ export default function UserProfile({
           {activeTab === "profile" && (
             <form onSubmit={handleProfileSubmit} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  {t("fullName", commonTranslations.fullName)}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -375,17 +396,28 @@ export default function UserProfile({
                     type="text"
                     id="name"
                     value={profileForm.name}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setProfileForm((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your full name"
+                    placeholder={t(
+                      "enterFullName",
+                      commonTranslations.enterFullName,
+                    )}
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  {t("emailAddress", commonTranslations.emailAddress)}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -393,9 +425,17 @@ export default function UserProfile({
                     type="email"
                     id="email"
                     value={profileForm.email}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) =>
+                      setProfileForm((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your email address"
+                    placeholder={t(
+                      "enterEmailAddress",
+                      commonTranslations.enterEmailAddress,
+                    )}
                     required
                   />
                 </div>
@@ -404,34 +444,50 @@ export default function UserProfile({
               {/* User Statistics */}
               {userStats && (
                 <div className="bg-gray-50 p-4 rounded-lg text-sm">
-                  <h4 className="font-medium text-gray-900 mb-3">Account Information</h4>
+                  <h4 className="font-medium text-gray-900 mb-3">
+                    Account Information
+                  </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-gray-600">Member since</p>
-                      <p className="font-medium">{new Date(userStats.createdAt).toLocaleDateString()}</p>
+                      <p className="font-medium">
+                        {new Date(userStats.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
                     <div>
                       <p className="text-gray-600">Last updated</p>
-                      <p className="font-medium">{new Date(userStats.updatedAt).toLocaleDateString()}</p>
+                      <p className="font-medium">
+                        {new Date(userStats.updatedAt).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
 
                   {userStats.stats && (
                     <>
                       <hr className="my-3 border-gray-200" />
-                      <h5 className="font-medium text-gray-900 mb-2">Storage Usage</h5>
+                      <h5 className="font-medium text-gray-900 mb-2">
+                        Storage Usage
+                      </h5>
                       <div className="grid grid-cols-3 gap-4 text-center">
                         <div>
-                          <p className="text-lg font-semibold text-blue-600">{userStats.stats.totalFiles}</p>
+                          <p className="text-lg font-semibold text-blue-600">
+                            {userStats.stats.totalFiles}
+                          </p>
                           <p className="text-xs text-gray-500">Files</p>
                         </div>
                         <div>
-                          <p className="text-lg font-semibold text-green-600">{userStats.stats.totalFolders}</p>
+                          <p className="text-lg font-semibold text-green-600">
+                            {userStats.stats.totalFolders}
+                          </p>
                           <p className="text-xs text-gray-500">Folders</p>
                         </div>
                         <div>
                           <p className="text-lg font-semibold text-purple-600">
-                            {(userStats.stats.totalSize / (1024 * 1024)).toFixed(1)} MB
+                            {(
+                              userStats.stats.totalSize /
+                              (1024 * 1024)
+                            ).toFixed(1)}{" "}
+                            MB
                           </p>
                           <p className="text-xs text-gray-500">Used</p>
                         </div>
@@ -460,7 +516,10 @@ export default function UserProfile({
           {activeTab === "password" && (
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="currentPassword"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Current Password
                 </label>
                 <div className="relative">
@@ -469,7 +528,12 @@ export default function UserProfile({
                     type={showPasswords.current ? "text" : "password"}
                     id="currentPassword"
                     value={passwordForm.currentPassword}
-                    onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                    onChange={(e) =>
+                      setPasswordForm((prev) => ({
+                        ...prev,
+                        currentPassword: e.target.value,
+                      }))
+                    }
                     className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter current password"
                     required
@@ -489,7 +553,10 @@ export default function UserProfile({
               </div>
 
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="newPassword"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   New Password
                 </label>
                 <div className="relative">
@@ -498,7 +565,12 @@ export default function UserProfile({
                     type={showPasswords.new ? "text" : "password"}
                     id="newPassword"
                     value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                    onChange={(e) =>
+                      setPasswordForm((prev) => ({
+                        ...prev,
+                        newPassword: e.target.value,
+                      }))
+                    }
                     className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter new password (min 8 characters)"
                     required
@@ -519,7 +591,10 @@ export default function UserProfile({
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Confirm New Password
                 </label>
                 <div className="relative">
@@ -528,7 +603,12 @@ export default function UserProfile({
                     type={showPasswords.confirm ? "text" : "password"}
                     id="confirmPassword"
                     value={passwordForm.confirmPassword}
-                    onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    onChange={(e) =>
+                      setPasswordForm((prev) => ({
+                        ...prev,
+                        confirmPassword: e.target.value,
+                      }))
+                    }
                     className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Confirm new password"
                     required
@@ -577,32 +657,44 @@ export default function UserProfile({
               {/* Storage Usage Details */}
               {userStats?.stats && (
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-3">Storage Overview</h4>
+                  <h4 className="font-medium text-gray-900 mb-3">
+                    Storage Overview
+                  </h4>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Total Files</span>
-                      <span className="font-medium">{userStats.stats.totalFiles}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Total Folders</span>
-                      <span className="font-medium">{userStats.stats.totalFolders}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Storage Used</span>
                       <span className="font-medium">
-                        {(userStats.stats.totalSize / (1024 * 1024)).toFixed(2)} MB
+                        {userStats.stats.totalFiles}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Total Folders
+                      </span>
+                      <span className="font-medium">
+                        {userStats.stats.totalFolders}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Storage Used
+                      </span>
+                      <span className="font-medium">
+                        {(userStats.stats.totalSize / (1024 * 1024)).toFixed(2)}{" "}
+                        MB
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-blue-600 h-2 rounded-full"
                         style={{
-                          width: `${Math.min((userStats.stats.totalSize / (100 * 1024 * 1024)) * 100, 100)}%`
+                          width: `${Math.min((userStats.stats.totalSize / (100 * 1024 * 1024)) * 100, 100)}%`,
                         }}
                       ></div>
                     </div>
                     <p className="text-xs text-gray-500">
-                      {(userStats.stats.totalSize / (1024 * 1024)).toFixed(2)} MB of 100 MB used
+                      {(userStats.stats.totalSize / (1024 * 1024)).toFixed(2)}{" "}
+                      MB of 100 MB used
                     </p>
                   </div>
                 </div>
@@ -615,7 +707,8 @@ export default function UserProfile({
                   Danger Zone
                 </h4>
                 <p className="text-sm text-red-700 mb-4">
-                  Permanently delete your account and all associated data. This action cannot be undone.
+                  Permanently delete your account and all associated data. This
+                  action cannot be undone.
                 </p>
                 <button
                   onClick={() => setShowDeletionModal(true)}
@@ -629,7 +722,9 @@ export default function UserProfile({
 
               {/* Account Information */}
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-900 mb-3">Account Details</h4>
+                <h4 className="font-medium text-gray-900 mb-3">
+                  Account Details
+                </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">User ID</span>
@@ -637,19 +732,33 @@ export default function UserProfile({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Account Created</span>
-                    <span>{userStats ? new Date(userStats.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    }) : '-'}</span>
+                    <span>
+                      {userStats
+                        ? new Date(userStats.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )
+                        : "-"}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Last Modified</span>
-                    <span>{userStats ? new Date(userStats.updatedAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    }) : '-'}</span>
+                    <span>
+                      {userStats
+                        ? new Date(userStats.updatedAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )
+                        : "-"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -668,13 +777,18 @@ export default function UserProfile({
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {deletionStep === "confirm" ? "Delete Account" :
-                   deletionStep === "code" ? "Verify Deletion" : "Deleting Account"}
+                  {deletionStep === "confirm"
+                    ? "Delete Account"
+                    : deletionStep === "code"
+                      ? "Verify Deletion"
+                      : "Deleting Account"}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  {deletionStep === "confirm" ? "This action cannot be undone" :
-                   deletionStep === "code" ? "Check your email for verification code" :
-                   "Please wait while we delete your account"}
+                  {deletionStep === "confirm"
+                    ? "This action cannot be undone"
+                    : deletionStep === "code"
+                      ? "Check your email for verification code"
+                      : "Please wait while we delete your account"}
                 </p>
               </div>
             </div>
@@ -764,7 +878,9 @@ export default function UserProfile({
                     disabled={deletionCountdown > 0 || loading}
                     className="text-blue-600 hover:text-blue-500 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {deletionCountdown > 0 ? `Resend in ${deletionCountdown}s` : "Resend Code"}
+                    {deletionCountdown > 0
+                      ? `Resend in ${deletionCountdown}s`
+                      : "Resend Code"}
                   </button>
                 </div>
 
@@ -783,7 +899,9 @@ export default function UserProfile({
                   <button
                     onClick={handleConfirmDeletion}
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                    disabled={loading || !deletionCode || deletionCode.length !== 6}
+                    disabled={
+                      loading || !deletionCode || deletionCode.length !== 6
+                    }
                   >
                     {loading ? (
                       <div className="flex items-center gap-2 justify-center">

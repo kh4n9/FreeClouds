@@ -10,9 +10,12 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import dynamic from "next/dynamic";
+const DynamicFileGrid = dynamic(() => import("@/components/FileGrid"), {
+  ssr: false,
+});
 import Navbar from "@/components/Navbar";
 import PlainFolderTree from "@/components/PlainFolderTree";
-import FileGrid from "@/components/FileGrid";
 import UploadDropzone from "@/components/UploadDropzone";
 import UserProfile from "@/components/UserProfile";
 import Footer from "@/components/Footer";
@@ -627,7 +630,7 @@ export default function DashboardPage() {
                 </p>
               </div>
             ) : (
-              <FileGrid
+              <DynamicFileGrid
                 files={files}
                 loading={filesLoading}
                 onDownload={handleDownload}

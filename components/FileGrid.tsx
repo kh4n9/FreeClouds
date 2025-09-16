@@ -36,8 +36,12 @@ import {
   formatDate,
   getFileColorClasses,
 } from "@/lib/file-utils";
-import FilePreview from "./FilePreview";
+import dynamic from "next/dynamic";
+const DynamicFilePreview = dynamic(() => import("./FilePreview"), {
+  ssr: false,
+});
 import PreviewIndicator, { PreviewStatusBadge } from "./PreviewIndicator";
+import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 
 interface FileData {
   id: string;
@@ -129,6 +133,7 @@ function FileItem({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const { t } = useTranslation();
 
   const isImage = isImageFile(file.name, file.mime);
   const fileInfo = getFileTypeInfo(file.name, file.mime);
@@ -249,7 +254,7 @@ function FileItem({
               handlePreview();
             }}
             className="absolute top-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 p-1 bg-white bg-opacity-80 backdrop-blur-sm rounded-full hover:bg-opacity-100 transition-all"
-            title="Preview file"
+            title={t("previewFile", commonTranslations.previewFile)}
           >
             <Eye className="w-4 h-4 text-gray-700" />
           </button>
@@ -296,21 +301,21 @@ function FileItem({
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-md"
                 >
                   <Eye className="w-4 h-4" />
-                  Preview
+                  {t("preview", commonTranslations.preview)}
                 </button>
                 <button
                   onClick={handleDownload}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <Download className="w-4 h-4" />
-                  Download
+                  {t("download", commonTranslations.download)}
                 </button>
                 <button
                   onClick={handleDelete}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 last:rounded-b-md"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete
+                  {t("delete", commonTranslations.delete)}
                 </button>
               </div>
             )}
@@ -395,7 +400,7 @@ function FileItem({
               handlePreview();
             }}
             className="opacity-0 group-hover:opacity-100 p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded transition-all"
-            title="Preview"
+            title={t("preview", commonTranslations.preview)}
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -689,8 +694,8 @@ export default function FileGrid({
         )}
       </div>
 
-      {/* File Preview Modal */}
-      <FilePreview
+      {/* File Preview Modal (dynamically loaded to avoid serializable-props warnings) */}
+      <DynamicFilePreview
         key={previewFile?.id || "no-file"}
         file={previewFile}
         isOpen={showPreview}
