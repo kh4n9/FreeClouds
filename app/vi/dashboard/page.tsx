@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import FolderTree from "@/components/FolderTree";
+import PlainFolderTree from "@/components/PlainFolderTree";
 import dynamic from "next/dynamic";
 const DynamicFileGrid = dynamic(() => import("@/components/FileGrid"), {
   ssr: false,
@@ -516,7 +516,7 @@ export default function DashboardPage() {
                   <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
                 </div>
               ) : (
-                <FolderTree
+                <PlainFolderTree
                   folders={folders}
                   selectedFolderId={selectedFolderId}
                   onFolderSelect={handleFolderSelect}
