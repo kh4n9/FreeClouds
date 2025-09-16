@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import FolderTree from "@/components/FolderTree";
+import PlainFolderTree from "@/components/PlainFolderTree";
 import FileGrid from "@/components/FileGrid";
 import UploadDropzone from "@/components/UploadDropzone";
 import UserProfile from "@/components/UserProfile";
@@ -399,13 +399,13 @@ export default function DashboardPage() {
   const selectedFolder = folders.find((f) => f.id === selectedFolderId);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="h-screen bg-gray-50 flex flex-col">
       <Navbar user={user} />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden h-full">
         {/* Sidebar */}
         <div
-          className={`${sidebarOpen ? "w-80" : "w-16"} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}
+          className={`${sidebarOpen ? "w-80" : "w-16"} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col min-h-0`}
         >
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -426,13 +426,13 @@ export default function DashboardPage() {
           </div>
 
           {sidebarOpen && (
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4 min-h-0">
               {foldersLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
                 </div>
               ) : (
-                <FolderTree
+                <PlainFolderTree
                   folders={folders}
                   selectedFolderId={selectedFolderId}
                   onFolderSelect={handleFolderSelect}
