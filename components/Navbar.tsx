@@ -50,7 +50,7 @@ export default function Navbar({
   };
 
   return (
-    <nav className="glass border-b border-slate-700/50 px-4 py-3">
+    <nav className="glass border-b border-slate-700/50 px-4 py-3 relative z-50">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
