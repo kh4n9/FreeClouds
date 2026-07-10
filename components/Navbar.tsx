@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LogOut, User, Settings } from "lucide-react";
-import Image from "next/image";
+import { LogOut, User, Settings, Cloud } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 
@@ -24,7 +23,6 @@ export default function Navbar({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { t } = useTranslation();
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -32,7 +30,6 @@ export default function Navbar({
         setIsDropdownOpen(false);
       }
     };
-
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
@@ -41,19 +38,11 @@ export default function Navbar({
     try {
       const response = await fetch("/api/auth/logout", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
-
       if (response.ok) {
-        if (onLogout) {
-          onLogout();
-        } else {
-          window.location.href = "/login";
-        }
-      } else {
-        console.error("Logout failed");
+        if (onLogout) onLogout();
+        else window.location.href = "/login";
       }
     } catch (error) {
       console.error("Logout error:", error);
@@ -61,25 +50,19 @@ export default function Navbar({
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 px-4 py-3">
+    <nav className="glass border-b border-slate-700/50 px-4 py-3">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
-        {/* Logo and Title */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <Image
-              src="/logo.svg"
-              alt="Free Clouds Logo"
-              width={32}
-              height={32}
-              className="h-8 w-8"
-            />
-            <h1 className="text-xl font-bold text-gray-900">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+              <Cloud className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-white">
               {t("brand", { en: "Free Clouds", vi: "Free Clouds" })}
             </h1>
           </div>
         </div>
 
-        {/* Language Switcher and User Menu */}
         <div className="flex items-center gap-3">
           <LanguageSwitcher variant="compact" className="hidden sm:block" />
 
@@ -87,43 +70,41 @@ export default function Navbar({
             <div className="relative user-dropdown">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all"
               >
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-blue-600" />
+                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-white" />
                 </div>
                 <div className="hidden md:block text-left">
-                  <div className="font-medium">{user.name}</div>
-                  <div className="text-xs text-gray-500 truncate max-w-32">
+                  <div className="font-medium text-white">{user.name}</div>
+                  <div className="text-xs text-slate-500 truncate max-w-32">
                     {user.email}
                   </div>
                 </div>
               </button>
 
-              {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                  <div className="p-3 border-b border-gray-100">
-                    <div className="font-medium text-gray-900">{user.name}</div>
-                    <div className="text-sm text-gray-500 break-all">
+                <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl z-50 animate-scale-in">
+                  <div className="px-4 py-3 border-b border-slate-700">
+                    <div className="font-medium text-white">{user.name}</div>
+                    <div className="text-sm text-slate-400 break-all">
                       {user.email}
                     </div>
                   </div>
-
-                  <div className="p-1">
+                  <div className="p-1.5">
                     <button
                       onClick={() => {
                         setIsDropdownOpen(false);
                         onOpenUserProfile?.();
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-slate-700 rounded-lg transition-all"
                     >
-                      <Settings className="w-4 h-4" />
+                      <Settings className="w-4 h-4 text-slate-400" />
                       {t("settings", commonTranslations.settings)}
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                     >
                       <LogOut className="w-4 h-4" />
                       {t("logout", commonTranslations.logout)}
@@ -137,13 +118,13 @@ export default function Navbar({
               <LanguageSwitcher variant="icon-only" className="sm:hidden" />
               <a
                 href="/login"
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                className="px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
               >
                 {t("login", commonTranslations.login)}
               </a>
               <a
                 href="/register"
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 text-sm btn-primary rounded-lg"
               >
                 {t("register", commonTranslations.register)}
               </a>

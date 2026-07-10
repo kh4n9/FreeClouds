@@ -209,8 +209,8 @@ function FolderNode({
         onClick={handleSelect}
         className={`flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer select-none ${
           isSelected
-            ? "bg-blue-100 text-blue-800"
-            : "hover:bg-gray-100 text-gray-800"
+            ? "bg-indigo-500/20 text-indigo-300"
+            : "hover:bg-slate-700/50 text-slate-300"
         }`}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
       >
@@ -234,7 +234,7 @@ function FolderNode({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            color: hasChildren ? "#6b7280" : "transparent",
+            color: hasChildren ? "#94a3b8" : "transparent",
             transform: hasChildren
               ? expanded
                 ? "rotate(90deg)"
@@ -284,7 +284,7 @@ function FolderNode({
                     setEditing(false);
                   }
                 }}
-                className="px-2 py-1 text-sm border border-gray-300 rounded"
+                className="px-2 py-1 text-sm bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </form>
           )}
@@ -306,7 +306,7 @@ function FolderNode({
                 onCreate(node.id);
               }}
               title={t("newFolder", commonTranslations.newFolder)}
-              className="text-xs px-2 py-1 rounded hover:bg-gray-100"
+              className="text-xs px-2 py-1 rounded hover:bg-slate-700/50 text-slate-400"
             >
               ➕
             </button>
@@ -318,7 +318,7 @@ function FolderNode({
                 setEditing(true);
               }}
               title={t("rename", commonTranslations.rename)}
-              className="text-xs px-2 py-1 rounded hover:bg-gray-100"
+              className="text-xs px-2 py-1 rounded hover:bg-slate-700/50 text-slate-400"
             >
               ✎
             </button>
@@ -327,7 +327,7 @@ function FolderNode({
             <button
               onClick={handleDelete}
               title={t("delete", commonTranslations.delete)}
-              className="text-xs px-2 py-1 rounded hover:bg-red-50 text-red-600"
+              className="text-xs px-2 py-1 rounded hover:bg-red-500/10 text-red-400"
             >
               🗑
             </button>
@@ -393,10 +393,10 @@ export default function PlainFolderTree({
   if (loading) {
     return (
       <div className="p-4">
-        <div className="h-4 bg-gray-200 rounded mb-2 w-1/3 animate-pulse" />
+        <div className="h-4 bg-slate-700/50 rounded mb-2 w-1/3 animate-pulse" />
         <div className="space-y-2">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-6 bg-gray-200 rounded animate-pulse" />
+            <div key={i} className="h-6 bg-slate-700/50 rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -409,8 +409,8 @@ export default function PlainFolderTree({
       <div
         className={`flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer select-none ${
           selectedFolderId === null
-            ? "bg-blue-100 text-blue-800"
-            : "hover:bg-gray-100 text-gray-800"
+            ? "bg-indigo-500/20 text-indigo-300"
+            : "hover:bg-slate-700/50 text-slate-300"
         }`}
         onClick={() => onFolderSelect(null)}
       >
@@ -426,7 +426,7 @@ export default function PlainFolderTree({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            color: tree.length ? "#6b7280" : "transparent",
+            color: tree.length ? "#94a3b8" : "transparent",
             transform: rootExpanded ? "rotate(90deg)" : "rotate(0deg)",
             transition: "transform 180ms ease",
           }}
@@ -453,7 +453,7 @@ export default function PlainFolderTree({
               onCreateFolder(null);
             }}
             title={t("newFolder", commonTranslations.newFolder)}
-            className="text-xs px-2 py-1 rounded hover:bg-gray-100"
+            className="text-xs px-2 py-1 rounded hover:bg-slate-700/50 text-slate-400"
           >
             ➕
           </button>
@@ -477,7 +477,7 @@ export default function PlainFolderTree({
           ))}
 
         {tree.length === 0 && (
-          <div className="plain-folder-empty">
+          <div className="px-2 py-3 text-sm text-slate-500 text-center">
             {t("noFoldersYet", commonTranslations.noFoldersYet)}
           </div>
         )}

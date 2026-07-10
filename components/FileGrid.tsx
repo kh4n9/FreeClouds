@@ -42,6 +42,7 @@ const DynamicFilePreview = dynamic(() => import("./FilePreview"), {
 });
 import PreviewIndicator, { PreviewStatusBadge } from "./PreviewIndicator";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
+import ContextMenu, { type ContextMenuAction } from "./ContextMenu";
 
 interface FileData {
   id: string;
@@ -212,22 +213,34 @@ function FileItem({
     };
   }, [imageUrl]);
 
+  const contextMenuItems: ContextMenuAction[] = [
+    { label: "Preview", icon: <Eye className="w-4 h-4" />, onClick: handlePreview },
+    { label: "Download", icon: <Download className="w-4 h-4" />, onClick: handleDownload },
+    { divider: true },
+    {
+      label: "Copy Name", icon: <FileText className="w-4 h-4" />, onClick: () => {
+        navigator.clipboard.writeText(file.name);
+      }
+    },
+    { divider: true },
+    { label: "Delete", icon: <Trash2 className="w-4 h-4" />, onClick: handleDelete, danger: true },
+  ];
+
   if (viewMode === "grid") {
     return (
-      <>
-        <div
-          className={`group relative border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer ${getFileTypeColorClasses(file.name, file.mime)}`}
+      <ContextMenu items={contextMenuItems}>
+        <div data-context-menu="true"
+          className={`group relative bg-white/5 border border-white/10 rounded-xl p-4 hover:border-indigo-500/30 hover:bg-white/[0.07] transition-all cursor-pointer ${selected ? "ring-2 ring-indigo-500/50 border-indigo-500/30" : ""}`}
           onClick={handlePreview}
         >
           {/* Selection checkbox (top-left) */}
-          <div className="absolute top-2 left-2 z-20">
+          <div className="absolute top-2.5 left-2.5 z-20">
             <input
               type="checkbox"
               checked={!!selected}
               onClick={handleCheckboxClick}
               onChange={() => {}}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              title="Select file"
+              className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500/50"
               aria-label={`Select ${file.name}`}
             />
           </div>
@@ -235,19 +248,15 @@ function FileItem({
           {/* File Icon or Image Preview */}
           <div className="flex justify-center mb-3 relative">
             {isImage && imageUrl ? (
-              <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
-                <img
-                  src={imageUrl}
-                  alt={file.name}
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10">
+                <img src={imageUrl} alt={file.name} className="w-full h-full object-cover" />
               </div>
             ) : isImage ? (
-              <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
                 {imageLoading ? (
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-indigo-400 border-t-transparent" />
                 ) : (
-                  <Image className="w-8 h-8 text-green-500" />
+                  <Image className="w-8 h-8 text-indigo-400" />
                 )}
               </div>
             ) : (
@@ -256,119 +265,69 @@ function FileItem({
           </div>
 
           {/* File Type Badge */}
-          <div className="absolute top-2 left-2">
-            <span className="text-xs px-2 py-1 bg-white bg-opacity-80 backdrop-blur-sm rounded-full font-medium">
+          <div className="absolute top-2.5 left-8">
+            <span className="text-[10px] px-2 py-0.5 bg-slate-800/80 backdrop-blur-sm rounded-full font-medium text-slate-400 border border-slate-700/50">
               {fileInfo.description}
             </span>
           </div>
 
-          {/* Preview Indicator */}
-          <div className="absolute top-2 right-12">
-            <PreviewIndicator
-              fileName={file.name}
-              fileSize={file.size}
-              mimeType={file.mime}
-              className="opacity-70 group-hover:opacity-100 transition-opacity"
-            />
-          </div>
-
-          {/* Preview Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handlePreview();
-            }}
-            className="absolute top-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 p-1 bg-white bg-opacity-80 backdrop-blur-sm rounded-full hover:bg-opacity-100 transition-all"
-            title={t("previewFile", commonTranslations.previewFile)}
-          >
-            <Eye className="w-4 h-4 text-gray-700" />
-          </button>
-
           {/* File Name */}
-          <h3
-            className="text-sm font-medium text-gray-900 truncate mb-1"
-            title={file.name}
-          >
+          <h3 className="text-sm font-medium text-slate-200 truncate mb-1" title={file.name}>
             {file.name}
           </h3>
 
           {/* File Info */}
-          <div className="text-xs text-gray-500 space-y-1">
+          <div className="text-xs text-slate-500 space-y-0.5">
             <div className="flex items-center justify-between">
               <span>{formatFileSize(file.size)}</span>
-              <PreviewStatusBadge
-                fileName={file.name}
-                fileSize={file.size}
-                mimeType={file.mime}
-                compact={true}
-              />
             </div>
             <div>{formatDate(file.createdAt)}</div>
           </div>
 
-          {/* Actions Menu */}
+          {/* More button */}
           <div className="absolute top-2 right-2">
             <button
               onClick={handleMenuToggle}
-              className="opacity-0 group-hover:opacity-100 p-1 bg-white bg-opacity-80 backdrop-blur-sm rounded hover:bg-opacity-100 transition-all"
+              className="opacity-0 group-hover:opacity-100 p-1.5 bg-slate-800/80 backdrop-blur-sm rounded-lg hover:bg-slate-700/80 border border-white/5 transition-all"
             >
-              <MoreVertical className="w-4 h-4" />
+              <MoreVertical className="w-3.5 h-3.5 text-slate-400" />
             </button>
 
             {isMenuOpen && (
-              <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePreview();
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-md"
-                >
-                  <Eye className="w-4 h-4" />
-                  {t("preview", commonTranslations.preview)}
-                </button>
-                <button
-                  onClick={handleDownload}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  <Download className="w-4 h-4" />
-                  {t("download", commonTranslations.download)}
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 last:rounded-b-md"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {t("delete", commonTranslations.delete)}
-                </button>
+              <div className="absolute right-0 top-full mt-1 w-40 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-10 py-1 backdrop-blur-xl">
+                    {contextMenuItems.map((item, i) => (
+                  item.divider ? (
+                    <div key={i} className="my-1 border-t border-slate-700/50" />
+                  ) : (
+                    <button key={i} onClick={(e) => { e.stopPropagation(); item.onClick?.(); setIsMenuOpen(false); }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${item.danger ? "text-red-400 hover:bg-red-500/10" : "text-slate-200 hover:bg-slate-700/50"}`}>
+                      {item.icon}{item.label}
+                    </button>
+                  )
+                ))}
               </div>
             )}
           </div>
         </div>
-      </>
+      </ContextMenu>
     );
   }
 
   // List view
   return (
-    <>
+    <ContextMenu items={contextMenuItems}>
       <div
-        className={`group flex items-center gap-3 p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer`}
+        className={`group flex items-center gap-3 p-3 border-b border-white/5 hover:bg-white/[0.03] transition-colors cursor-pointer ${selected ? "bg-indigo-500/5" : ""}`}
         onClick={handlePreview}
       >
         {/* Selection checkbox */}
-        <div className="flex-shrink-0 mr-2">
+        <div className="flex-shrink-0">
           <input
             type="checkbox"
             checked={!!selected}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCheckboxClick(e as any);
-            }}
+            onClick={(e) => { e.stopPropagation(); handleCheckboxClick(e as any); }}
             onChange={() => {}}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            title="Select file"
+            className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500/50"
             aria-label={`Select ${file.name}`}
           />
         </div>
@@ -376,99 +335,53 @@ function FileItem({
         {/* File Icon or Image Thumbnail */}
         <div className="flex-shrink-0 relative">
           {isImage && imageUrl ? (
-            <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200">
-              <img
-                src={imageUrl}
-                alt={file.name}
-                className="w-full h-full object-cover"
-              />
+            <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10">
+              <img src={imageUrl} alt={file.name} className="w-full h-full object-cover" />
             </div>
           ) : isImage ? (
-            <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
               {imageLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-400 border-t-transparent" />
               ) : (
-                <Image className="w-6 h-6 text-green-500" />
+                <Image className="w-6 h-6 text-indigo-400" />
               )}
             </div>
           ) : (
             getFileIcon(file.name, file.mime)
           )}
-
-          {/* File Type Badge */}
-          <span className="absolute -top-1 -right-1 text-xs px-1 py-0.5 bg-white border border-gray-200 rounded text-gray-600 font-medium">
-            {fileInfo.description.split(" ")[0]}
-          </span>
         </div>
 
         {/* File Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3
-              className="text-sm font-medium text-gray-900 truncate flex-1"
-              title={file.name}
-            >
+            <h3 className="text-sm font-medium text-slate-200 truncate flex-1" title={file.name}>
               {file.name}
             </h3>
-            <PreviewIndicator
-              fileName={file.name}
-              fileSize={file.size}
-              mimeType={file.mime}
-              className="opacity-70 group-hover:opacity-100 transition-opacity"
-              showTooltip={false}
-            />
           </div>
-          <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+          <div className="flex items-center gap-4 text-xs text-slate-500 mt-0.5">
             <span>{formatFileSize(file.size)}</span>
             <span>{formatDate(file.createdAt)}</span>
-            {file.folderName && (
-              <span className="text-blue-600">📁 {file.folderName}</span>
-            )}
-            <PreviewStatusBadge
-              fileName={file.name}
-              fileSize={file.size}
-              mimeType={file.mime}
-              compact={true}
-            />
+            {file.folderName && <span className="text-indigo-400">in {file.folderName}</span>}
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handlePreview();
-            }}
-            className="opacity-0 group-hover:opacity-100 p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded transition-all"
-            title={t("preview", commonTranslations.preview)}
-          >
+        {/* Hover action buttons */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={(e) => { e.stopPropagation(); handlePreview(); }}
+            className="p-2 text-slate-500 hover:text-indigo-400 hover:bg-slate-800/50 rounded-lg transition-all">
             <Eye className="w-4 h-4" />
           </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDownload(file.id, file.name);
-            }}
-            className="opacity-0 group-hover:opacity-100 p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-all"
-            title="Download"
-          >
+          <button onClick={(e) => { e.stopPropagation(); onDownload(file.id, file.name); }}
+            className="p-2 text-slate-500 hover:text-blue-400 hover:bg-slate-800/50 rounded-lg transition-all">
             <Download className="w-4 h-4" />
           </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // Delegate confirmation to parent (in-app modal) and trigger deletion flow.
-              onDelete(file.id);
-            }}
-            className="opacity-0 group-hover:opacity-100 p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-all"
-            title="Delete"
-          >
+          <button onClick={(e) => { e.stopPropagation(); onDelete(file.id); }}
+            className="p-2 text-slate-500 hover:text-red-400 hover:bg-slate-800/50 rounded-lg transition-all">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
-    </>
+    </ContextMenu>
   );
 }
 

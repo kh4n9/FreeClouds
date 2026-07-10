@@ -10,9 +10,9 @@ import {
 import { telegramAPI, TelegramError } from "@/lib/telegram";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
 
     // Validate file ID
-    const fileId = params.id;
+    const { id: fileId } = await params;
     if (!fileId || fileId.length !== 24) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }

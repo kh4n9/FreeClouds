@@ -53,7 +53,15 @@ export function useAuth() {
         body: JSON.stringify(credentials),
       });
 
-      const data = await response.json();
+      let data: any;
+      try {
+        data = await response.json();
+      } catch {
+        const text = await response.text().catch(() => "");
+        console.error("Login failed - non-JSON response:", response.status, text);
+        setError({ message: `Server error (${response.status}). Please try again.` });
+        return null;
+      }
 
       if (response.ok) {
         console.log("Login successful, user data:", data);
@@ -73,9 +81,9 @@ export function useAuth() {
           throw new Error("Auth verification failed after login");
         }
       } else {
-        console.error("Login failed:", data);
+        console.error("Login failed:", response.status, data);
         setError({
-          message: data.error || "Login failed. Please try again.",
+          message: data?.error || `Login failed (${response.status}). Please try again.`,
         });
         return null;
       }

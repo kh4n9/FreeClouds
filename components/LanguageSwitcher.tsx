@@ -88,21 +88,21 @@ export default function LanguageSwitcher({
 
   const getButtonClasses = () => {
     const baseClasses =
-      "flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md";
+      "flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-md";
 
     switch (variant) {
       case "compact":
-        return `${baseClasses} px-2 py-1 text-sm hover:bg-gray-100`;
+        return `${baseClasses} px-2 py-1 text-sm hover:bg-slate-800/50`;
       case "icon-only":
-        return `${baseClasses} p-2 hover:bg-gray-100`;
+        return `${baseClasses} p-2 hover:bg-slate-800/50`;
       default:
-        return `${baseClasses} px-3 py-2 hover:bg-gray-100`;
+        return `${baseClasses} px-3 py-2 hover:bg-slate-800/50`;
     }
   };
 
   const getDropdownClasses = () => {
     const baseClasses =
-      "absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-max";
+      "absolute right-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl shadow-black/20 z-50 min-w-max";
 
     switch (variant) {
       case "compact":
@@ -138,10 +138,10 @@ export default function LanguageSwitcher({
               <button
                 key={language.code}
                 onClick={() => handleLanguageChange(language)}
-                className={`w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-gray-100 transition-colors ${
+                className={`w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-slate-700/50 transition-colors ${
                   currentLanguage.code === language.code
-                    ? "bg-blue-50 text-blue-600 font-medium"
-                    : "text-gray-700"
+                    ? "bg-indigo-500/10 text-indigo-400 font-medium"
+                    : "text-slate-300"
                 }`}
                 aria-label={`Switch to ${language.nativeName}`}
               >
@@ -154,7 +154,7 @@ export default function LanguageSwitcher({
                 </span>
                 <span>{language.nativeName}</span>
                 {currentLanguage.code === language.code && (
-                  <span className="ml-auto text-blue-600">✓</span>
+                  <span className="ml-auto text-indigo-400">✓</span>
                 )}
               </button>
             ))}
@@ -174,7 +174,7 @@ export default function LanguageSwitcher({
         aria-haspopup="true"
       >
         {variant !== "compact" && (
-          <Globe className="w-4 h-4 text-gray-500" aria-hidden="true" />
+          <Globe className="w-4 h-4 text-slate-400" aria-hidden="true" />
         )}
         <span
           className="text-base"
@@ -185,7 +185,7 @@ export default function LanguageSwitcher({
         </span>
         {showText && (
           <span
-            className={`${variant === "compact" ? "text-sm" : "text-sm"} font-medium text-gray-700`}
+            className={`${variant === "compact" ? "text-sm" : "text-sm"} font-medium text-slate-200`}
           >
             {variant === "compact"
               ? currentLanguage.code.toUpperCase()
@@ -193,15 +193,15 @@ export default function LanguageSwitcher({
           </span>
         )}
         <ChevronDown
-          className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
           aria-hidden="true"
         />
       </button>
 
       {isOpen && (
         <div className={getDropdownClasses()}>
-          <div className="px-3 py-2 border-b border-gray-100">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <div className="px-3 py-2 border-b border-slate-700">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
               Select Language
             </p>
           </div>
@@ -209,10 +209,10 @@ export default function LanguageSwitcher({
             <button
               key={language.code}
               onClick={() => handleLanguageChange(language)}
-              className={`w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-gray-100 transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-slate-700/50 transition-colors ${
                 currentLanguage.code === language.code
-                  ? "bg-blue-50 text-blue-600 font-medium"
-                  : "text-gray-700"
+                  ? "bg-indigo-500/10 text-indigo-400 font-medium"
+                  : "text-slate-300"
               }`}
               aria-label={`Switch to ${language.nativeName}`}
             >
@@ -225,17 +225,17 @@ export default function LanguageSwitcher({
               </span>
               <div className="flex flex-col items-start">
                 <span className="font-medium">{language.nativeName}</span>
-                <span className="text-xs text-gray-500">{language.name}</span>
+                <span className="text-xs text-slate-500">{language.name}</span>
               </div>
               {currentLanguage.code === language.code && (
-                <span className="ml-auto text-blue-600 font-medium">✓</span>
+                <span className="ml-auto text-indigo-400 font-medium">✓</span>
               )}
             </button>
           ))}
 
           {/* Language preference note */}
-          <div className="px-3 py-2 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
+          <div className="px-3 py-2 border-t border-slate-700">
+            <p className="text-xs text-slate-500">
               Language preference is saved automatically
             </p>
           </div>

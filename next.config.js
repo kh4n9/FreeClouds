@@ -1,10 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["mongoose"],
-  },
+  serverExternalPackages: ["mongoose"],
   images: {
-    domains: ["api.telegram.org"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "api.telegram.org",
+      },
+    ],
     unoptimized: true,
   },
   async headers() {

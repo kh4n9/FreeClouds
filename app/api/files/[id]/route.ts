@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
+import { z } from "zod";
 import {
   requireAuth,
   AuthError,
@@ -11,9 +12,9 @@ import {
 } from "@/lib/auth";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
 
     // Validate file ID
-    const fileId = params.id;
+    const { id: fileId } = await params;
     if (!fileId || fileId.length !== 24) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
@@ -85,7 +86,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
 
     // Validate file ID
-    const fileId = params.id;
+    const { id: fileId } = await params;
     if (!fileId || fileId.length !== 24) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
@@ -129,6 +130,39 @@ export async function PUT() {
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
-export async function PATCH() {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+const renameSchema = z.object({
+  name: z.string().min(1, "File name is required").max(255, "File name too long").trim(),
+});
+
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  try {
+    if (!validateOrigin(request)) return createCsrfError();
+    const user = await requireAuth(request);
+    await connectToDatabase();
+    const { id: fileId } = await params;
+    const body = await request.json();
+    const action = body.action;
+
+    if (action === "rename") {
+      const validation = renameSchema.safeParse(body);
+      if (!validation.success) {
+        const firstError = validation.error?.errors?.[0];
+        return NextResponse.json({ error: firstError?.message || "Invalid name" }, { status: 400 });
+      }
+      const file = await File.findById(fileId);
+      if (!file || file.deletedAt) return NextResponse.json({ error: "File not found" }, { status: 404 });
+      if (!(await verifyOwnership(user.id, file))) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      const ext = file.name.includes(".") ? file.name.substring(file.name.lastIndexOf(".")) : "";
+      const baseName = validation.data.name.endsWith(ext) ? validation.data.name : validation.data.name + ext;
+      file.name = baseName;
+      await file.save();
+      return NextResponse.json({ id: file._id.toString(), name: file.name }, { status: 200 });
+    }
+
+    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  } catch (error) {
+    console.error("Patch file error:", error);
+    if (error instanceof AuthError) return createAuthResponse(error);
+    return NextResponse.json({ error: "Failed to update file" }, { status: 500 });
+  }
 }

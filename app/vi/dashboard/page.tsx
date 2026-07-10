@@ -207,32 +207,29 @@ export default function DashboardPage() {
     setShowCreateFolder(true);
   }, []);
 
-  const confirmCreateFolder = async () => {
-    if (!newFolderName.trim()) return;
-
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const confirmCreateFolder = async (folderName?: string) => {
+    const name = (folderName || newFolderName).trim();
+    if (!name) return;
+    setCreatingFolder(true);
     try {
-      const response = await fetch("/api/folders", {
+      const res = await fetch("/api/folders", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: newFolderName.trim(),
-          parent: createFolderParent,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, parent: createFolderParent }),
       });
-
-      if (response.ok) {
+      if (res.ok) {
         await loadFolders();
         setShowCreateFolder(false);
         setNewFolderName("");
       } else {
-        const data = await response.json();
+        const data = await res.json();
         alert(data.error || "Không thể tạo thư mục");
       }
-    } catch (error) {
-      console.error("Lỗi khi tạo thư mục:", error);
+    } catch {
       alert("Không thể tạo thư mục");
+    } finally {
+      setCreatingFolder(false);
     }
   };
 
@@ -723,36 +720,25 @@ export default function DashboardPage() {
 
       {/* Create Folder Modal */}
       {showCreateFolder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Create New Folder
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowCreateFolder(false); }}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-slate-700/50">
+              <h3 className="text-lg font-semibold text-white">Tạo thư mục mới</h3>
             </div>
             <div className="p-6">
-              <input
-                type="text"
-                placeholder="Folder name"
-                value={newFolderName}
+              <input type="text" placeholder="Tên thư mục" value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-                onKeyPress={(e) => e.key === "Enter" && confirmCreateFolder()}
-                autoFocus
-              />
+                className="input-modern w-full px-4 py-2.5 rounded-xl mb-4 text-white"
+                onKeyDown={(e) => e.key === "Enter" && newFolderName.trim() && confirmCreateFolder(newFolderName.trim())}
+                autoFocus />
               <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => setShowCreateFolder(false)}
-                  className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmCreateFolder}
-                  disabled={!newFolderName.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Create
+                <button onClick={() => setShowCreateFolder(false)}
+                  className="btn-secondary px-4 py-2 rounded-lg text-sm">Hủy</button>
+                <button onClick={() => confirmCreateFolder(newFolderName.trim())} disabled={!newFolderName.trim() || creatingFolder}
+                  className="btn-primary px-4 py-2 rounded-lg text-sm disabled:opacity-50">
+                  {creatingFolder && <svg className="animate-spin h-4 w-4 inline mr-1.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
+                  Tạo
                 </button>
               </div>
             </div>

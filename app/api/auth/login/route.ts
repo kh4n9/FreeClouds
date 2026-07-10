@@ -30,7 +30,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate request body
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid request body. Please provide valid JSON." },
+        { status: 400 },
+      );
+    }
+
     const validation = loginSchema.safeParse(body);
 
     if (!validation.success) {
@@ -90,15 +99,12 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("Login error:", error);
-
-    return NextResponse.json(
-      { error: "Login failed. Please try again." },
-      { status: 500 },
-    );
+    const message =
+      error instanceof Error ? error.message : "Login failed. Please try again.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
-// Method not allowed for other HTTP methods
 export async function GET() {
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

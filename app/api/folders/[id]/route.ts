@@ -12,9 +12,9 @@ import {
 } from "@/lib/auth";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const updateFolderSchema = z.object({
@@ -39,7 +39,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
 
     // Validate folder ID
-    const folderId = params.id;
+    const { id: folderId } = await params;
     if (!folderId || folderId.length !== 24) {
       return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
     }
@@ -153,7 +153,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
 
     // Validate folder ID
-    const folderId = params.id;
+    const { id: folderId } = await params;
     if (!folderId || folderId.length !== 24) {
       return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
     }

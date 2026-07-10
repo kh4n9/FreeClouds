@@ -55,13 +55,14 @@ folderSchema.virtual("id").get(function () {
 folderSchema.set("toJSON", {
   virtuals: true,
   transform: function (doc, ret) {
-    delete ret._id;
-    delete (ret as any).__v;
+    const obj = ret as any;
+    delete obj._id;
+    delete obj.__v;
     // Convert parent ObjectId to string
-    if (ret.parent) {
-      (ret as any).parent = ret.parent.toString();
+    if (obj.parent) {
+      obj.parent = obj.parent.toString();
     }
-    return ret;
+    return obj;
   },
 });
 

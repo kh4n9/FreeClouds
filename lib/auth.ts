@@ -88,6 +88,17 @@ export function validateOrigin(request: NextRequest): boolean {
     return true;
   }
 
+  // In development, allow any localhost origin
+  if (env.NODE_ENV === "development") {
+    let checkOrigin = origin;
+    if (!checkOrigin && referer) {
+      try { checkOrigin = new URL(referer).origin; } catch {}
+    }
+    if (checkOrigin && (checkOrigin.startsWith("http://localhost:") || checkOrigin.startsWith("http://127.0.0.1:"))) {
+      return true;
+    }
+  }
+
   const allowedOrigins = [env.ALLOWED_ORIGIN];
 
   if (origin && allowedOrigins.includes(origin)) {

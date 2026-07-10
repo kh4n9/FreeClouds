@@ -1,360 +1,242 @@
-"use client";
+import Link from "next/link";
+import { Shield, Zap, Users, ArrowRight, Check, Cloud, Lock, Server, Globe } from "lucide-react";
 
-import { useEffect, useState } from "react";
-import { Shield, Zap, Users, ArrowRight, Check } from "lucide-react";
-import Image from "next/image";
-import Head from "next/head";
-import Script from "next/script";
-import Footer from "../../components/Footer";
-import {
-  generateMetadata,
-  generateWebApplicationStructuredData,
-  generateBreadcrumbs,
-} from "@/lib/seo/utils";
-import { BASE_URL } from "@/lib/seo/config";
+const features = [
+  {
+    icon: Shield,
+    title: "Bảo Mật & Riêng Tư",
+    desc: "File của bạn được mã hóa và lưu trữ an toàn. Chỉ bạn mới có quyền truy cập.",
+    en: "Secure and private",
+    gradient: "from-blue-500 to-indigo-500",
+  },
+  {
+    icon: Zap,
+    title: "Tốc Độ Cực Nhanh",
+    desc: "Tải lên và tải xuống với tốc độ cao nhờ hạ tầng tối ưu.",
+    en: "Lightning fast",
+    gradient: "from-purple-500 to-pink-500",
+  },
+  {
+    icon: Cloud,
+    title: "Vận Hành Bởi Telegram",
+    desc: "Tận dụng hạ tầng mạnh mẽ của Telegram cho lưu trữ luôn sẵn sàng.",
+    en: "Telegram powered",
+    gradient: "from-cyan-500 to-blue-500",
+  },
+  {
+    icon: Lock,
+    title: "Bảo Mật Doanh Nghiệp",
+    desc: "Xác thực JWT, bảo vệ CSRF, giới hạn tốc độ tích hợp sẵn.",
+    en: "Enterprise security",
+    gradient: "from-emerald-500 to-teal-500",
+  },
+  {
+    icon: Users,
+    title: "Dễ Dàng Quản Lý",
+    desc: "Sắp xếp với thư mục, tìm kiếm tức thì, quản lý dễ dàng.",
+    en: "Easy organization",
+    gradient: "from-orange-500 to-red-500",
+  },
+  {
+    icon: Globe,
+    title: "Truy Cập Mọi Nơi",
+    desc: "Truy cập file từ bất kỳ thiết bị nào, bất kỳ đâu trên thế giới.",
+    en: "Cross-platform",
+    gradient: "from-pink-500 to-rose-500",
+  },
+];
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+const pricing = [
+  { name: "Cơ Bản", price: "$0", period: "tháng", features: ["Giới hạn 50MB", "Không giới hạn thư mục", "Lưu trữ an toàn", "Quản lý file", "Tìm kiếm"], popular: false },
+  { name: "Pro", price: "$9", period: "tháng", features: ["Giới hạn 500MB", "Không giới hạn thư mục", "Hỗ trợ ưu tiên", "Phân tích nâng cao", "Tải bulk"], popular: true },
+  { name: "Doanh Nghiệp", price: "$29", period: "tháng", features: ["Giới hạn 5GB", "Mọi tính năng Pro", "API access", "Quản lý nhóm", "Tích hợp tùy chỉnh"], popular: false },
+];
 
 export default function VietnameseHomePage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch("/api/auth/me");
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      }
-    } catch (error) {
-      console.error("Auth check failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (user) {
-    // Redirect to dashboard if already logged in
-    window.location.href = "/dashboard";
-    return null;
-  }
-
-  const structuredData = generateWebApplicationStructuredData("vi");
-  const breadcrumbData = generateBreadcrumbs([
-    { name: "Trang Chủ", url: "/vi" },
-  ]);
-
   return (
-    <>
-      {/* Enhanced SEO Head */}
-      <Head>
-        <title>Free Clouds - Lưu Trữ Đám Mây An Toàn & Chia Sẻ File</title>
-        <meta
-          name="description"
-          content="Lưu trữ đám mây miễn phí và bảo mật được hỗ trợ bởi Telegram. Tải lên, tổ chức và chia sẻ file với bảo mật cấp doanh nghiệp. Giới hạn file 50MB, thư mục không giới hạn."
-        />
-        <meta
-          name="keywords"
-          content="lưu trữ đám mây, chia sẻ file, lưu trữ miễn phí, telegram storage, tải file an toàn, lưu trữ trực tuyến, quản lý file, sao lưu đám mây"
-        />
-        <link rel="canonical" href={`${BASE_URL}/vi`} />
-        <meta property="og:type" content="website" />
-        <meta
-          property="og:title"
-          content="Free Clouds - Lưu Trữ Đám Mây An Toàn & Chia Sẻ File"
-        />
-        <meta
-          property="og:description"
-          content="Lưu trữ đám mây miễn phí và bảo mật được hỗ trợ bởi Telegram. Tải lên, tổ chức và chia sẻ file với bảo mật cấp doanh nghiệp."
-        />
-        <meta property="og:url" content={`${BASE_URL}/vi`} />
-        <meta property="og:image" content={`${BASE_URL}/logo-with-text.png`} />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Head>
-
-      {/* Structured Data */}
-      <Script
-        id="homepage-structured-data"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify([structuredData, breadcrumbData]),
-        }}
-      />
-
-      <div className="min-h-screen">
-        {/* Header */}
-        <header className="bg-white shadow-sm" role="banner">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/logo.svg"
-                  alt="Free Clouds - Logo Lưu Trữ Đám Mây An Toàn"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8"
-                  priority
-                />
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Free Clouds
-                </h1>
+    <div className="min-h-screen">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/vi" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center transition-transform group-hover:scale-110">
+                <Cloud className="w-5 h-5 text-white" />
               </div>
-              <nav
-                className="flex items-center gap-4"
-                role="navigation"
-                aria-label="Điều hướng chính"
-              >
-                <a
-                  href="/vi/login"
-                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-3 py-2"
-                  aria-label="Đăng nhập vào tài khoản của bạn"
-                >
-                  Đăng Nhập
-                </a>
-                <a
+              <span className="text-xl font-bold text-white">Free Clouds</span>
+            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/vi/login" className="btn-ghost px-4 py-2 rounded-lg text-sm font-medium">
+                Đăng Nhập
+              </Link>
+              <Link href="/vi/register" className="btn-primary px-5 py-2 rounded-lg text-sm font-medium">
+                Bắt Đầu
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <section className="relative pt-32 pb-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 via-transparent to-transparent" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-[128px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[128px]" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm mb-8">
+              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+              Vận hành bởi hạ tầng Telegram
+            </div>
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+              File Của Bạn,{" "}
+              <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Mọi Nơi
+              </span>
+            </h1>
+            <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
+              Lưu trữ, sắp xếp và truy cập file an toàn trên đám mây. Được hỗ trợ bởi hạ tầng mạnh mẽ của Telegram.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/vi/register" className="btn-primary px-8 py-4 rounded-xl text-lg font-semibold inline-flex items-center gap-2 group">
+                Bắt Đầu Miễn Phí
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <a href="#features" className="btn-secondary px-8 py-4 rounded-xl text-lg font-semibold inline-flex items-center gap-2">
+                Tìm Hiểu Thêm
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 border-y border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { value: "50MB", label: "Giới Hạn File" },
+              { value: "∞", label: "Thư Mục" },
+              { value: "99.9%", label: "Hoạt Động" },
+              { value: "24/7", label: "Hỗ Trợ" },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                  {stat.value}
+                </div>
+                <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="features" className="py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Mọi thứ bạn cần cho lưu trữ file
+            </h2>
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+              Đơn giản, an toàn và đáng tin cậy với đầy đủ tính năng bạn cần.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, i) => {
+              const Icon = feature.icon;
+              return (
+                <div key={feature.title} className="stat-card group">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} p-2.5 mb-4 transition-transform group-hover:scale-110`}>
+                    <Icon className="w-full h-full text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                  <p className="text-sm text-slate-400 mb-2">{feature.desc}</p>
+                  <p className="text-xs text-slate-500 italic">{feature.en}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 bg-slate-900/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Bảng giá đơn giản, minh bạch
+            </h2>
+            <p className="text-lg text-slate-400">Bắt đầu miễn phí, nâng cấp khi cần thêm.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {pricing.map((plan) => (
+              <div key={plan.name} className={`relative rounded-2xl p-8 transition-all duration-300 hover:translate-y-[-4px] ${
+                plan.popular
+                  ? "bg-gradient-to-b from-indigo-500/10 to-purple-500/10 border-2 border-indigo-500/50"
+                  : "bg-slate-800/50 border border-slate-700"
+              }`}>
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-xs font-semibold text-white">
+                    Phổ Biến Nhất
+                  </div>
+                )}
+                <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
+                <div className="flex items-baseline gap-1 mb-6">
+                  <span className="text-4xl font-bold text-white">{plan.price}</span>
+                  <span className="text-slate-400">/{plan.period}</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-3 text-sm text-slate-300">
+                      <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
                   href="/vi/register"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  aria-label="Tạo tài khoản mới"
+                  className={`w-full py-3 rounded-xl text-sm font-semibold text-center block transition-all ${
+                    plan.popular ? "btn-primary" : "btn-secondary"
+                  }`}
                 >
                   Bắt Đầu
-                </a>
-              </nav>
-            </div>
-          </div>
-        </header>
-
-        {/* Hero Section */}
-        <section
-          className="bg-gradient-to-br from-blue-50 to-indigo-100 py-20"
-          role="main"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-                File Của Bạn,
-                <span className="text-blue-600"> Mọi Nơi</span>
-              </h2>
-              <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                Lưu trữ, tổ chức và truy cập file của bạn một cách an toàn trên
-                đám mây. Được hỗ trợ bởi hạ tầng mạnh mẽ của Telegram với bảo
-                mật cấp doanh nghiệp.
-                <span className="block mt-2 text-lg">
-                  🇻🇳 <em>Made in Vietnam - Sản phẩm Việt Nam</em>
-                </span>
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a
-                  href="/vi/register"
-                  className="bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg inline-flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  aria-label="Bắt đầu sử dụng Free Clouds miễn phí"
-                >
-                  Bắt Đầu Miễn Phí
-                  <ArrowRight className="w-5 h-5" />
-                </a>
-                <a
-                  href="#features"
-                  className="border border-gray-300 text-gray-700 px-8 py-4 rounded-lg hover:bg-gray-50 transition-colors font-medium text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  aria-label="Tìm hiểu thêm về tính năng Free Clouds"
-                >
-                  Tìm Hiểu Thêm
-                </a>
+                </Link>
               </div>
-            </div>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Features Section */}
-        <section
-          id="features"
-          className="py-20 bg-white"
-          aria-labelledby="features-heading"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2
-                id="features-heading"
-                className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
-              >
-                Mọi thứ bạn cần để lưu trữ file
-              </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Lưu trữ đám mây đơn giản, an toàn và đáng tin cậy với đầy đủ
-                tính năng bạn mong đợi.
-                <span className="block mt-2 text-lg text-gray-500">
-                  <em>
-                    Simple, secure, and reliable cloud storage with all the
-                    features you expect
-                  </em>
-                </span>
-              </p>
-            </div>
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20" />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+            Sẵn sàng bắt đầu?
+          </h2>
+          <p className="text-lg text-slate-300 mb-8 max-w-xl mx-auto">
+            Tham gia cùng hàng nghìn người dùng tin tưởng Free Clouds.
+          </p>
+          <Link
+            href="/vi/register"
+            className="btn-primary px-10 py-4 rounded-xl text-lg font-semibold inline-flex items-center gap-2 group"
+          >
+            Tạo Tài Khoản
+            <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </section>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              <article className="text-center p-6">
-                <div
-                  className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                  aria-hidden="true"
-                >
-                  <Shield className="w-8 h-8 text-blue-600" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Bảo Mật & Riêng Tư
-                </h3>
-                <p className="text-gray-600 mb-2">
-                  File của bạn được mã hóa và lưu trữ an toàn. Chỉ bạn mới có
-                  quyền truy cập dữ liệu của mình.
-                </p>
-                <p className="text-sm text-gray-500 italic">Secure & Private</p>
-              </article>
-
-              <article className="text-center p-6">
-                <div
-                  className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                  aria-hidden="true"
-                >
-                  <Zap className="w-8 h-8 text-green-600" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Tốc Độ Nhanh Chóng
-                </h3>
-                <p className="text-gray-600 mb-2">
-                  Tải lên và tải xuống file với tốc độ nhanh như chớp nhờ hạ
-                  tầng được tối ưu hóa.
-                </p>
-                <p className="text-sm text-gray-500 italic">Lightning Fast</p>
-              </article>
-
-              <article className="text-center p-6">
-                <div
-                  className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                  aria-hidden="true"
-                >
-                  <Users className="w-8 h-8 text-purple-600" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Tổ Chức Dễ Dàng
-                </h3>
-                <p className="text-gray-600 mb-2">
-                  Tổ chức file với thư mục và tìm kiếm những gì bạn cần một cách
-                  nhanh chóng.
-                </p>
-                <p className="text-sm text-gray-500 italic">
-                  Easy Organization
-                </p>
-              </article>
-            </div>
-          </div>
-        </section>
-
-        {/* Pricing Section */}
-        <section className="py-20 bg-gray-50" aria-labelledby="pricing-heading">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2
-                id="pricing-heading"
-                className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
-              >
-                Giá cả đơn giản, minh bạch
-              </h2>
-              <p className="text-xl text-gray-600 mb-2">
-                Bắt đầu miễn phí, nâng cấp khi bạn cần thêm.
-              </p>
-              <p className="text-lg text-gray-500 italic">
-                Start for free, upgrade when you need more
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg p-8 border-2 border-blue-600">
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  Gói Miễn Phí{" "}
-                  <span className="text-lg text-gray-500">/ Free Plan</span>
-                </h3>
-                <div className="text-4xl font-bold text-blue-600 mb-6">
-                  0₫<span className="text-lg text-gray-500">/tháng</span>
-                </div>
-
-                <ul className="space-y-4 mb-8 text-left max-w-sm mx-auto">
-                  <li className="flex items-center gap-3">
-                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    <span>Giới hạn file 50MB</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    <span>Thư mục không giới hạn</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    <span>Lưu trữ file an toàn</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    <span>Tổ chức file</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    <span>Chức năng tìm kiếm</span>
-                  </li>
-                </ul>
-
-                <a
-                  href="/vi/register"
-                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg inline-block focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  aria-label="Bắt đầu sử dụng Free Clouds miễn phí"
-                >
-                  Bắt Đầu Miễn Phí
-                </a>
+      <footer className="border-t border-slate-800 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                <Cloud className="w-5 h-5 text-white" />
               </div>
+              <span className="text-lg font-bold text-white">Free Clouds</span>
+            </div>
+            <div className="text-sm text-slate-500">
+              &copy; {new Date().getFullYear()} Free Clouds. Bảo lưu mọi quyền.
             </div>
           </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-20 bg-blue-600" aria-labelledby="cta-heading">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2
-              id="cta-heading"
-              className="text-3xl md:text-4xl font-bold text-white mb-4"
-            >
-              Sẵn sàng bắt đầu?
-            </h2>
-            <p className="text-xl text-blue-100 mb-4">
-              Tham gia cùng hàng nghìn người dùng tin tưởng Free Clouds với file
-              của họ.
-            </p>
-            <p className="text-lg text-blue-200 mb-8 italic">
-              Join thousands of users who trust Free Clouds with their files
-            </p>
-            <a
-              href="/vi/register"
-              className="bg-white text-blue-600 px-8 py-4 rounded-lg hover:bg-gray-100 transition-colors font-medium text-lg inline-flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 focus:ring-offset-blue-600"
-              aria-label="Tạo tài khoản Free Clouds của bạn"
-            >
-              Tạo Tài Khoản
-              <ArrowRight className="w-5 h-5" />
-            </a>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <Footer />
-      </div>
-    </>
+        </div>
+      </footer>
+    </div>
   );
 }

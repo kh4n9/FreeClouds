@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify admin authentication
@@ -18,7 +18,7 @@ export async function GET(
     // Connect to database
     await connectToDatabase();
 
-    const { id } = params;
+    const { id } = await params;
 
     // Find user with detailed stats
     const user = await User.findById(id).select("-passwordHash").lean();
@@ -120,7 +120,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify admin authentication
@@ -129,7 +129,7 @@ export async function PUT(
     // Connect to database
     await connectToDatabase();
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { name, email, role, isActive, password } = body;
 
@@ -253,7 +253,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify admin authentication
@@ -262,7 +262,7 @@ export async function DELETE(
     // Connect to database
     await connectToDatabase();
 
-    const { id } = params;
+    const { id } = await params;
 
     // Find user
     const user = await User.findById(id);
