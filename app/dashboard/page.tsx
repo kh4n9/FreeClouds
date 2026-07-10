@@ -348,15 +348,26 @@ export default function DashboardPage() {
 
   const handleUpload = async (uploadedFiles: File[], folderId?: string | null) => {
     try {
-      await Promise.all(uploadedFiles.map(async (file) => {
+      const results = await Promise.allSettled(uploadedFiles.map(async (file) => {
         const fd = new FormData(); fd.append("file", file); fd.append("folderId", (folderId ?? selectedFolderId) || "");
         const res = await fetch("/api/upload", { method: "POST", body: fd });
-        if (!res.ok) throw new Error(`Failed to upload ${file.name}`);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Failed to upload ${file.name}`);
+        }
       }));
+      const failed = results.filter((r) => r.status === "rejected");
+      if (failed.length > 0) {
+        setToast({ type: "error", message: `${failed.length} file(s) failed to upload` });
+        setTimeout(() => setToast(null), 4000);
+      } else {
+        setToast({ type: "success", message: `${uploadedFiles.length} file(s) uploaded` });
+        setTimeout(() => setToast(null), 3000);
+      }
       fileCache.current.clear();
       await loadFiles(selectedFolderId, debouncedSearch, false);
       setShowUpload(false);
-    } catch { /* ignore */ }
+    } catch { setToast({ type: "error", message: "Upload failed" }); setTimeout(() => setToast(null), 4000); }
   };
 
   const handleDeleteFile = (fileId: string) => {

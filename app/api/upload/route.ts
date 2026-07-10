@@ -135,23 +135,25 @@ export async function POST(request: NextRequest) {
       chunks.push(buffer.subarray(start, end));
     }
 
-    // Upload all chunks to Telegram in parallel
-    const chunkResults = await Promise.all(
-      chunks.map((chunk, i) =>
-        telegramAPI.sendDocument(chunk, `${fileName}.part${i + 1}`, mimeType)
-          .catch((err) => {
-            console.error(`Chunk ${i + 1}/${totalChunks} upload failed:`, err);
-            return null;
-          })
-      )
-    );
+    // Upload chunks sequentially to avoid Telegram rate limiting
+    const chunkResults: (Awaited<ReturnType<typeof telegramAPI.sendDocument>> | null)[] = [];
+    for (let i = 0; i < chunks.length; i++) {
+      try {
+        const result = await telegramAPI.sendDocument(chunks[i]!, `${fileName}.part${i + 1}`, mimeType);
+        chunkResults.push(result);
+      } catch (err) {
+        console.error(`Chunk ${i + 1}/${totalChunks} upload failed:`, err);
+        chunkResults.push(null);
+        break; // stop on first failure
+      }
+    }
 
     const failedChunks = chunkResults.some((r) => r === null);
     if (failedChunks) {
       return NextResponse.json({ error: `Failed to upload some chunks. Please try again.` }, { status: 500 });
     }
 
-    // Save all chunk records in parallel (all results are non-null here)
+    // Save all chunk records (results are all non-null here)
     const chunkFileDocs = chunkResults.map((result, i) => ({
       name: `${fileName}.part${i + 1}`,
       size: (chunks[i] as Buffer).length,
@@ -165,14 +167,14 @@ export async function POST(request: NextRequest) {
       ...(originalExt ? { originalExt } : {}),
     }));
 
-    const savedChunks = await (File as any).insertMany(chunkFileDocs);
+    await (File as any).insertMany(chunkFileDocs);
 
-    // Save parent file record (what users see)
+    // Save parent file record (what users see) with a synthetic fileId to avoid unique constraint conflict
     const parentFile = new (File as any)({
       name: fileName,
       size: totalSize,
       mime: mimeType,
-      fileId: savedChunks[0].fileId, // reference to first chunk
+      fileId: `chunked_parent_${chunkedId}`,
       owner: user.id,
       folder: folderId,
       chunkedId,
