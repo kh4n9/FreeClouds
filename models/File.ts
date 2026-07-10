@@ -9,6 +9,7 @@ export interface IFile extends Document {
   folder: Types.ObjectId | null;
   deletedAt: Date | null;
   createdAt: Date;
+  originalExt?: string;     // restored on download when set
 
   // Chunked file support
   chunkedId?: string;       // group UUID shared by all chunks + parent
@@ -112,6 +113,10 @@ const fileSchema = new Schema<IFile>({
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  originalExt: {
+    type: String,
+    default: null,
   },
   chunkedId: {
     type: String,

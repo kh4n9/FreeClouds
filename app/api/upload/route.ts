@@ -65,8 +65,19 @@ export async function POST(request: NextRequest) {
     if (!validateFileName(fileName)) fileName = sanitizeFileName(fileName);
 
     const mimeType = file.type || "application/octet-stream";
-    if (!isAllowedFileType(mimeType, fileName))
-      return NextResponse.json({ error: "File type not allowed for security reasons" }, { status: 415 });
+
+    // If file type is blocked, wrap it: change extension to .bin, save the original
+    let originalExt: string | null = null;
+    if (!isAllowedFileType(mimeType, fileName)) {
+      const dot = fileName.lastIndexOf(".");
+      if (dot !== -1) {
+        originalExt = fileName.substring(dot);
+        fileName = fileName.substring(0, dot) + ".bin";
+      } else {
+        originalExt = "";
+        fileName = fileName + ".bin";
+      }
+    }
 
     const existingFile = await (File as any).findOne({
       owner: user.id, folder: folderId, name: fileName, deletedAt: null,
@@ -98,6 +109,7 @@ export async function POST(request: NextRequest) {
         fileId: telegramResponse.document.file_id,
         owner: user.id,
         folder: folderId,
+        ...(originalExt ? { originalExt } : {}),
       });
       await fileRecord.save();
 
@@ -150,6 +162,7 @@ export async function POST(request: NextRequest) {
       chunkedId,
       chunkIndex: i,
       totalChunks,
+      ...(originalExt ? { originalExt } : {}),
     }));
 
     const savedChunks = await (File as any).insertMany(chunkFileDocs);
@@ -165,6 +178,7 @@ export async function POST(request: NextRequest) {
       chunkedId,
       chunkIndex: -1,
       totalChunks,
+      ...(originalExt ? { originalExt } : {}),
     });
     await parentFile.save();
 

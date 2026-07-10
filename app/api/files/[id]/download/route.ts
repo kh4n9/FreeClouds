@@ -75,7 +75,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const headers = new Headers();
     headers.set("Content-Type", file.mime || "application/octet-stream");
 
-    const encodedFileName = encodeURIComponent(file.name);
+    // Restore original extension if file was wrapped
+    const displayName = file.originalExt
+      ? file.name.replace(/\.bin$/i, "") + file.originalExt
+      : file.name;
+    const encodedFileName = encodeURIComponent(displayName);
     headers.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
 
     if (file.size) headers.set("Content-Length", file.size.toString());
