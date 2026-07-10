@@ -207,129 +207,73 @@ function FolderNode({
     <div>
       <div
         onClick={handleSelect}
-        className={`flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer select-none ${
+        className={`flex items-center gap-2 min-h-[44px] px-2 py-1.5 rounded-lg cursor-pointer select-none ${
           isSelected
             ? "bg-indigo-500/20 text-indigo-300"
             : "hover:bg-slate-700/50 text-slate-300"
         }`}
-        style={{ paddingLeft: `${level * 12 + 8}px` }}
+        style={{ paddingLeft: `${level * 16 + 8}px` }}
       >
-        {/* Chevron / toggle */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggle(e);
-          }}
-          aria-label={
-            hasChildren
-              ? expanded
-                ? t("collapse", { en: "Collapse", vi: "Thu gọn" })
-                : t("expand", { en: "Expand", vi: "Mở rộng" })
-              : t("noChildren", { en: "No children", vi: "Không có thư con" })
-          }
-          className="flex items-center justify-center"
+          onClick={(e) => { e.stopPropagation(); handleToggle(e); }}
+          aria-label={hasChildren ? (expanded ? "Collapse" : "Expand") : "No children"}
+          className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-slate-700/50 transition-colors shrink-0"
           style={{
-            width: 18,
-            height: 18,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
             color: hasChildren ? "#94a3b8" : "transparent",
-            transform: hasChildren
-              ? expanded
-                ? "rotate(90deg)"
-                : "rotate(0deg)"
-              : undefined,
+            transform: hasChildren ? (expanded ? "rotate(90deg)" : "rotate(0deg)") : undefined,
             transition: "transform 180ms ease",
-            flexShrink: 0,
           }}
         >
-          {/* simple chevron */}
-          {hasChildren ? "▸" : "•"}
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
         </button>
 
-        {/* folder icon */}
-        <span
-          style={{
-            width: 16,
-            height: 16,
-            display: "inline-block",
-            flexShrink: 0,
-          }}
-        >
-          📁
-        </span>
+        <svg className="w-4 h-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v1M4 10h16M4 10v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+        </svg>
 
-        {/* name or input */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="flex-1 min-w-0">
           {!editing ? (
-            <div className="text-sm truncate" title={node.name}>
-              {node.name}
-            </div>
+            <div className="text-sm truncate" title={node.name}>{node.name}</div>
           ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                submitRename();
-              }}
-            >
-              <input
-                autoFocus
-                value={name}
+            <form onSubmit={(e) => { e.preventDefault(); submitRename(); }}>
+              <input autoFocus value={name}
                 onChange={(e) => setName(e.target.value)}
                 onBlur={submitRename}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    setName(node.name);
-                    setEditing(false);
-                  }
-                }}
-                className="px-2 py-1 text-sm bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
+                onKeyDown={(e) => { if (e.key === "Escape") { setName(node.name); setEditing(false); } }}
+                className="w-full px-2 py-1 text-sm bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </form>
           )}
         </div>
 
-        {/* actions */}
-        <div
-          style={{
-            display: "flex",
-            gap: 6,
-            alignItems: "center",
-            marginLeft: "6px",
-          }}
-        >
+        <div className="flex items-center gap-0.5 shrink-0">
           {onCreate && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onCreate(node.id);
-              }}
+            <button onClick={(e) => { e.stopPropagation(); onCreate(node.id); }}
               title={t("newFolder", commonTranslations.newFolder)}
-              className="text-xs px-2 py-1 rounded hover:bg-slate-700/50 text-slate-400"
-            >
-              ➕
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-700/50 text-slate-400 transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
             </button>
           )}
           {onRename && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditing(true);
-              }}
+            <button onClick={(e) => { e.stopPropagation(); setEditing(true); }}
               title={t("rename", commonTranslations.rename)}
-              className="text-xs px-2 py-1 rounded hover:bg-slate-700/50 text-slate-400"
-            >
-              ✎
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-700/50 text-slate-400 transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
             </button>
           )}
           {onDelete && (
-            <button
-              onClick={handleDelete}
+            <button onClick={handleDelete}
               title={t("delete", commonTranslations.delete)}
-              className="text-xs px-2 py-1 rounded hover:bg-red-500/10 text-red-400"
-            >
-              🗑
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-red-500/10 text-red-400 transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
             </button>
           )}
         </div>
@@ -407,7 +351,7 @@ export default function PlainFolderTree({
     <nav aria-label="Folders" className="plain-folder-tree">
       {/* Root / All Files */}
       <div
-        className={`flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer select-none ${
+        className={`flex items-center gap-2 min-h-[44px] px-2 py-1.5 rounded-lg cursor-pointer select-none ${
           selectedFolderId === null
             ? "bg-indigo-500/20 text-indigo-300"
             : "hover:bg-slate-700/50 text-slate-300"
@@ -415,47 +359,34 @@ export default function PlainFolderTree({
         onClick={() => onFolderSelect(null)}
       >
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleRootToggle();
-          }}
-          className="flex items-center justify-center"
+          onClick={(e) => { e.stopPropagation(); handleRootToggle(); }}
+          className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-slate-700/50 transition-colors shrink-0"
           style={{
-            width: 18,
-            height: 18,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
             color: tree.length ? "#94a3b8" : "transparent",
             transform: rootExpanded ? "rotate(90deg)" : "rotate(0deg)",
             transition: "transform 180ms ease",
           }}
-          aria-label={
-            tree.length
-              ? rootExpanded
-                ? t("collapse", { en: "Collapse", vi: "Thu gọn" })
-                : t("expand", { en: "Expand", vi: "Mở rộng" })
-              : t("noFolders", { en: "No folders", vi: "Không có thư mục" })
-          }
+          aria-label={tree.length ? (rootExpanded ? "Collapse" : "Expand") : "No folders"}
         >
-          {tree.length ? "▸" : "•"}
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
         </button>
 
-        <span style={{ width: 16, display: "inline-block" }}>📁</span>
-        <div style={{ flex: 1, minWidth: 0, fontWeight: 600 }}>
+        <svg className="w-4 h-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v1M4 10h16M4 10v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+        </svg>
+        <div className="flex-1 min-w-0 font-semibold text-sm">
           {t("allFiles", commonTranslations.allFiles)}
         </div>
 
         {onCreateFolder && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onCreateFolder(null);
-            }}
+          <button onClick={(e) => { e.stopPropagation(); onCreateFolder(null); }}
             title={t("newFolder", commonTranslations.newFolder)}
-            className="text-xs px-2 py-1 rounded hover:bg-slate-700/50 text-slate-400"
-          >
-            ➕
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-700/50 text-slate-400 transition-colors">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
           </button>
         )}
       </div>

@@ -288,7 +288,7 @@ function FileItem({
           <div className="absolute top-2 right-2">
             <button
               onClick={handleMenuToggle}
-              className="opacity-0 group-hover:opacity-100 p-1.5 bg-slate-800/80 backdrop-blur-sm rounded-lg hover:bg-slate-700/80 border border-white/5 transition-all"
+              className="sm:opacity-0 sm:group-hover:opacity-100 p-1.5 bg-slate-800/80 backdrop-blur-sm rounded-lg hover:bg-slate-700/80 border border-white/5 transition-all"
             >
               <MoreVertical className="w-3.5 h-3.5 text-slate-400" />
             </button>
@@ -366,7 +366,7 @@ function FileItem({
         </div>
 
         {/* Hover action buttons */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           <button onClick={(e) => { e.stopPropagation(); handlePreview(); }}
             className="p-2 text-slate-500 hover:text-indigo-400 hover:bg-slate-800/50 rounded-lg transition-all">
             <Eye className="w-4 h-4" />
