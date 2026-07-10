@@ -4,11 +4,16 @@ export interface IFile extends Document {
   name: string;
   size: number;
   mime: string;
-  fileId: string; // Telegram file_id
+  fileId: string; // Telegram file_id (for chunks, each chunk has its own fileId)
   owner: Types.ObjectId;
   folder: Types.ObjectId | null;
   deletedAt: Date | null;
   createdAt: Date;
+
+  // Chunked file support
+  chunkedId?: string;       // group UUID shared by all chunks + parent
+  chunkIndex?: number;      // 0-based index for chunks (parent = -1 or null)
+  totalChunks?: number;     // total number of chunks
 
   // Instance methods (typed) so TypeScript recognizes document methods
   softDelete(): Promise<IFile>;
@@ -73,7 +78,6 @@ const fileSchema = new Schema<IFile>({
     type: Number,
     required: [true, "File size is required"],
     min: [0, "File size must be non-negative"],
-    max: [50 * 1024 * 1024, "File size exceeds maximum limit (50MB)"], // Telegram limit
   },
   mime: {
     type: String,
@@ -109,6 +113,19 @@ const fileSchema = new Schema<IFile>({
     type: Date,
     default: Date.now,
   },
+  chunkedId: {
+    type: String,
+    default: null,
+    index: true,
+  },
+  chunkIndex: {
+    type: Number,
+    default: null,
+  },
+  totalChunks: {
+    type: Number,
+    default: null,
+  },
 });
 
 // Compound indexes for better query performance
@@ -116,6 +133,7 @@ fileSchema.index({ owner: 1, folder: 1, deletedAt: 1 });
 fileSchema.index({ owner: 1, name: 1, deletedAt: 1 });
 fileSchema.index({ createdAt: -1 });
 fileSchema.index({ deletedAt: 1, createdAt: -1 });
+fileSchema.index({ chunkedId: 1, chunkIndex: 1 });
 
 // Virtual for id
 fileSchema.virtual("id").get(function (this: IFile) {
@@ -213,6 +231,12 @@ fileSchema.statics.findByOwner = function (
     query.deletedAt = null;
   }
 
+  // Exclude chunk files (only show parent/chunked files or non-chunked files)
+  query.$or = [
+    { chunkedId: null },
+    { chunkIndex: -1 },
+  ];
+
   // Search functionality
   if (search) {
     query.name = { $regex: search, $options: "i" };
@@ -279,6 +303,10 @@ fileSchema.statics.getStorageUsage = async function (ownerId: string) {
       $match: {
         owner: new mongoose.Types.ObjectId(ownerId),
         deletedAt: null,
+        $or: [
+          { chunkedId: null },
+          { chunkIndex: -1 },
+        ],
       },
     },
     {

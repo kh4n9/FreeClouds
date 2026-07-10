@@ -106,6 +106,14 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // Soft delete the file
     await file.softDelete();
 
+    // If file is chunked parent, also soft-delete all chunks
+    if (file.chunkedId && file.totalChunks && file.totalChunks > 1) {
+      await File.updateMany(
+        { chunkedId: file.chunkedId, chunkIndex: { $gte: 0 }, deletedAt: null },
+        { deletedAt: new Date() },
+      );
+    }
+
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error("Delete file error:", error);
