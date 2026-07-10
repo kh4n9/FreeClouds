@@ -101,23 +101,75 @@ export default function UploadDropzone({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const uploadFileWithProgress = useCallback(
+    (file: File) => {
+      const uploadId = `${file.name}-${file.size}-${Date.now()}`;
+      return new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("folderId", folderId || "");
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            setUploadFiles((prev) =>
+              prev.map((uf) =>
+                uf.file === file ? { ...uf, progress: pct } : uf,
+              ),
+            );
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            setUploadFiles((prev) =>
+              prev.map((uf) =>
+                uf.file === file ? { ...uf, progress: 100 } : uf,
+              ),
+            );
+            resolve();
+          } else {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              reject(new Error(data.error || `Upload failed (${xhr.status})`));
+            } catch {
+              reject(new Error(`Upload failed (${xhr.status})`));
+            }
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Network error"));
+        xhr.open("POST", "/api/upload");
+        xhr.send(fd);
+      });
+    },
+    [folderId],
+  );
+
   const handleUpload = useCallback(
     async (files: File[]) => {
+      if (!files.length) return;
       setIsUploading(true);
 
-      try {
-        // Update status to uploading
-        setUploadFiles((prev) =>
-          prev.map((uf) =>
-            files.some((f) => f === uf.file)
-              ? { ...uf, status: "uploading" as const }
-              : uf,
-          ),
-        );
+      // Mark files as uploading
+      setUploadFiles((prev) =>
+        prev.map((uf) =>
+          files.some((f) => f === uf.file)
+            ? { ...uf, status: "uploading" as const, progress: 0 }
+            : uf,
+        ),
+      );
 
+      try {
+        for (const file of files) {
+          await uploadFileWithProgress(file);
+        }
+
+        // Notify parent to refresh file list
         await onUpload(files, folderId);
 
-        // Update status to success
+        // Mark success
         setUploadFiles((prev) =>
           prev.map((uf) =>
             files.some((f) => f === uf.file)
@@ -126,16 +178,12 @@ export default function UploadDropzone({
           ),
         );
 
-        // Clear successful uploads after a delay
         setTimeout(() => {
           setUploadFiles((prev) =>
             prev.filter((uf) => uf.status !== "success"),
           );
         }, 2000);
       } catch (error) {
-        console.error("Upload failed:", error);
-
-        // Update status to error
         setUploadFiles((prev) =>
           prev.map((uf) =>
             files.some((f) => f === uf.file)
@@ -152,7 +200,7 @@ export default function UploadDropzone({
         setIsUploading(false);
       }
     },
-    [onUpload, folderId],
+    [onUpload, folderId, uploadFileWithProgress],
   );
 
   const handleFiles = useCallback(
