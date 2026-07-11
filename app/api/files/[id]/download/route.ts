@@ -21,9 +21,11 @@ async function streamFromTelegram(fileId: string): Promise<ReadableStream<Uint8A
 }
 
 async function* chunkStreamGenerator(chunks: IFile[]) {
-  for (const chunk of chunks) {
-    const stream = await streamFromTelegram(chunk.fileId);
-    const reader = stream.getReader();
+  const streams = await Promise.all(
+    chunks.map(c => telegramAPI.getFileStream(c.fileId)),
+  );
+  for (const s of streams) {
+    const reader = s.stream.getReader();
     try {
       while (true) {
         const { done, value } = await reader.read();
