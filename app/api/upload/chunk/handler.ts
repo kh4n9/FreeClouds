@@ -62,6 +62,7 @@ export async function handleChunk(request: NextRequest) {
   } catch (error) {
     console.error("Chunk upload error:", error);
     if (error instanceof AuthError) return createAuthResponse(error);
-    return NextResponse.json({ error: "Chunk upload failed" }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: "Chunk upload failed", details: msg }, { status: 500 });
   }
 }
