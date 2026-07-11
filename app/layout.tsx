@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import Script from "next/script";
 import {
   generateMetadata as generateSEOMetadata,
@@ -7,8 +6,6 @@ import {
   generateOrganizationStructuredData,
 } from "@/lib/seo/utils";
 import "../styles/globals.css";
-
-const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
 export const metadata: Metadata = generateSEOMetadata({
   language: "en",
@@ -73,6 +70,7 @@ export default function RootLayout({
         <link rel="alternate" href="https://free-clouds.vercel.app/vi" hrefLang="vi" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet" />
         <link rel="dns-prefetch" href="//api.telegram.org" />
         <link rel="dns-prefetch" href="//mongodb.com" />
         <Script
@@ -92,7 +90,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body className="antialiased">
         <div className="min-h-screen bg-[#0f172a]">{children}</div>
       </body>
     </html>
