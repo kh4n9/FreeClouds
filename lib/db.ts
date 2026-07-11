@@ -4,8 +4,23 @@ import { env } from "./env";
 
 // Fix Node.js DNS resolution on Windows (ECONNREFUSED for SRV/A queries)
 try {
-  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+  dns.setServers(["8.8.8.8", "1.1.1.1", "9.9.9.9", "208.67.222.222"]);
+  dns.setDefaultResultOrder("ipv4first");
 } catch {}
+
+// Monkey-patch DNS SRV resolution to fall back to custom resolver
+// (MongoDB Atlas +srv connections fail on Windows when default DNS can't resolve SRV)
+const origResolveSrv = dns.promises.resolveSrv.bind(dns.promises);
+dns.promises.resolveSrv = ((hostname: string) => {
+  return origResolveSrv(hostname).catch((err: NodeJS.ErrnoException) => {
+    if (err.code === "ECONNREFUSED" || err.code === "ENOTFOUND" || err.code === "ETIMEOUT") {
+      const r = new dns.promises.Resolver();
+      r.setServers(["8.8.8.8", "1.1.1.1", "9.9.9.9", "208.67.222.222"]);
+      return r.resolveSrv(hostname);
+    }
+    throw err;
+  });
+}) as typeof dns.promises.resolveSrv;
 
 interface GlobalMongoose {
   conn: mongoose.Connection | null;
