@@ -22,6 +22,8 @@ interface UploadDropzoneProps {
   className?: string;
 }
 
+const CLIENT_CHUNK_SIZE = 4 * 1024 * 1024; // 4MB per chunk (Vercel hobby 4.5MB body limit)
+
 function formatFileSize(bytes: number): string {
   const sizes = ["Bytes", "KB", "MB", "GB"];
   if (bytes === 0) return "0 Bytes";
@@ -102,47 +104,110 @@ export default function UploadDropzone({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadFileWithProgress = useCallback(
-    (file: File) => {
-      const uploadId = `${file.name}-${file.size}-${Date.now()}`;
-      return new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
+    async (file: File) => {
+      if (file.size <= CLIENT_CHUNK_SIZE) {
+        // Small file: direct upload via XHR (under Vercel 4.5MB body limit)
+        return new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          const fd = new FormData();
+          fd.append("file", file);
+          fd.append("folderId", folderId || "");
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const pct = Math.round((e.loaded / e.total) * 100);
+              setUploadFiles((prev) =>
+                prev.map((uf) =>
+                  uf.file === file ? { ...uf, progress: pct } : uf,
+                ),
+              );
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              setUploadFiles((prev) =>
+                prev.map((uf) =>
+                  uf.file === file ? { ...uf, progress: 100 } : uf,
+                ),
+              );
+              resolve();
+            } else {
+              try {
+                const data = JSON.parse(xhr.responseText);
+                reject(new Error(data.error || `Upload failed (${xhr.status})`));
+              } catch {
+                reject(new Error(`Upload failed (${xhr.status})`));
+              }
+            }
+          };
+
+          xhr.onerror = () => reject(new Error("Network error"));
+          xhr.open("POST", "/api/upload");
+          xhr.send(fd);
+        });
+      }
+
+      // Large file: chunked upload (bypass Vercel 4.5MB body limit)
+      const chunkedId = crypto.randomUUID();
+      const totalChunks = Math.ceil(file.size / CLIENT_CHUNK_SIZE);
+      const totalSize = file.size;
+
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * CLIENT_CHUNK_SIZE;
+        const end = Math.min(start + CLIENT_CHUNK_SIZE, totalSize);
+        const chunkBlob = file.slice(start, end);
+
         const fd = new FormData();
-        fd.append("file", file);
+        fd.append("chunk", chunkBlob, `chunk_${i}`);
+        fd.append("chunkedId", chunkedId);
+        fd.append("chunkIndex", String(i));
+        fd.append("totalChunks", String(totalChunks));
+        fd.append("originalName", file.name);
+        fd.append("originalMime", file.type);
         fd.append("folderId", folderId || "");
 
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const pct = Math.round((e.loaded / e.total) * 100);
-            setUploadFiles((prev) =>
-              prev.map((uf) =>
-                uf.file === file ? { ...uf, progress: pct } : uf,
-              ),
-            );
-          }
-        };
+        const resp = await fetch("/api/upload/chunk", {
+          method: "POST",
+          body: fd,
+        });
 
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            setUploadFiles((prev) =>
-              prev.map((uf) =>
-                uf.file === file ? { ...uf, progress: 100 } : uf,
-              ),
-            );
-            resolve();
-          } else {
-            try {
-              const data = JSON.parse(xhr.responseText);
-              reject(new Error(data.error || `Upload failed (${xhr.status})`));
-            } catch {
-              reject(new Error(`Upload failed (${xhr.status})`));
-            }
-          }
-        };
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => null);
+          throw new Error(errData?.error || `Chunk ${i + 1}/${totalChunks} failed`);
+        }
 
-        xhr.onerror = () => reject(new Error("Network error"));
-        xhr.open("POST", "/api/upload");
-        xhr.send(fd);
+        const overallPct = Math.round(((i + 1) / totalChunks) * 100);
+        setUploadFiles((prev) =>
+          prev.map((uf) =>
+            uf.file === file ? { ...uf, progress: overallPct } : uf,
+          ),
+        );
+      }
+
+      // Finalize
+      const finalResp = await fetch("/api/upload/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chunkedId,
+          originalName: file.name,
+          originalMime: file.type,
+          totalSize,
+          folderId: folderId || null,
+        }),
       });
+
+      if (!finalResp.ok) {
+        const errData = await finalResp.json().catch(() => null);
+        throw new Error(errData?.error || "Failed to finalize upload");
+      }
+
+      setUploadFiles((prev) =>
+        prev.map((uf) =>
+          uf.file === file ? { ...uf, progress: 100 } : uf,
+        ),
+      );
     },
     [folderId],
   );

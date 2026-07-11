@@ -46,7 +46,7 @@ export async function connectToDatabase(): Promise<mongoose.Connection> {
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 15000,
       socketTimeoutMS: 45000,
       family: 4, // Use IPv4, skip trying IPv6
     };
