@@ -224,12 +224,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
-}
-export async function PUT() {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
-}
-export async function DELETE() {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
-}
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
+
+// Methods GET, PUT, DELETE intentionally not exported — Next.js returns 405 automatically.
