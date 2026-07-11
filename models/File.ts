@@ -162,6 +162,14 @@ fileSchema.virtual("nameWithoutExtension").get(function () {
   return lastDot === -1 ? this.name : this.name.substring(0, lastDot);
 });
 
+// Virtual for display name (restores original extension for wrapped blocked types)
+fileSchema.virtual("displayName").get(function () {
+  if (this.originalExt) {
+    return this.name.replace(/\.bin$/i, "") + this.originalExt;
+  }
+  return this.name;
+});
+
 // Ensure virtual fields are serialized
 fileSchema.set("toJSON", {
   virtuals: true,

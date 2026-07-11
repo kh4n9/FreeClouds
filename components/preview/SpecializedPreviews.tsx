@@ -30,6 +30,7 @@ import { formatFileSize } from "@/lib/file-utils";
 interface FileData {
   id: string;
   name: string;
+  displayName?: string;
   size: number;
   mime: string;
   folderId: string | null;

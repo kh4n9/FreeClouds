@@ -7,6 +7,7 @@ import { formatFileSize, formatDate } from "@/lib/file-utils";
 interface FileData {
   id: string;
   name: string;
+  displayName?: string;
   size: number;
   mime: string;
   folderId: string | null;
@@ -123,8 +124,8 @@ export default function SimpleFilePreview({ file, isOpen, onClose, onDownload }:
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="min-w-0 flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 truncate" title={file.name}>
-                {file.name}
+              <h3 className="text-lg font-semibold text-gray-900 truncate" title={file.displayName || file.name}>
+                {file.displayName || file.name}
               </h3>
               <div className="flex items-center gap-4 text-sm text-gray-500">
                 <span>{file.mime}</span>

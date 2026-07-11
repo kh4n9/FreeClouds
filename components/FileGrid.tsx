@@ -47,11 +47,13 @@ import ContextMenu, { type ContextMenuAction } from "./ContextMenu";
 interface FileData {
   id: string;
   name: string;
+  displayName?: string;
   size: number;
   mime: string;
   folderId: string | null;
   folderName?: string | null;
   createdAt: string;
+  originalExt?: string | null;
 }
 
 interface FileGridProps {
@@ -141,11 +143,12 @@ function FileItem({
   const [imageLoading, setImageLoading] = useState(false);
   const { t } = useTranslation();
 
-  const isImage = isImageFile(file.name, file.mime);
-  const fileInfo = getFileTypeInfo(file.name, file.mime);
+  const displayName = file.displayName || file.name;
+  const isImage = isImageFile(displayName, file.mime);
+  const fileInfo = getFileTypeInfo(displayName, file.mime);
 
   const handleDownload = () => {
-    onDownload(file.id, file.name);
+    onDownload(file.id, displayName);
     setIsMenuOpen(false);
   };
 
@@ -219,7 +222,7 @@ function FileItem({
     { divider: true },
     {
       label: "Copy Name", icon: <FileText className="w-4 h-4" />, onClick: () => {
-        navigator.clipboard.writeText(file.name);
+        navigator.clipboard.writeText(displayName);
       }
     },
     { divider: true },
@@ -241,7 +244,7 @@ function FileItem({
               onClick={handleCheckboxClick}
               onChange={() => {}}
               className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500/50"
-              aria-label={`Select ${file.name}`}
+              aria-label={`Select ${file.displayName || file.name}`}
             />
           </div>
 
@@ -249,7 +252,7 @@ function FileItem({
           <div className="flex justify-center mb-3 relative">
             {isImage && imageUrl ? (
               <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10">
-                <img src={imageUrl} alt={file.name} className="w-full h-full object-cover" />
+                <img src={imageUrl} alt={file.displayName || file.name} className="w-full h-full object-cover" />
               </div>
             ) : isImage ? (
               <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
@@ -260,7 +263,7 @@ function FileItem({
                 )}
               </div>
             ) : (
-              getFileIcon(file.name, file.mime)
+              getFileIcon(displayName, file.mime)
             )}
           </div>
 
@@ -272,8 +275,8 @@ function FileItem({
           </div>
 
           {/* File Name */}
-          <h3 className="text-sm font-medium text-slate-200 truncate mb-1" title={file.name}>
-            {file.name}
+          <h3 className="text-sm font-medium text-slate-200 truncate mb-1" title={file.displayName || file.name}>
+            {file.displayName || file.name}
           </h3>
 
           {/* File Info */}
@@ -328,7 +331,7 @@ function FileItem({
             onClick={(e) => { e.stopPropagation(); handleCheckboxClick(e as any); }}
             onChange={() => {}}
             className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500/50"
-            aria-label={`Select ${file.name}`}
+            aria-label={`Select ${file.displayName || file.name}`}
           />
         </div>
 
@@ -336,7 +339,7 @@ function FileItem({
         <div className="flex-shrink-0 relative">
           {isImage && imageUrl ? (
             <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10">
-              <img src={imageUrl} alt={file.name} className="w-full h-full object-cover" />
+              <img src={imageUrl} alt={file.displayName || file.name} className="w-full h-full object-cover" />
             </div>
           ) : isImage ? (
             <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
@@ -354,8 +357,8 @@ function FileItem({
         {/* File Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium text-slate-200 truncate flex-1" title={file.name}>
-              {file.name}
+            <h3 className="text-sm font-medium text-slate-200 truncate flex-1" title={file.displayName || file.name}>
+              {file.displayName || file.name}
             </h3>
           </div>
           <div className="flex items-center gap-4 text-xs text-slate-500 mt-0.5">
@@ -619,14 +622,16 @@ export default function FileGrid({
   // Filter files by type
   const filteredFiles = files.filter((file) => {
     if (selectedFilter === "all") return true;
-    const fileInfo = getFileTypeInfo(file.name, file.mime);
+    const fname = file.displayName || file.name;
+    const fileInfo = getFileTypeInfo(fname, file.mime);
     return fileInfo.category === selectedFilter;
   });
 
   // Get file type counts
   const fileTypeCounts = files.reduce(
     (acc, file) => {
-      const fileInfo = getFileTypeInfo(file.name, file.mime);
+      const fname = file.displayName || file.name;
+      const fileInfo = getFileTypeInfo(fname, file.mime);
       acc[fileInfo.category] = (acc[fileInfo.category] || 0) + 1;
       acc.all = (acc.all || 0) + 1;
       return acc;

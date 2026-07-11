@@ -47,6 +47,7 @@ import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 interface FileData {
   id: string;
   name: string;
+  displayName?: string;
   size: number;
   mime: string;
   folderId: string | null;
@@ -83,14 +84,15 @@ export default function FilePreview({
   const audioRef = useRef<HTMLAudioElement>(null);
   const pdfViewerRef = useRef<HTMLIFrameElement>(null);
 
+  const fname = file?.displayName || file?.name || "";
   const fileInfo = useMemo(
-    () => (file ? getFileTypeInfo(file.name, file.mime) : null),
-    [file?.name, file?.mime],
+    () => (file ? getFileTypeInfo(fname, file.mime) : null),
+    [fname, file?.mime],
   );
 
   const previewCapability = useMemo(
-    () => (file ? getPreviewCapability(file.name, file.mime) : null),
-    [file?.name, file?.mime],
+    () => (file ? getPreviewCapability(fname, file.mime) : null),
+    [fname, file?.mime],
   );
 
   const isImage = useMemo(
