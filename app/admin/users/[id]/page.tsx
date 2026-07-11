@@ -220,20 +220,20 @@ export default function AdminUserDetailPage() {
 
   if (error) {
     return (
-      <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
         <div className="flex items-center">
           <Link
             href="/admin/users"
-            className="flex items-center text-sm text-gray-500 hover:text-gray-700"
+            className="flex items-center text-sm text-slate-400 hover:text-slate-200"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             Quay lại danh sách
           </Link>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="bg-red-500/10 border border-red-200 rounded-lg p-6">
           <div className="flex items-center">
             <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-            <span className="text-red-700">{error}</span>
+            <span className="text-red-300">{error}</span>
           </div>
         </div>
       </div>
@@ -243,7 +243,7 @@ export default function AdminUserDetailPage() {
   if (!user) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Không tìm thấy thông tin người dùng</p>
+        <p className="text-slate-400">Không tìm thấy thông tin người dùng</p>
       </div>
     );
   }
@@ -255,13 +255,13 @@ export default function AdminUserDetailPage() {
         <div className="flex items-center space-x-4">
           <Link
             href="/admin/users"
-            className="flex items-center text-sm text-gray-500 hover:text-gray-700"
+            className="flex items-center text-sm text-slate-400 hover:text-slate-200"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             Quay lại danh sách
           </Link>
           <div className="text-gray-300">|</div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-white">
             Chi tiết người dùng
           </h1>
         </div>
@@ -269,14 +269,14 @@ export default function AdminUserDetailPage() {
         <div className="flex items-center space-x-3">
           <Link
             href={`/admin/users/${userId}/edit`}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex items-center px-3 py-2 border border-slate-600/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-700/50"
           >
             <Edit className="mr-2 h-4 w-4" />
             Chỉnh sửa
           </Link>
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
+            className="inline-flex items-center px-3 py-2 border border-red-500/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-red-300 bg-slate-800/50 hover:bg-red-500/10"
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Xóa
@@ -286,18 +286,18 @@ export default function AdminUserDetailPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-500/10 border border-red-200 rounded-lg p-4">
           <div className="flex">
             <AlertTriangle className="h-5 w-5 text-red-400" />
             <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-sm text-red-300">{error}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* User Profile Card */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="bg-slate-800/50 shadow rounded-lg overflow-hidden">
         <div className="px-6 py-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -307,15 +307,15 @@ export default function AdminUserDetailPage() {
                 }`}
               >
                 {user.role === "admin" ? (
-                  <Shield className="h-10 w-10 text-red-600" />
+                  <Shield className="h-10 w-10 text-red-400" />
                 ) : (
-                  <User className="h-10 w-10 text-blue-600" />
+                  <User className="h-10 w-10 text-indigo-400" />
                 )}
               </div>
             </div>
             <div className="ml-6 flex-1">
               <div className="flex items-center">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-white">
                   {user.name}
                 </h2>
                 <span
@@ -331,22 +331,22 @@ export default function AdminUserDetailPage() {
                   className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     user.isActive
                       ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
+                      : "bg-gray-100 text-slate-100"
                   }`}
                 >
                   {user.isActive ? "Hoạt động" : "Vô hiệu hóa"}
                 </span>
               </div>
-              <div className="mt-1 flex items-center text-sm text-gray-500">
+              <div className="mt-1 flex items-center text-sm text-slate-400">
                 <Mail className="mr-1 h-4 w-4" />
                 {user.email}
               </div>
-              <div className="mt-1 flex items-center text-sm text-gray-500">
+              <div className="mt-1 flex items-center text-sm text-slate-400">
                 <Calendar className="mr-1 h-4 w-4" />
                 Tham gia {formatDate(user.createdAt)}
               </div>
               {user.lastLoginAt && (
-                <div className="mt-1 flex items-center text-sm text-gray-500">
+                <div className="mt-1 flex items-center text-sm text-slate-400">
                   <Clock className="mr-1 h-4 w-4" />
                   Đăng nhập cuối: {getRelativeTime(user.lastLoginAt)}
                 </div>
@@ -356,10 +356,10 @@ export default function AdminUserDetailPage() {
               <button
                 onClick={handleToggleStatus}
                 disabled={actionLoading}
-                className={`inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md ${
+                className={`inline-flex items-center px-3 py-2 border shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md ${
                   user.isActive
-                    ? "border-red-300 text-red-700 bg-white hover:bg-red-50"
-                    : "border-green-300 text-green-700 bg-white hover:bg-green-50"
+                    ? "border-red-500/50 text-red-300 bg-slate-800/50 hover:bg-red-500/10"
+                    : "border-green-500/50 text-green-300 bg-slate-800/50 hover:bg-green-500/10"
                 } disabled:opacity-50`}
               >
                 {user.isActive ? (
@@ -377,7 +377,7 @@ export default function AdminUserDetailPage() {
               <button
                 onClick={handleToggleRole}
                 disabled={actionLoading}
-                className="inline-flex items-center px-3 py-2 border border-blue-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 disabled:opacity-50"
+                className="inline-flex items-center px-3 py-2 border border-indigo-500/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-indigo-300 bg-slate-800/50 hover:bg-blue-500/10 disabled:opacity-50"
               >
                 <Shield className="mr-2 h-4 w-4" />
                 {user.role === "admin" ? "Hủy admin" : "Làm admin"}
@@ -389,7 +389,7 @@ export default function AdminUserDetailPage() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -397,10 +397,10 @@ export default function AdminUserDetailPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     Tổng file
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {user.stats.totalFiles.toLocaleString()}
                   </dd>
                 </dl>
@@ -409,7 +409,7 @@ export default function AdminUserDetailPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -417,10 +417,10 @@ export default function AdminUserDetailPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     Tổng thư mục
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {user.stats.totalFolders.toLocaleString()}
                   </dd>
                 </dl>
@@ -429,7 +429,7 @@ export default function AdminUserDetailPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -437,10 +437,10 @@ export default function AdminUserDetailPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     Dung lượng sử dụng
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {formatFileSize(user.totalStorageUsed || 0)}
                   </dd>
                 </dl>
@@ -449,7 +449,7 @@ export default function AdminUserDetailPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -457,10 +457,10 @@ export default function AdminUserDetailPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     Kích thước trung bình
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {user.stats.totalFiles > 0
                       ? formatFileSize(
                           user.stats.totalSize / user.stats.totalFiles,
@@ -477,9 +477,9 @@ export default function AdminUserDetailPage() {
       {/* Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* File Type Distribution */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">
+        <div className="bg-slate-800/50 shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-slate-700/50">
+            <h3 className="text-lg font-medium text-white">
               Phân bố loại file
             </h3>
           </div>
@@ -511,15 +511,15 @@ export default function AdminUserDetailPage() {
                             ][index % 10]
                           }`}
                         ></div>
-                        <span className="text-sm font-medium text-gray-900 capitalize">
+                        <span className="text-sm font-medium text-white capitalize">
                           {type || "Không xác định"}
                         </span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-white">
                           {data.count} file
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-slate-400">
                           {formatFileSize(data.size)}
                         </div>
                       </div>
@@ -527,17 +527,17 @@ export default function AdminUserDetailPage() {
                   ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-4">Chưa có file nào</p>
+              <p className="text-slate-400 text-center py-4">Chưa có file nào</p>
             )}
           </div>
         </div>
 
         {/* Recent Files */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">File gần đây</h3>
+        <div className="bg-slate-800/50 shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-slate-700/50">
+            <h3 className="text-lg font-medium text-white">File gần đây</h3>
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-slate-700/50">
             {user.recentFiles.length > 0 ? (
               user.recentFiles.map((file) => (
                 <div key={file.id} className="px-6 py-4">
@@ -547,16 +547,16 @@ export default function AdminUserDetailPage() {
                         <FileText className="h-8 w-8 text-gray-400" />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900 truncate max-w-48">
+                        <div className="text-sm font-medium text-white truncate max-w-48">
                           {file.name}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-slate-400">
                           {formatFileSize(file.size)} •{" "}
                           {getRelativeTime(file.createdAt)}
                         </div>
                       </div>
                     </div>
-                    <div className="text-xs text-gray-500 capitalize">
+                    <div className="text-xs text-slate-400 capitalize">
                       {file.type}
                     </div>
                   </div>
@@ -564,15 +564,15 @@ export default function AdminUserDetailPage() {
               ))
             ) : (
               <div className="px-6 py-8 text-center">
-                <p className="text-gray-500">Chưa có file nào</p>
+                <p className="text-slate-400">Chưa có file nào</p>
               </div>
             )}
           </div>
           {user.recentFiles.length > 0 && (
-            <div className="px-6 py-3 border-t border-gray-200">
+            <div className="px-6 py-3 border-t border-slate-700/50">
               <Link
                 href={`/admin/files?user=${userId}`}
-                className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+                className="text-sm text-indigo-400 hover:text-blue-500 font-medium"
               >
                 Xem tất cả file của người dùng →
               </Link>
@@ -584,16 +584,16 @@ export default function AdminUserDetailPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg shadow-black/20 rounded-md bg-slate-800/50">
             <div className="mt-3 text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <Trash2 className="h-6 w-6 text-red-600" />
+                <Trash2 className="h-6 w-6 text-red-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-5">
+              <h3 className="text-lg font-medium text-white mt-5">
                 Xóa người dùng
               </h3>
               <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-400">
                   Bạn có chắc chắn muốn xóa người dùng{" "}
                   <strong>{user.name}</strong>? Tất cả dữ liệu của người dùng
                   này bao gồm {user.stats.totalFiles} file và{" "}
@@ -605,14 +605,14 @@ export default function AdminUserDetailPage() {
                   <button
                     onClick={handleDeleteUser}
                     disabled={actionLoading}
-                    className="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50"
+                    className="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm shadow-black/10 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50"
                   >
                     {actionLoading ? "Đang xóa..." : "Xóa"}
                   </button>
                   <button
                     onClick={() => setShowDeleteModal(false)}
                     disabled={actionLoading}
-                    className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
+                    className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md shadow-sm shadow-black/10 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
                   >
                     Hủy
                   </button>

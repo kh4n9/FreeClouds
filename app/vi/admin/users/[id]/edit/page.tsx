@@ -250,20 +250,20 @@ export default function AdminUserEditPage() {
 
   if (error && !user) {
     return (
-      <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
         <div className="flex items-center">
           <Link
             href="/admin/users"
-            className="flex items-center text-sm text-gray-500 hover:text-gray-700"
+            className="flex items-center text-sm text-slate-400 hover:text-slate-200"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             Quay lại danh sách
           </Link>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="bg-red-500/10 border border-red-200 rounded-lg p-6">
           <div className="flex items-center">
             <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-            <span className="text-red-700">{error}</span>
+            <span className="text-red-300">{error}</span>
           </div>
         </div>
       </div>
@@ -277,13 +277,13 @@ export default function AdminUserEditPage() {
         <div className="flex items-center space-x-4">
           <Link
             href={`/admin/users/${userId}`}
-            className="flex items-center text-sm text-gray-500 hover:text-gray-700"
+            className="flex items-center text-sm text-slate-400 hover:text-slate-200"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             Quay lại chi tiết
           </Link>
           <div className="text-gray-300">|</div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-white">
             Chỉnh sửa người dùng
           </h1>
         </div>
@@ -291,10 +291,10 @@ export default function AdminUserEditPage() {
 
       {/* Success Message */}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="bg-green-500/10 border border-green-200 rounded-lg p-4">
           <div className="flex items-center">
             <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-            <span className="text-green-700">
+            <span className="text-green-300">
               Cập nhật thông tin thành công! Đang chuyển hướng...
             </span>
           </div>
@@ -303,10 +303,10 @@ export default function AdminUserEditPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-500/10 border border-red-200 rounded-lg p-4">
           <div className="flex items-center">
             <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-            <span className="text-red-700">{error}</span>
+            <span className="text-red-300">{error}</span>
           </div>
         </div>
       )}
@@ -315,8 +315,8 @@ export default function AdminUserEditPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* User Info Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="bg-slate-800/50 shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-white mb-4">
                 Thông tin hiện tại
               </h3>
 
@@ -328,22 +328,22 @@ export default function AdminUserEditPage() {
                     }`}
                   >
                     {user.role === "admin" ? (
-                      <Shield className="h-6 w-6 text-red-600" />
+                      <Shield className="h-6 w-6 text-red-400" />
                     ) : (
-                      <User className="h-6 w-6 text-blue-600" />
+                      <User className="h-6 w-6 text-indigo-400" />
                     )}
                   </div>
                   <div className="ml-4">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-white">
                       {user.name}
                     </div>
-                    <div className="text-sm text-gray-500">{user.email}</div>
+                    <div className="text-sm text-slate-400">{user.email}</div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700/50">
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">
+                    <dt className="text-sm font-medium text-slate-400">
                       Vai trò
                     </dt>
                     <dd className="mt-1">
@@ -359,7 +359,7 @@ export default function AdminUserEditPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">
+                    <dt className="text-sm font-medium text-slate-400">
                       Trạng thái
                     </dt>
                     <dd className="mt-1">
@@ -367,7 +367,7 @@ export default function AdminUserEditPage() {
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           user.isActive
                             ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
+                            : "bg-gray-100 text-slate-100"
                         }`}
                       >
                         {user.isActive ? "Hoạt động" : "Vô hiệu hóa"}
@@ -375,18 +375,18 @@ export default function AdminUserEditPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">
+                    <dt className="text-sm font-medium text-slate-400">
                       Tổng file
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900">
+                    <dd className="mt-1 text-sm text-white">
                       {(user.totalFilesUploaded || 0).toLocaleString()}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">
+                    <dt className="text-sm font-medium text-slate-400">
                       Dung lượng
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900">
+                    <dd className="mt-1 text-sm text-white">
                       {formatFileSize(user.totalStorageUsed || 0)}
                     </dd>
                   </div>
@@ -397,8 +397,8 @@ export default function AdminUserEditPage() {
 
           {/* Edit Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">
+            <div className="bg-slate-800/50 shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-white mb-6">
                 Chỉnh sửa thông tin
               </h3>
 
@@ -407,7 +407,7 @@ export default function AdminUserEditPage() {
                 <div>
                   <label
                     htmlFor="name"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-sm font-medium text-slate-200 mb-2"
                   >
                     Họ và tên *
                   </label>
@@ -422,16 +422,16 @@ export default function AdminUserEditPage() {
                       required
                       value={form.name}
                       onChange={handleInputChange}
-                      className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         getFieldError("name")
-                          ? "border-red-300 text-red-900 placeholder-red-300"
-                          : "border-gray-300"
+                          ? "border-red-500/50 text-red-900 placeholder-red-300"
+                          : "border-slate-600/50"
                       }`}
                       placeholder="Nhập họ và tên"
                     />
                   </div>
                   {getFieldError("name") && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="mt-1 text-sm text-red-400">
                       {getFieldError("name")}
                     </p>
                   )}
@@ -441,7 +441,7 @@ export default function AdminUserEditPage() {
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-sm font-medium text-slate-200 mb-2"
                   >
                     Địa chỉ email *
                   </label>
@@ -456,16 +456,16 @@ export default function AdminUserEditPage() {
                       required
                       value={form.email}
                       onChange={handleInputChange}
-                      className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         getFieldError("email")
-                          ? "border-red-300 text-red-900 placeholder-red-300"
-                          : "border-gray-300"
+                          ? "border-red-500/50 text-red-900 placeholder-red-300"
+                          : "border-slate-600/50"
                       }`}
                       placeholder="Nhập địa chỉ email"
                     />
                   </div>
                   {getFieldError("email") && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="mt-1 text-sm text-red-400">
                       {getFieldError("email")}
                     </p>
                   )}
@@ -475,7 +475,7 @@ export default function AdminUserEditPage() {
                 <div>
                   <label
                     htmlFor="role"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-sm font-medium text-slate-200 mb-2"
                   >
                     Vai trò *
                   </label>
@@ -484,7 +484,7 @@ export default function AdminUserEditPage() {
                     name="role"
                     value={form.role}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="block w-full px-3 py-2 border border-slate-600/50 rounded-md bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="user">Người dùng</option>
                     <option value="admin">Quản trị viên</option>
@@ -493,7 +493,7 @@ export default function AdminUserEditPage() {
 
                 {/* Status Field */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
                     Trạng thái tài khoản
                   </label>
                   <div className="flex items-center">
@@ -503,11 +503,11 @@ export default function AdminUserEditPage() {
                       type="checkbox"
                       checked={form.isActive}
                       onChange={handleInputChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
                     />
                     <label
                       htmlFor="isActive"
-                      className="ml-2 flex items-center text-sm text-gray-900"
+                      className="ml-2 flex items-center text-sm text-white"
                     >
                       {form.isActive ? (
                         <>
@@ -525,8 +525,8 @@ export default function AdminUserEditPage() {
                 </div>
 
                 {/* Password Section */}
-                <div className="pt-6 border-t border-gray-200">
-                  <h4 className="text-md font-medium text-gray-900 mb-4">
+                <div className="pt-6 border-t border-slate-700/50">
+                  <h4 className="text-md font-medium text-white mb-4">
                     Đổi mật khẩu (tùy chọn)
                   </h4>
 
@@ -534,7 +534,7 @@ export default function AdminUserEditPage() {
                   <div className="mb-4">
                     <label
                       htmlFor="password"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-sm font-medium text-slate-200 mb-2"
                     >
                       Mật khẩu mới
                     </label>
@@ -548,10 +548,10 @@ export default function AdminUserEditPage() {
                         type={showPassword ? "text" : "password"}
                         value={form.password}
                         onChange={handleInputChange}
-                        className={`block w-full pl-10 pr-12 py-2 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`block w-full pl-10 pr-12 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                           getFieldError("password")
-                            ? "border-red-300 text-red-900 placeholder-red-300"
-                            : "border-gray-300"
+                            ? "border-red-500/50 text-red-900 placeholder-red-300"
+                            : "border-slate-600/50"
                         }`}
                         placeholder="Nhập mật khẩu mới (ít nhất 8 ký tự)"
                       />
@@ -568,7 +568,7 @@ export default function AdminUserEditPage() {
                       </button>
                     </div>
                     {getFieldError("password") && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-400">
                         {getFieldError("password")}
                       </p>
                     )}
@@ -578,7 +578,7 @@ export default function AdminUserEditPage() {
                   <div>
                     <label
                       htmlFor="confirmPassword"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-sm font-medium text-slate-200 mb-2"
                     >
                       Xác nhận mật khẩu mới
                     </label>
@@ -592,10 +592,10 @@ export default function AdminUserEditPage() {
                         type={showConfirmPassword ? "text" : "password"}
                         value={form.confirmPassword}
                         onChange={handleInputChange}
-                        className={`block w-full pl-10 pr-12 py-2 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`block w-full pl-10 pr-12 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                           getFieldError("confirmPassword")
-                            ? "border-red-300 text-red-900 placeholder-red-300"
-                            : "border-gray-300"
+                            ? "border-red-500/50 text-red-900 placeholder-red-300"
+                            : "border-slate-600/50"
                         }`}
                         placeholder="Nhập lại mật khẩu mới"
                       />
@@ -614,29 +614,29 @@ export default function AdminUserEditPage() {
                       </button>
                     </div>
                     {getFieldError("confirmPassword") && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-400">
                         {getFieldError("confirmPassword")}
                       </p>
                     )}
                   </div>
 
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className="mt-2 text-sm text-slate-400">
                     Để trống nếu không muốn thay đổi mật khẩu
                   </p>
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                <div className="flex justify-end space-x-3 pt-6 border-t border-slate-700/50">
                   <Link
                     href={`/admin/users/${userId}`}
-                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-4 py-2 border border-slate-600/50 rounded-md shadow-sm shadow-black/10 text-sm font-medium text-slate-200 bg-slate-800/50 hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     Hủy
                   </Link>
                   <button
                     type="submit"
                     disabled={saving || success}
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm shadow-black/10 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {saving ? (
                       <>

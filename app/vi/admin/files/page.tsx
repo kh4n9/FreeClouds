@@ -243,18 +243,18 @@ export default function AdminFilesPage() {
   const hasActiveFilters = searchTerm || userFilter || includeDeleted;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Quản lý File</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-bold text-white">Quản lý File</h1>
+          <p className="mt-2 text-slate-300">
             Quản lý tất cả file trong hệ thống
           </p>
         </div>
         <button
           onClick={() => fetchFiles()}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="inline-flex items-center px-4 py-2 border border-slate-600/50 rounded-md shadow-sm shadow-black/10 text-sm font-medium text-slate-200 bg-slate-800/50 hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Làm mới
@@ -263,7 +263,7 @@ export default function AdminFilesPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -271,10 +271,10 @@ export default function AdminFilesPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     Tổng File
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {pagination.totalFiles.toLocaleString()}
                   </dd>
                 </dl>
@@ -283,7 +283,7 @@ export default function AdminFilesPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -291,10 +291,10 @@ export default function AdminFilesPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     File Đã Chọn
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {selectedFiles.length}
                   </dd>
                 </dl>
@@ -303,7 +303,7 @@ export default function AdminFilesPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -311,10 +311,10 @@ export default function AdminFilesPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     File Hoạt Động
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {files.filter(f => !f.isDeleted).length}
                   </dd>
                 </dl>
@@ -323,7 +323,7 @@ export default function AdminFilesPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -331,10 +331,10 @@ export default function AdminFilesPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     File Đã Xóa
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {files.filter(f => f.isDeleted).length}
                   </dd>
                 </dl>
@@ -346,7 +346,7 @@ export default function AdminFilesPage() {
 
       {/* Error Alert */}
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="rounded-md bg-red-500/10 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <AlertTriangle className="h-5 w-5 text-red-400" />
@@ -359,7 +359,7 @@ export default function AdminFilesPage() {
               <div className="-mx-1.5 -my-1.5">
                 <button
                   onClick={() => setError(null)}
-                  className="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+                  className="inline-flex bg-red-500/10 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -370,7 +370,7 @@ export default function AdminFilesPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white shadow rounded-lg p-6">
+      <div className="bg-slate-800/50 shadow rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
           <div className="md:col-span-2">
@@ -383,7 +383,7 @@ export default function AdminFilesPage() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full pl-10 pr-3 py-2 border border-slate-600/50 rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Tìm kiếm file..."
                 />
               </div>
@@ -403,9 +403,9 @@ export default function AdminFilesPage() {
                 type="checkbox"
                 checked={includeDeleted}
                 onChange={(e) => setIncludeDeleted(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
               />
-              <span className="ml-2 text-sm text-gray-700">Bao gồm file đã xóa</span>
+              <span className="ml-2 text-sm text-slate-200">Bao gồm file đã xóa</span>
             </label>
           </div>
 
@@ -414,7 +414,7 @@ export default function AdminFilesPage() {
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-3 py-2 border border-slate-600/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <X className="h-4 w-4 mr-2" />
                 Đặt lại
@@ -447,10 +447,10 @@ export default function AdminFilesPage() {
 
       {/* Bulk Actions */}
       {selectedFiles.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-blue-500/10 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
+              <CheckCircle className="h-5 w-5 text-indigo-400 mr-2" />
               <span className="text-sm font-medium text-blue-800">
                 {selectedFiles.length} file đã được chọn
               </span>
@@ -491,56 +491,56 @@ export default function AdminFilesPage() {
       )}
 
       {/* Files Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+      <div className="bg-slate-800/50 shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:p-6">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-slate-700/50">
+              <thead className="bg-slate-800/50">
                 <tr>
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
                       checked={selectedFiles.length === files.length && files.length > 0}
                       onChange={handleSelectAll}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
                     />
                   </th>
                   <th
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("name")}
                   >
                     File
                   </th>
                   <th
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("size")}
                   >
                     Kích thước
                   </th>
                   <th
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("ownerName")}
                   >
                     Chủ sở hữu
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                     Thư mục
                   </th>
                   <th
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("createdAt")}
                   >
                     Ngày tạo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                     Trạng thái
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                     Hành động
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-slate-800/50 divide-y divide-slate-700/50">
                 {loading ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-4 text-center">
@@ -551,58 +551,58 @@ export default function AdminFilesPage() {
                   </tr>
                 ) : files.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={8} className="px-6 py-4 text-center text-slate-400">
                       Không tìm thấy file nào
                     </td>
                   </tr>
                 ) : (
                   files.map((file) => (
-                    <tr key={file.id} className={file.isDeleted ? "bg-red-50" : ""}>
+                    <tr key={file.id} className={file.isDeleted ? "bg-red-500/10" : ""}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="checkbox"
                           checked={selectedFiles.includes(file.id)}
                           onChange={() => handleSelectFile(file.id)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="text-lg mr-3">{getFileTypeIcon(file.mime)}</div>
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-white">
                               {file.name}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-slate-400">
                               {file.mime}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                         {file.formattedSize}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-white">
                             {file.ownerName}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-slate-400">
                             {file.ownerEmail}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                         {file.folderName ? (
                           <div className="flex items-center">
                             <FolderOpen className="h-4 w-4 mr-2 text-blue-500" />
                             {file.folderName}
                           </div>
                         ) : (
-                          <span className="text-gray-500">Gốc</span>
+                          <span className="text-slate-400">Gốc</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                         {formatDate(file.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -620,7 +620,7 @@ export default function AdminFilesPage() {
                         <div className="flex items-center space-x-2">
                           <Link
                             href={`/vi/admin/users/${file.owner}`}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-indigo-400 hover:text-blue-900"
                           >
                             <Eye className="h-4 w-4" />
                           </Link>
@@ -635,26 +635,26 @@ export default function AdminFilesPage() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div className="bg-slate-800/50 px-4 py-3 flex items-center justify-between border-t border-slate-700/50 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
                   onClick={() => fetchFiles(pagination.currentPage - 1)}
                   disabled={!pagination.hasPrevPage}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center px-4 py-2 border border-slate-600/50 text-sm font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Trước
                 </button>
                 <button
                   onClick={() => fetchFiles(pagination.currentPage + 1)}
                   disabled={!pagination.hasNextPage}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-600/50 text-sm font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Tiếp
                 </button>
               </div>
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-slate-200">
                     Hiển thị trang{" "}
                     <span className="font-medium">{pagination.currentPage}</span>{" "}
                     trong{" "}
@@ -663,18 +663,18 @@ export default function AdminFilesPage() {
                   </p>
                 </div>
                 <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm shadow-black/10 -space-x-px">
                     <button
                       onClick={() => fetchFiles(pagination.currentPage - 1)}
                       disabled={!pagination.hasPrevPage}
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-600/50 bg-slate-800/50 text-sm font-medium text-slate-400 hover:bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => fetchFiles(pagination.currentPage + 1)}
                       disabled={!pagination.hasNextPage}
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-600/50 bg-slate-800/50 text-sm font-medium text-slate-400 hover:bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronRight className="h-5 w-5" />
                     </button>
@@ -689,16 +689,16 @@ export default function AdminFilesPage() {
       {/* Delete Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg shadow-black/20 rounded-md bg-slate-800/50">
             <div className="mt-3 text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <Trash2 className="h-6 w-6 text-red-600" />
+                <Trash2 className="h-6 w-6 text-red-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-2">
+              <h3 className="text-lg font-medium text-white mt-2">
                 {deleteType === "permanent" ? "Xóa vĩnh viễn" : "Xóa"} File
               </h3>
               <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-400">
                   Bạn có chắc chắn muốn {deleteType === "permanent" ? "xóa vĩnh viễn " : "xóa "}
                   {selectedFiles.length} file?
                   {deleteType === "permanent"
@@ -711,7 +711,7 @@ export default function AdminFilesPage() {
                 <button
                   onClick={handleDeleteFiles}
                   disabled={actionLoading}
-                  className="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-full shadow-sm shadow-black/10 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {actionLoading ? "Đang xóa..." :
                    deleteType === "permanent" ? "Xóa vĩnh viễn" : "Xóa"}
@@ -719,7 +719,7 @@ export default function AdminFilesPage() {
                 <button
                   onClick={() => setShowDeleteModal(false)}
                   disabled={actionLoading}
-                  className="mt-3 px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-3 px-4 py-2 bg-gray-300 text-slate-100 text-base font-medium rounded-md w-full shadow-sm shadow-black/10 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Hủy
                 </button>
@@ -732,16 +732,16 @@ export default function AdminFilesPage() {
       {/* Restore Modal */}
       {showRestoreModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg shadow-black/20 rounded-md bg-slate-800/50">
             <div className="mt-3 text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                <RotateCcw className="h-6 w-6 text-green-600" />
+                <RotateCcw className="h-6 w-6 text-green-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-2">
+              <h3 className="text-lg font-medium text-white mt-2">
                 Khôi phục File
               </h3>
               <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-400">
                   Bạn có chắc chắn muốn khôi phục {selectedFiles.length} file?
                 </p>
               </div>
@@ -749,14 +749,14 @@ export default function AdminFilesPage() {
                 <button
                   onClick={handleRestoreFiles}
                   disabled={actionLoading}
-                  className="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm shadow-black/10 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {actionLoading ? "Đang khôi phục..." : "Khôi phục"}
                 </button>
                 <button
                   onClick={() => setShowRestoreModal(false)}
                   disabled={actionLoading}
-                  className="mt-3 px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-3 px-4 py-2 bg-gray-300 text-slate-100 text-base font-medium rounded-md w-full shadow-sm shadow-black/10 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Hủy
                 </button>

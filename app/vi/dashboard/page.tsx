@@ -1,61 +1,175 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import {
-  FolderPlus,
-  Upload,
-  RefreshCw,
-  AlertCircle,
-  Menu,
-  X,
+  FolderPlus, Upload, RefreshCw, AlertCircle, X, Cloud, Search,
+  HardDrive, FileIcon, FolderIcon, LogOut, Settings, Grid3X3,
+  List, ChevronLeft, ChevronRight, Sidebar, Trash2, FileText,
 } from "lucide-react";
+import dynamic from "next/dynamic";
+const DynamicFileGrid = dynamic(() => import("@/components/FileGrid"), { ssr: false });
+const DynamicUploadDropzone = dynamic(() => import("@/components/UploadDropzone"), { ssr: false });
+const DynamicUserProfile = dynamic(() => import("@/components/UserProfile"), { ssr: false });
 import Navbar from "@/components/Navbar";
 import PlainFolderTree from "@/components/PlainFolderTree";
-import dynamic from "next/dynamic";
-const DynamicFileGrid = dynamic(() => import("@/components/FileGrid"), {
-  ssr: false,
-});
-import UploadDropzone from "@/components/UploadDropzone";
-import UserProfile from "@/components/UserProfile";
+import ContextMenu from "@/components/ContextMenu";
 import Footer from "@/components/Footer";
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  stats?: {
-    totalFiles: number;
-    totalSize: number;
-    totalFolders: number;
-  };
+interface User { id: string; email: string; name: string; createdAt: string; updatedAt: string; stats?: { totalFiles: number; totalSize: number; totalFolders: number; }; }
+interface FolderData { id: string; name: string; parent: string | null; createdAt: string; }
+interface FileData { id: string; name: string; size: number; mime: string; folderId: string | null; folderName?: string | null; createdAt: string; }
+type CacheKey = string;
+
+function formatSize(bytes: number): string {
+  if (bytes === 0) return "0 B";
+  const k = 1024; const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
-interface FolderData {
-  id: string;
-  name: string;
-  parent: string | null;
-  createdAt: string;
+function Toast({ toast, onDismiss }: { toast: { type: string; message: string } | null; onDismiss: () => void }) {
+  if (!toast) return null;
+  return (
+    <div className={`fixed bottom-6 right-6 z-[60] max-w-sm animate-slide-up ${toast.type === "success" ? "toast-success" : toast.type === "error" ? "toast-error" : "toast-info"}`}>
+      <div className="flex items-center gap-3">
+        <span className="text-sm">{toast.message}</span>
+        <button onClick={onDismiss} className="ml-auto opacity-70 hover:opacity-100"><X className="w-4 h-4" /></button>
+      </div>
+    </div>
+  );
 }
 
-interface FileData {
-  id: string;
-  name: string;
-  size: number;
-  mime: string;
-  folderId: string | null;
-  folderName?: string | null;
-  createdAt: string;
+function Modal({ show, onClose, title, children }: { show: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+  if (!show) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="relative modal-content w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
+          <h3 className="text-lg font-semibold text-white">{title}</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-6">{children}</div>
+      </div>
+    </div>
+  );
 }
 
-interface FilesResponse {
-  files: FileData[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+function CreateFolderModal({ show, onClose, onConfirm, loading }: { show: boolean; onClose: () => void; onConfirm: (name: string) => void; loading?: boolean }) {
+  const [name, setName] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (show) {
+      setName("");
+      setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 50);
+    }
+  }, [show]);
+  useEffect(() => {
+    if (!show) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [show, onClose]);
+  if (!show) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="relative modal-content w-full max-w-md">
+        <div className="p-6 border-b border-slate-700/50"><h3 className="text-lg font-semibold text-white">Tạo thư mục mới</h3></div>
+        <div className="p-6">
+          <input ref={inputRef} type="text" placeholder="Tên thư mục" value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="input-modern w-full px-4 py-2.5 rounded-xl mb-4"
+            onKeyDown={(e) => e.key === "Enter" && name.trim() && onConfirm(name.trim())} />
+          <div className="flex gap-2 justify-end">
+            <button onClick={onClose} className="btn-secondary px-4 py-2 rounded-lg text-sm">Huỷ</button>
+            <button onClick={() => onConfirm(name.trim())} disabled={!name.trim() || loading}
+              className="btn-primary px-4 py-2 rounded-lg text-sm disabled:opacity-50">
+              {loading && <svg className="animate-spin h-4 w-4 inline mr-1.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
+              Tạo
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmModal({ show, title, message, warning, loading, onCancel, onConfirm, confirmLabel = "Xoá" }: {
+  show: boolean; title: string; message: string; warning?: string; loading?: boolean;
+  onCancel: () => void; onConfirm: () => void; confirmLabel?: string;
+}) {
+  if (!show) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="relative modal-content w-full max-w-md p-6">
+        <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 mx-auto">
+          <AlertCircle className="w-6 h-6 text-red-400" />
+        </div>
+        <h3 className="text-lg font-semibold text-white mb-2 text-center">{title}</h3>
+        <p className="text-sm text-slate-300 mb-1 text-center">{message}</p>
+        {warning && <p className="text-sm text-red-400/80 mb-6 text-center">{warning}</p>}
+        <div className="flex gap-3 justify-center">
+          <button onClick={onCancel} disabled={loading} className="btn-secondary px-5 py-2.5 rounded-lg text-sm font-medium">Huỷ</button>
+          <button onClick={onConfirm} disabled={loading}
+            className="px-5 py-2.5 rounded-lg text-sm font-medium bg-gradient-to-r from-red-500 to-rose-600 text-white hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-50 transition-all">
+            {loading && <svg className="animate-spin h-4 w-4 inline mr-1.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatsCard({ icon: Icon, label, value, sub, gradient }: { icon: any; label: string; value: string; sub?: string; gradient: string }) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl bg-slate-800/50 border border-slate-700/50 p-5 group hover:border-slate-600/50 transition-all">
+      <div className={`absolute inset-0 opacity-[0.03] ${gradient}`} />
+      <div className="relative flex items-start justify-between">
+        <div>
+          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">{label}</p>
+          <p className="text-2xl font-bold text-white">{value}</p>
+          {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
+        </div>
+        <div className={`w-10 h-10 rounded-xl ${gradient} flex items-center justify-center`}>
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SearchBar({ value, onChange, onClear }: { value: string; onChange: (v: string) => void; onClear: () => void }) {
+  return (
+    <div className="relative group">
+      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-400 transition-colors" />
+      <input ref={(el) => { if (el) el.onkeydown = (e: any) => { if ((e.ctrlKey || e.metaKey) && e.key === "k") e.preventDefault(); }; }} type="text" placeholder="Tìm kiếm files... (Ctrl+K)" value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="input-modern w-full pl-10 pr-10 py-2.5 rounded-xl text-sm bg-slate-800/50 border-slate-700/50 focus:border-indigo-500/50 focus:bg-slate-800/80 transition-all" />
+      {value && (
+        <button onClick={onClear} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors">
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function SkeletonLoader() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-pulse">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="rounded-2xl bg-slate-800/30 border border-slate-700/30 p-5">
+          <div className="h-4 bg-slate-700/50 rounded w-3/4 mb-3" />
+          <div className="h-3 bg-slate-700/50 rounded w-1/2 mb-4" />
+          <div className="h-8 bg-slate-700/50 rounded w-full" />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function DashboardPage() {
@@ -67,149 +181,123 @@ export default function DashboardPage() {
   const [filesLoading, setFilesLoading] = useState(false);
   const [foldersLoading, setFoldersLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandAll, setExpandAll] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [spaceMenu, setSpaceMenu] = useState<{ x: number; y: number } | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showUpload, setShowUpload] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
-  const [createFolderParent, setCreateFolderParent] = useState<string | null>(
-    null,
-  );
+  const [createFolderParent, setCreateFolderParent] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  // In-app delete confirmation modal state (folders)
-  const [deleteModal, setDeleteModal] = useState<{
-    show: boolean;
-    folderId?: string | null;
-    folderName?: string;
-    subfolderCount?: number;
-  }>({ show: false });
-  const [deleting, setDeleting] = useState(false);
-
-  // In-app delete confirmation modal state (files)
-  const [fileDeleteModal, setFileDeleteModal] = useState<{
-    show: boolean;
-    fileId?: string | undefined;
-    fileName?: string | undefined;
-  }>({ show: false });
-  const [fileDeleting, setFileDeleting] = useState(false);
-
-  // Simple toast state
-  const [toast, setToast] = useState<{
-    show: boolean;
-    message: string;
-    type?: "success" | "error" | "info";
-  }>({
-    show: false,
-    message: "",
-    type: "info",
-  });
-
-  const router = useRouter();
-
-  // Check authentication
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
   useEffect(() => {
-    checkAuth();
+    const check = () => setSidebarOpen(window.innerWidth >= 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  const [deleteModal, setDeleteModal] = useState<{ show: boolean; folder?: FolderData; subfolderCount?: number }>({ show: false });
+  const [fileDeleteModal, setFileDeleteModal] = useState<{ show: boolean; fileId?: string; fileName?: string }>({ show: false });
+  const [deleting, setDeleting] = useState(false);
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [toast, setToast] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
+  const router = useRouter();
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Client-side file cache: key = "folderId|search"
+  const fileCache = useRef<Map<CacheKey, FileData[]>>(new Map());
+
+  const debounceTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  useEffect(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); searchRef.current?.focus(); }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Load files when folder selection or search changes
-  useEffect(() => {
-    if (user) {
-      loadFiles();
-    }
-  }, [user, selectedFolderId, searchQuery]);
-
-  // Load folders when user is available
-  useEffect(() => {
-    if (user) {
-      loadFolders();
-    }
-  }, [user]);
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch("/api/auth/me");
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        router.push("/vi/login");
-      }
-    } catch (error) {
-      console.error("Kiểm tra xác thực thất bại:", error);
-      router.push("/vi/login");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadFolders = async () => {
-    try {
-      setFoldersLoading(true);
-      const response = await fetch("/api/folders");
-      if (response.ok) {
-        const data = await response.json();
-        setFolders(data);
-      } else {
-        throw new Error("Không thể tải thư mục");
-      }
-    } catch (error) {
-      console.error("Lỗi khi tải thư mục:", error);
-      setError("Không thể tải thư mục");
-    } finally {
-      setFoldersLoading(false);
-    }
-  };
-
-  const loadFiles = async () => {
-    try {
-      setFilesLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams();
-      if (selectedFolderId) {
-        params.set("folderId", selectedFolderId);
-      }
-      if (searchQuery) {
-        params.set("q", searchQuery);
-      }
-
-      const response = await fetch(`/api/files?${params}`);
-      if (response.ok) {
-        const data: FilesResponse = await response.json();
-        setFiles(data.files);
-      } else {
-        throw new Error("Không thể tải tệp tin");
-      }
-    } catch (error) {
-      console.error("Lỗi khi tải tệp tin:", error);
-      setError("Không thể tải tệp tin");
-    } finally {
+  const loadFiles = useCallback(async (folderId: string | null, search: string, useCache = true) => {
+    const cacheKey = `${folderId || ""}|${search}`;
+    if (useCache && fileCache.current.has(cacheKey)) {
+      setFiles(fileCache.current.get(cacheKey)!);
       setFilesLoading(false);
+      return;
     }
-  };
+
+    setFilesLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      if (folderId) params.set("folderId", folderId);
+      if (search) params.set("q", search);
+      const res = await fetch(`/api/files?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        const result = data.files;
+        fileCache.current.set(cacheKey, result);
+        setFiles(result);
+      }
+    } catch { setError("Không thể tải files"); }
+    finally { setFilesLoading(false); }
+  }, []);
+
+  const refreshFolders = useCallback(async () => {
+    setFoldersLoading(true);
+    try { const res = await fetch("/api/folders"); if (res.ok) setFolders(await res.json()); }
+    finally { setFoldersLoading(false); }
+  }, []);
+
+  // Initial load: auth + folders in parallel, then load files
+  useEffect(() => {
+    (async () => {
+      try {
+        const [authRes, foldersRes] = await Promise.all([
+          fetch("/api/auth/me"),
+          fetch("/api/folders"),
+        ]);
+        if (!authRes.ok) { router.push("/login"); return; }
+        setUser(await authRes.json());
+        if (foldersRes.ok) {
+          const folderData = await foldersRes.json();
+          setFolders(folderData);
+        }
+      } catch { router.push("/login"); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  // Load files when folder/search changes (with cache)
+  useEffect(() => {
+    if (!user) return;
+    loadFiles(selectedFolderId, debouncedSearch, true);
+  }, [user, selectedFolderId, debouncedSearch, loadFiles]);
 
   const refreshData = useCallback(() => {
-    loadFiles();
-    loadFolders();
-  }, []);
+    fileCache.current.clear();
+    loadFiles(selectedFolderId, debouncedSearch, false);
+    refreshFolders();
+  }, [selectedFolderId, debouncedSearch, loadFiles, refreshFolders]);
 
   const handleFolderSelect = useCallback((folderId: string | null) => {
     setSelectedFolderId(folderId);
-    setSearchQuery(""); // Clear search when selecting folder
+    setSearchQuery("");
   }, []);
 
   const handleCreateFolder = useCallback((parentId: string | null) => {
     setCreateFolderParent(parentId);
-    setNewFolderName("");
     setShowCreateFolder(true);
   }, []);
 
-  const [creatingFolder, setCreatingFolder] = useState(false);
   const confirmCreateFolder = async (folderName?: string) => {
-    const name = (folderName || newFolderName).trim();
+    const name = folderName?.trim() || newFolderName.trim();
     if (!name) return;
     setCreatingFolder(true);
     try {
@@ -218,681 +306,414 @@ export default function DashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, parent: createFolderParent }),
       });
-      if (res.ok) {
-        await loadFolders();
-        setShowCreateFolder(false);
-        setNewFolderName("");
-      } else {
-        const data = await res.json();
-        alert(data.error || "Không thể tạo thư mục");
-      }
-    } catch {
-      alert("Không thể tạo thư mục");
-    } finally {
-      setCreatingFolder(false);
-    }
+      if (res.ok) { fileCache.current.clear(); refreshData(); setShowCreateFolder(false); setNewFolderName(""); }
+    } catch { /* ignore */ }
+    setCreatingFolder(false);
   };
 
   const handleRenameFolder = async (folderId: string, newName: string) => {
     try {
-      const response = await fetch(`/api/folders/${folderId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: newName }),
-      });
-
-      if (response.ok) {
-        await loadFolders();
-      } else {
-        const data = await response.json();
-        alert(data.error || "Không thể đổi tên thư mục");
-      }
-    } catch (error) {
-      console.error("Lỗi khi đổi tên thư mục:", error);
-      alert("Không thể đổi tên thư mục");
-    }
+      const res = await fetch(`/api/folders/${folderId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newName }) });
+      if (res.ok) { fileCache.current.clear(); refreshFolders(); }
+    } catch { /* ignore */ }
   };
 
-  // Open an in-app confirmation modal for deleting a folder.
-  // Actual deletion is performed by confirmDeleteFolder().
+  const countSubfolders = (folders: FolderData[], parentId: string): number => {
+    const children = folders.filter((f) => f.parent === parentId);
+    return children.length + children.reduce((sum, child) => sum + countSubfolders(folders, child.id), 0);
+  };
+
   const handleDeleteFolder = (folderId: string) => {
     const folder = folders.find((f) => f.id === folderId);
-    if (!folder) {
-      setToast({
-        show: true,
-        message: "Không tìm thấy thư mục",
-        type: "error",
-      });
-      setTimeout(
-        () => setToast({ show: false, message: "", type: "info" }),
-        3000,
-      );
-      return;
-    }
-
-    const countSubfolders = (
-      folders: FolderData[],
-      parentId: string,
-    ): number => {
-      const children = folders.filter((f) => f.parent === parentId);
-      return (
-        children.length +
-        children.reduce(
-          (sum, child) => sum + countSubfolders(folders, child.id),
-          0,
-        )
-      );
-    };
-
-    const subfolderCount = countSubfolders(folders, folderId);
-
-    setDeleteModal({
-      show: true,
-      folderId,
-      folderName: folder.name,
-      subfolderCount,
-    });
+    if (!folder) return;
+    setDeleteModal({ show: true, folder, subfolderCount: countSubfolders(folders, folderId) });
   };
 
-  // Called when user confirms deletion of a folder in the in-app modal
   const confirmDeleteFolder = async () => {
-    if (!deleteModal.folderId) return;
-    setDeleting(true);
-    setToast({
-      show: true,
-      message: "Đang xóa thư mục và nội dung...",
-      type: "info",
-    });
-
+    if (!deleteModal.folder) return;
     try {
-      const response = await fetch(`/api/folders/${deleteModal.folderId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const stats = data.stats;
-        let message = `Đã xóa: ${deleteModal.folderName}. Thư mục: ${stats.foldersDeleted}, Tệp: ${stats.filesDeleted}.`;
-        if (stats.errors && stats.errors.length > 0) {
-          message += ` Cảnh báo: ${stats.errors.join("; ")}`;
-          setToast({ show: true, message, type: "info" });
-        } else {
-          setToast({ show: true, message, type: "success" });
-        }
-
-        await loadFolders();
-        await loadFiles();
-
-        if (selectedFolderId === deleteModal.folderId) {
-          setSelectedFolderId(null);
-        }
-      } else {
-        const data = await response.json();
-        setToast({
-          show: true,
-          message: data.error || "Không thể xóa thư mục",
-          type: "error",
-        });
+      setToast({ type: "info", message: "Đang xoá thư mục..." });
+      const res = await fetch(`/api/folders/${deleteModal.folder.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setToast({ type: "success", message: "Đã xoá thư mục" });
+        fileCache.current.clear();
+        refreshFolders();
+        if (selectedFolderId === deleteModal.folder.id) setSelectedFolderId(null);
       }
-    } catch (error) {
-      console.error("Lỗi khi xóa thư mục:", error);
-      setToast({
-        show: true,
-        message: "Không thể xóa thư mục: Lỗi mạng",
-        type: "error",
-      });
-    } finally {
-      setDeleting(false);
-      setDeleteModal({ show: false });
-      setTimeout(
-        () => setToast({ show: false, message: "", type: "info" }),
-        3500,
-      );
-    }
+    } catch { setToast({ type: "error", message: "Xoá thư mục thất bại" }); }
+    finally { setDeleteModal({ show: false }); setTimeout(() => setToast(null), 4000); }
   };
 
-  const handleUserUpdate = (updatedUser: User) => {
-    setUser(updatedUser);
-    loadFiles();
-    loadFolders();
+  const handleUserUpdate = (updatedUser: User) => { setUser(updatedUser); refreshData(); };
+
+  const handleUpload = async (uploadedFiles: File[], folderId?: string | null) => {
+    fileCache.current.clear();
+    await loadFiles(selectedFolderId, debouncedSearch, false);
+    setShowUpload(false);
   };
 
-  const handleUpload = async (files: File[], folderId?: string | null) => {
-    const uploadPromises = files.map(async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      if (folderId !== undefined) {
-        formData.append("folderId", folderId || "");
-      } else if (selectedFolderId) {
-        formData.append("folderId", selectedFolderId);
-      }
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Không thể tải lên ${file.name}`);
-      }
-
-      return response.json();
-    });
-
-    try {
-      await Promise.all(uploadPromises);
-      await loadFiles();
-      setShowUpload(false);
-    } catch (error) {
-      console.error("Lỗi tải lên:", error);
-      alert("Một số tệp tin không thể tải lên. Vui lòng thử lại.");
-    }
-  };
-
-  // Open in-app confirmation modal for deleting a file. Actual deletion happens in confirmDeleteFile.
   const handleDeleteFile = (fileId: string) => {
     const file = files.find((f) => f.id === fileId);
-    if (file) {
-      setFileDeleteModal({
-        show: true,
-        fileId,
-        fileName: file.name,
-      });
-    } else {
-      setFileDeleteModal({
-        show: true,
-        fileId,
-      });
-    }
+    setFileDeleteModal({ show: true, fileId, fileName: file?.name ?? "Unknown" });
   };
 
   const confirmDeleteFile = async () => {
     if (!fileDeleteModal.fileId) return;
-    setFileDeleting(true);
-    setToast({ show: true, message: "Đang xóa tệp tin...", type: "info" });
-
+    setDeleting(true);
     try {
-      const response = await fetch(`/api/files/${fileDeleteModal.fileId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        await loadFiles();
-        setToast({ show: true, message: "Đã xóa tệp tin", type: "success" });
-      } else {
-        const data = await response.json();
-        setToast({
-          show: true,
-          message: data.error || "Không thể xóa tệp tin",
-          type: "error",
-        });
+      const res = await fetch(`/api/files/${fileDeleteModal.fileId}`, { method: "DELETE" });
+      if (res.ok) {
+        fileCache.current.clear();
+        await loadFiles(selectedFolderId, debouncedSearch, false);
+        setToast({ type: "success", message: "Đã xoá file" });
       }
-    } catch (error) {
-      console.error("Lỗi khi xóa tệp tin:", error);
-      setToast({ show: true, message: "Không thể xóa tệp tin", type: "error" });
-    } finally {
-      setFileDeleting(false);
-      setFileDeleteModal({ show: false });
-      setTimeout(
-        () => setToast({ show: false, message: "", type: "info" }),
-        3000,
-      );
-    }
+    } catch { setToast({ type: "error", message: "Xoá file thất bại" }); }
+    finally { setDeleting(false); setFileDeleteModal({ show: false }); setTimeout(() => setToast(null), 3000); }
   };
 
   const handleDownload = async (fileId: string, fileName: string) => {
     try {
-      const response = await fetch(`/api/files/${fileId}/download`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        const data = await response.json();
-        alert(data.error || "Không thể tải xuống tệp tin");
+      const res = await fetch(`/api/files/${fileId}/download`);
+      if (res.ok) {
+        const blob = await res.blob(); const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a"); a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click();
+        window.URL.revokeObjectURL(url); document.body.removeChild(a);
       }
-    } catch (error) {
-      console.error("Lỗi tải xuống:", error);
-      alert("Không thể tải xuống tệp tin");
-    }
+    } catch { /* ignore */ }
   };
+
+  const handleLogout = async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/login"); };
+
+  const totalSize = user?.stats?.totalSize ?? 0;
+  const totalFiles = user?.stats?.totalFiles ?? files.length;
+  const totalFolders = user?.stats?.totalFolders ?? folders.length;
+  const childFolders = selectedFolderId ? folders.filter(f => f.parent === selectedFolderId) : [];
+  const currentFolderName = selectedFolderId ? folders.find(f => f.id === selectedFolderId)?.name : null;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-500/20 animate-pulse">
+            <Cloud className="w-8 h-8 text-white" />
+          </div>
+          <div className="flex gap-1.5 justify-center">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="w-2.5 h-2.5 rounded-full bg-indigo-500/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  const selectedFolder = folders.find((f) => f.id === selectedFolderId);
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Navbar user={user} />
+    <div className="h-screen bg-[#0f172a] flex flex-col overflow-hidden animate-fade-in">
+      <Navbar user={user} onOpenUserProfile={() => setShowUserProfile(true)} />
 
       <div className="flex-1 flex overflow-hidden">
+        {/* Mobile sidebar backdrop */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
         {/* Sidebar */}
-        <div
-          className={`${sidebarOpen ? "w-80" : "w-16"} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}
-        >
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              {sidebarOpen && (
-                <h2 className="text-lg font-semibold text-gray-900">Thư mục</h2>
-              )}
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                {sidebarOpen ? (
-                  <X className="w-5 h-5" />
-                ) : (
-                  <Menu className="w-5 h-5" />
-                )}
+        <aside className={`
+          flex-shrink-0 bg-slate-900/40 border-r border-slate-800/50 flex flex-col relative
+          transition-all duration-300 ease-in-out
+          ${sidebarOpen ? "w-72" : "w-0 lg:w-16"}
+          ${sidebarOpen ? "" : "overflow-hidden"}
+          max-lg:fixed max-lg:top-0 max-lg:left-0 max-lg:h-full max-lg:z-40
+          ${sidebarOpen ? "max-lg:translate-x-0" : "max-lg:-translate-x-full"}
+        `}>
+          {sidebarOpen ? (
+            <div className="flex flex-col h-full min-w-72">
+              <div className="p-4 border-b border-slate-800/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <span className="text-sm font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{user.name}</p>
+                    <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                  </div>
+                  <button onClick={() => setSidebarOpen(false)}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="p-3 border-b border-slate-800/50">
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => { setShowUpload(true); setSidebarOpen(false); }}
+                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-indigo-300 hover:from-indigo-500/20 hover:to-purple-500/20 hover:border-indigo-500/30 transition-all text-sm font-medium min-h-[44px]">
+                    <Upload className="w-4 h-4" /> Tải lên
+                  </button>
+                  <button onClick={() => { handleCreateFolder(selectedFolderId); setSidebarOpen(false); }}
+                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:border-slate-600/50 transition-all text-sm font-medium min-h-[44px]">
+                    <FolderPlus className="w-4 h-4" /> Mới
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <div className="p-3">
+                  <div className="flex items-center justify-between mb-2 px-2">
+                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Thư mục</h3>
+                    <button onClick={() => refreshFolders()} disabled={foldersLoading} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-400 hover:bg-slate-800/50 transition-colors">
+                      <RefreshCw className={`w-3.5 h-3.5 ${foldersLoading ? "animate-spin" : ""}`} />
+                    </button>
+                  </div>
+                  {foldersLoading && folders.length === 0 ? (
+                    <div className="space-y-2 px-2">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="h-10 rounded-lg bg-slate-800/30 animate-pulse" />
+                      ))}
+                    </div>
+                  ) : (
+                    <PlainFolderTree folders={folders} selectedFolderId={selectedFolderId}
+                      onFolderSelect={(id) => { handleFolderSelect(id); if (window.innerWidth < 1024) setSidebarOpen(false); }}
+                      onCreateFolder={handleCreateFolder}
+                      onRenameFolder={handleRenameFolder} onDeleteFolder={handleDeleteFolder} expandAll={true} />
+                  )}
+                </div>
+              </div>
+              <div className="p-3 border-t border-slate-800/50">
+                <div className="flex flex-col gap-1">
+                  <button onClick={() => { setShowUserProfile(true); setSidebarOpen(false); }}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all min-h-[44px]">
+                    <Settings className="w-4 h-4" /> Cài đặt
+                  </button>
+                  <button onClick={handleLogout}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all min-h-[44px]">
+                    <LogOut className="w-4 h-4" /> Đăng xuất
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="hidden lg:flex flex-col items-center h-full py-4 gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <span className="text-sm font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
+              </div>
+              <div className="w-8 border-t border-slate-700/50" />
+              <button onClick={() => setShowUpload(true)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-indigo-300 hover:bg-slate-800/50 transition-all" title="Tải lên">
+                <Upload className="w-4 h-4" />
               </button>
+              <button onClick={() => handleCreateFolder(selectedFolderId)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all" title="Thư mục mới">
+                <FolderPlus className="w-4 h-4" />
+              </button>
+              <div className="flex-1" />
+              <button onClick={() => setShowUserProfile(true)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all" title="Cài đặt">
+                <Settings className="w-4 h-4" />
+              </button>
+              <button onClick={handleLogout}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all" title="Đăng xuất">
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          <button onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-12 rounded-r-xl bg-slate-800 border border-slate-700 border-l-0 flex items-center justify-center text-slate-400 hover:text-slate-300 hover:bg-slate-700 transition-all z-10 hidden lg:flex">
+            {sidebarOpen ? <ChevronLeft className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+          </button>
+        </aside>
+
+        {/* Main */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Top bar */}
+          <div className="flex-shrink-0 border-b border-slate-800/50 bg-slate-900/30 backdrop-blur-xl">
+            <div className="px-6 py-4">
+              <div className="flex items-center gap-4">
+                <button onClick={() => setSidebarOpen(true)} className="lg:hidden btn-ghost p-2 rounded-lg text-slate-400 hover:text-white">
+                  <Sidebar className="w-5 h-5" />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2">
+                    <h1 className="text-xl font-bold text-white truncate">{currentFolderName || "Tất cả files"}</h1>
+                    {debouncedSearch && <span className="text-sm text-indigo-400 hidden sm:inline">&mdash; &ldquo;{debouncedSearch}&rdquo;</span>}
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    {selectedFolderId
+                      ? `${files.length} file${files.length !== 1 ? "" : ""}${childFolders.length > 0 ? ` · ${childFolders.length} thư mục con` : ""}`
+                      : `${totalFiles} file · ${totalFolders} thư mục`}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 pb-4">
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                <div className="flex-1">
+                  <SearchBar value={searchQuery} onChange={setSearchQuery} onClear={() => setSearchQuery("")} />
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex items-center gap-1 bg-slate-800/80 rounded-xl p-1">
+                    {(["grid", "list"] as const).map((mode) => (
+                      <button key={mode} onClick={() => setViewMode(mode)}
+                        className={`p-2 rounded-lg transition-all ${viewMode === mode ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-300"}`} title={mode === "grid" ? "Dạng lưới" : "Dạng danh sách"}>
+                        {mode === "grid" ? <Grid3X3 className="w-4 h-4" /> : <List className="w-4 h-4" />}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={refreshData} disabled={filesLoading || foldersLoading}
+                    className="btn-secondary px-3 py-2 rounded-xl text-sm flex items-center gap-2 border-slate-700/50 hover:border-slate-600/50">
+                    <RefreshCw className={`w-4 h-4 ${filesLoading || foldersLoading ? "animate-spin" : ""}`} />
+                    <span className="hidden sm:inline">Làm mới</span>
+                  </button>
+                  <button onClick={() => setShowUpload(true)}
+                    className="btn-primary px-4 py-2 rounded-xl text-sm flex items-center gap-2">
+                    <Upload className="w-4 h-4" /> <span className="hidden sm:inline">Tải lên</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          {sidebarOpen && (
-            <div className="flex-1 overflow-y-auto p-4">
-              {foldersLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
+          {/* Content area */}
+          <div className="flex-1 overflow-y-auto"
+            onContextMenu={(e) => {
+              if ((e.target as HTMLElement).closest("[data-context-menu]")) return;
+              e.preventDefault();
+              setSpaceMenu({ x: e.clientX, y: e.clientY });
+            }}
+            onClick={() => setSpaceMenu(null)}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 px-6 pt-5 pb-2">
+              <StatsCard icon={FileIcon} label="Files" value={totalFiles.toLocaleString()} gradient="bg-gradient-to-br from-blue-500 to-cyan-600" />
+              <StatsCard icon={FolderIcon} label="Thư mục" value={totalFolders.toLocaleString()} gradient="bg-gradient-to-br from-purple-500 to-pink-600" />
+              <StatsCard icon={HardDrive} label="Lưu trữ" value={formatSize(totalSize)} gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
+            </div>
+
+            {error && (
+              <div className="mx-6 mt-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm flex-1">{error}</span>
+                <button onClick={() => setError(null)} className="text-red-400 hover:text-red-300 p-1"><X className="w-4 h-4" /></button>
+              </div>
+            )}
+
+            {/* Sub-folders */}
+            {childFolders.length > 0 && !debouncedSearch && (
+              <div className="px-6 pt-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <FolderIcon className="w-4 h-4 text-purple-400" />
+                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Thư mục con</h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  {childFolders.map(child => (
+                    <ContextMenu key={child.id}
+                      items={[
+                        { label: "Mở", icon: <FolderIcon className="w-4 h-4" />, onClick: () => handleFolderSelect(child.id) },
+                        { divider: true },
+                        { label: "Tạo thư mục con", icon: <FolderPlus className="w-4 h-4" />, onClick: () => handleCreateFolder(child.id) },
+                        { divider: true },
+                        { label: "Đổi tên", icon: <FileText className="w-4 h-4" />, onClick: () => { const name = prompt("Đổi tên thư mục:", child.name); if (name && name.trim()) handleRenameFolder(child.id, name.trim()); } },
+                        { label: "Xoá", icon: <Trash2 className="w-4 h-4" />, onClick: () => handleDeleteFolder(child.id), danger: true },
+                      ]}>
+                      <div data-context-menu="true" onClick={() => handleFolderSelect(child.id)}
+                        className="group relative flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-purple-500/30 hover:bg-slate-800/50 cursor-pointer transition-all">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
+                          <FolderIcon className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-200 truncate">{child.name}</p>
+                          <p className="text-xs text-slate-400">{folders.filter(f => f.parent === child.id).length} thư mục con</p>
+                        </div>
+                      </div>
+                    </ContextMenu>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Files */}
+            <div className="p-6">
+              {filesLoading && files.length === 0 && !selectedFolderId ? (
+                <SkeletonLoader />
+              ) : files.length === 0 && childFolders.length === 0 ? (
+                <div className="text-center py-20">
+                  <div className="w-20 h-20 rounded-3xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center mx-auto mb-6">
+                    <Cloud className="w-10 h-10 text-slate-500" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-slate-300 mb-2">
+                    {debouncedSearch ? `Không có kết quả cho "${debouncedSearch}"` : selectedFolderId ? "Thư mục này trống" : "Chưa có file nào"}
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-6 max-w-md mx-auto">
+                    {debouncedSearch ? "Thử từ khoá khác hoặc duyệt thư mục của bạn." : selectedFolderId ? "Kéo thả file vào đây hoặc dùng nút tải lên để thêm files." : "Tải file đầu tiên để bắt đầu với FreeClouds."}
+                  </p>
+                  {!debouncedSearch && (
+                    <div className="flex gap-3 justify-center">
+                      <button onClick={() => setShowUpload(true)} className="btn-primary px-5 py-2.5 rounded-xl text-sm flex items-center gap-2">
+                        <Upload className="w-4 h-4" /> Tải files lên
+                      </button>
+                      <button onClick={() => handleCreateFolder(selectedFolderId)} className="btn-secondary px-5 py-2.5 rounded-xl text-sm flex items-center gap-2">
+                        <FolderPlus className="w-4 h-4" /> Tạo thư mục
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <PlainFolderTree
-                  folders={folders}
-                  selectedFolderId={selectedFolderId}
-                  onFolderSelect={handleFolderSelect}
-                  onCreateFolder={handleCreateFolder}
-                  onRenameFolder={handleRenameFolder}
-                  onDeleteFolder={handleDeleteFolder}
-                  expandAll={expandAll}
-                />
+                <>
+                  {filesLoading && files.length > 0 && (
+                    <div className="flex items-center gap-2 mb-4 text-sm text-slate-400">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      Đang làm mới...
+                    </div>
+                  )}
+                  <DynamicFileGrid files={files} loading={filesLoading}
+                    onDownload={handleDownload} onDelete={handleDeleteFile}
+                    viewMode={viewMode} onViewModeChange={setViewMode} />
+                </>
               )}
             </div>
-          )}
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="bg-white border-b border-gray-200 p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  {selectedFolder ? `${selectedFolder.name}` : "Tất cả tệp tin"}
-                  {searchQuery && ` - "${searchQuery}"`}
-                </h1>
-                <p className="text-gray-600">Chào mừng trở lại, {user.name}</p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={refreshData}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  disabled={filesLoading || foldersLoading}
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 ${filesLoading || foldersLoading ? "animate-spin" : ""}`}
-                  />
-                  Làm mới
-                </button>
-
-                <button
-                  onClick={() => setShowUpload(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  Tải lên
-                </button>
-
-                <button
-                  onClick={() => handleCreateFolder(selectedFolderId)}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  <FolderPlus className="w-4 h-4" />
-                  Tạo thư mục
-                </button>
-
-                <button
-                  onClick={() => setShowUserProfile(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Hồ sơ
-                </button>
-              </div>
-            </div>
-
-            {/* Search Bar */}
-            <div className="mt-4">
-              <input
-                type="text"
-                placeholder="Tìm kiếm tệp tin..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* View Mode Toggle */}
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-gray-600">
-                {files.length} tệp tin
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`px-3 py-1 rounded text-sm transition-colors ${
-                    viewMode === "grid"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  Lưới
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`px-3 py-1 rounded text-sm transition-colors ${
-                    viewMode === "list"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  Danh sách
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Error Display */}
-          {error && (
-            <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
-              <AlertCircle className="w-5 h-5" />
-              <span>{error}</span>
-              <button
-                onClick={() => setError(null)}
-                className="ml-auto text-red-600 hover:text-red-800"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
-          {/* File Content */}
-          <div className="flex-1 overflow-y-auto p-6">
-            {filesLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
-              </div>
-            ) : files.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">
-                  {searchQuery
-                    ? `Không tìm thấy tệp tin nào với từ khóa "${searchQuery}"`
-                    : selectedFolder
-                      ? "Thư mục này chưa có tệp tin nào"
-                      : "Chưa có tệp tin nào được tải lên"}
-                </p>
-              </div>
-            ) : (
-              <DynamicFileGrid
-                files={files}
-                loading={filesLoading}
-                onDownload={handleDownload}
-                onDelete={handleDeleteFile}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-              />
-            )}
           </div>
         </div>
       </div>
 
-      {/* Upload Modal */}
-      {showUpload && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Tải lên tệp tin
-                </h3>
-                <button
-                  onClick={() => setShowUpload(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              <UploadDropzone
-                onUpload={(files) => handleUpload(files, selectedFolderId)}
-                folderId={selectedFolderId}
-              />
-            </div>
-          </div>
+      {spaceMenu && (
+        <div className="fixed z-[100] min-w-[180px] py-1.5 rounded-xl bg-slate-800 border border-slate-700 shadow-2xl shadow-black/30 backdrop-blur-xl"
+          style={{ left: spaceMenu.x, top: spaceMenu.y }}
+          onClick={() => setSpaceMenu(null)}>
+          <button onClick={() => { setShowUpload(true); setSpaceMenu(null); }}
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors">
+            <Upload className="w-4 h-4" /> Tải files lên
+          </button>
+          <button onClick={() => { handleCreateFolder(selectedFolderId); setSpaceMenu(null); }}
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors">
+            <FolderPlus className="w-4 h-4" /> Thư mục mới
+          </button>
+          <div className="my-1 border-t border-slate-700/50" />
+          <button onClick={() => { refreshData(); setSpaceMenu(null); }}
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors">
+            <RefreshCw className="w-4 h-4" /> Làm mới
+          </button>
         </div>
       )}
 
-      {/* User Profile Modal */}
-      {showUserProfile && user && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Hồ sơ người dùng
-                </h3>
-                <button
-                  onClick={() => setShowUserProfile(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              <UserProfile
-                isOpen={showUserProfile}
-                onClose={() => setShowUserProfile(false)}
-                user={user}
-                onUserUpdate={handleUserUpdate}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal show={showUpload} onClose={() => setShowUpload(false)} title="Tải files lên">
+        <DynamicUploadDropzone onUpload={(files) => handleUpload(files, selectedFolderId)} folderId={selectedFolderId} />
+      </Modal>
+      <Modal show={showUserProfile} onClose={() => setShowUserProfile(false)} title="Thông tin cá nhân">
+        <Suspense fallback={<div className="text-center py-4 text-slate-400">Đang tải...</div>}>
+          <DynamicUserProfile isOpen={showUserProfile} onClose={() => setShowUserProfile(false)} user={user!} onUserUpdate={handleUserUpdate} />
+        </Suspense>
+      </Modal>
 
-      {/* Create Folder Modal */}
-      {showCreateFolder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowCreateFolder(false); }}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="relative bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 border-b border-slate-700/50">
-              <h3 className="text-lg font-semibold text-white">Tạo thư mục mới</h3>
-            </div>
-            <div className="p-6">
-              <input type="text" placeholder="Tên thư mục" value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                className="input-modern w-full px-4 py-2.5 rounded-xl mb-4 text-white"
-                onKeyDown={(e) => e.key === "Enter" && newFolderName.trim() && confirmCreateFolder(newFolderName.trim())}
-                autoFocus />
-              <div className="flex gap-2 justify-end">
-                <button onClick={() => setShowCreateFolder(false)}
-                  className="btn-secondary px-4 py-2 rounded-lg text-sm">Hủy</button>
-                <button onClick={() => confirmCreateFolder(newFolderName.trim())} disabled={!newFolderName.trim() || creatingFolder}
-                  className="btn-primary px-4 py-2 rounded-lg text-sm disabled:opacity-50">
-                  {creatingFolder && <svg className="animate-spin h-4 w-4 inline mr-1.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
-                  Tạo
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateFolderModal show={showCreateFolder} loading={creatingFolder} onClose={() => { setShowCreateFolder(false); setNewFolderName(""); }} onConfirm={confirmCreateFolder} />
 
-      {/* Delete Folder Modal (in-app) */}
-      {deleteModal.show && deleteModal.folderId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Xóa thư mục
-              </h3>
-            </div>
-            <div className="p-6">
-              <p className="text-sm text-gray-700 mb-2">
-                Bạn sắp xóa vĩnh viễn thư mục{" "}
-                <span className="font-semibold">{deleteModal.folderName}</span>.
-              </p>
-              {typeof deleteModal.subfolderCount === "number" &&
-                deleteModal.subfolderCount > 0 && (
-                  <p className="text-sm text-gray-600 mb-2">
-                    Đồng thời sẽ xóa {deleteModal.subfolderCount} thư mục con và
-                    toàn bộ tệp bên trong.
-                  </p>
-                )}
-              <p className="text-sm text-red-600 mb-4">
-                Hành động này không thể hoàn tác.
-              </p>
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => setDeleteModal({ show: false })}
-                  className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-                  disabled={deleting}
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={confirmDeleteFolder}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                  disabled={deleting}
-                >
-                  {deleting ? (
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8z"
-                      ></path>
-                    </svg>
-                  ) : (
-                    "Xóa"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* File Delete Modal (in-app) */}
-      {fileDeleteModal.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Xóa tệp tin
-              </h3>
-            </div>
-            <div className="p-6">
-              <p className="text-sm text-gray-700 mb-4">
-                Bạn có chắc chắn muốn xóa tệp{" "}
-                <span className="font-semibold">
-                  {fileDeleteModal.fileName}
-                </span>
-                ? Hành động này không thể hoàn tác.
-              </p>
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => setFileDeleteModal({ show: false })}
-                  className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-                  disabled={fileDeleting}
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={confirmDeleteFile}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                  disabled={fileDeleting}
-                >
-                  {fileDeleting ? (
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8z"
-                      ></path>
-                    </svg>
-                  ) : (
-                    "Xóa"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Toast */}
-      {toast.show && (
-        <div className="fixed right-6 top-6 z-60">
-          <div
-            className={`px-4 py-2 rounded shadow-lg text-sm flex items-center gap-3 ${
-              toast.type === "success"
-                ? "bg-green-600 text-white"
-                : toast.type === "error"
-                  ? "bg-red-600 text-white"
-                  : "bg-blue-600 text-white"
-            }`}
-          >
-            <div>{toast.message}</div>
-            <button
-              onClick={() =>
-                setToast({ show: false, message: "", type: "info" })
-              }
-              className="ml-2 opacity-90 hover:opacity-100"
-              aria-label="Dismiss"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
+      <ConfirmModal show={deleteModal.show} title="Xoá thư mục"
+        message={`Xoá vĩnh viễn "${deleteModal.folder?.name}"?${deleteModal.subfolderCount && deleteModal.subfolderCount > 0 ? ` Thao tác này cũng xoá ${deleteModal.subfolderCount} thư mục con.` : ""}`}
+        warning="Hành động này không thể hoàn tác." onCancel={() => setDeleteModal({ show: false })} onConfirm={confirmDeleteFolder} />
+      <ConfirmModal show={fileDeleteModal.show} title="Xoá file" message={`Xoá vĩnh viễn "${fileDeleteModal.fileName}"?`}
+        warning="Hành động này không thể hoàn tác." loading={deleting} onCancel={() => setFileDeleteModal({ show: false })} onConfirm={confirmDeleteFile} />
+      <Toast toast={toast} onDismiss={() => setToast(null)} />
       <Footer />
     </div>
   );

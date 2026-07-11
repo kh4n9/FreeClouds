@@ -4,7 +4,7 @@ import React from "react";
 
 export default function AdminAnalyticsPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-slate-900/50 animate-fade-in">
       <main className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
           <section className="space-y-6">

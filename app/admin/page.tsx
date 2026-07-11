@@ -170,7 +170,7 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div className="bg-red-500/10 border border-red-200 rounded-lg p-4">
         <div className="flex items-center">
           <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
           <span className="text-red-700">{error}</span>
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
   if (!stats) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Không có dữ liệu thống kê</p>
+        <p className="text-slate-400">Không có dữ liệu thống kê</p>
       </div>
     );
   }
@@ -232,15 +232,15 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="md:flex md:items-center md:justify-between">
         <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+          <h2 className="text-2xl font-bold leading-7 text-white sm:truncate sm:text-3xl sm:tracking-tight">
             Tổng quan hệ thống
           </h2>
           <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
-            <div className="mt-2 flex items-center text-sm text-gray-500">
+            <div className="mt-2 flex items-center text-sm text-slate-400">
               <Calendar className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" />
               Cập nhật lần cuối: {formatDate(stats.system.timestamp)}
             </div>
@@ -249,7 +249,7 @@ export default function AdminDashboard() {
         <div className="mt-4 flex md:ml-4 md:mt-0">
           <button
             onClick={fetchStats}
-            className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+            className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-black/10 hover:bg-blue-500"
           >
             <Activity className="mr-2 h-4 w-4" />
             Làm mới dữ liệu
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {quickStats.map((stat, index) => (
           <Link key={index} href={stat.href}>
-            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer">
+            <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -273,11 +273,11 @@ export default function AdminDashboard() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="text-sm font-medium text-slate-400 truncate">
                         {stat.title}
                       </dt>
                       <dd className="flex items-baseline">
-                        <div className="text-2xl font-semibold text-gray-900">
+                        <div className="text-2xl font-semibold text-white">
                           {typeof stat.value === "string"
                             ? stat.value
                             : stat.value.toLocaleString()}
@@ -286,8 +286,8 @@ export default function AdminDashboard() {
                           <div
                             className={`ml-2 flex items-baseline text-sm font-semibold ${
                               stat.change > 0
-                                ? "text-green-600"
-                                : "text-red-600"
+                                ? "text-green-400"
+                                : "text-red-400"
                             }`}
                           >
                             <TrendingUp className="h-4 w-4 mr-1" />
@@ -307,29 +307,29 @@ export default function AdminDashboard() {
 
       {/* Today's Activity and Storage Overview */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="bg-slate-800/50 shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-white mb-4">
             Hoạt động hôm nay
           </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Users className="h-5 w-5 text-blue-500 mr-2" />
-                <span className="text-sm text-gray-600">Người dùng mới</span>
+                <span className="text-sm text-slate-300">Người dùng mới</span>
               </div>
               <span className="text-lg font-semibold">{stats.users.today}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <FileText className="h-5 w-5 text-green-500 mr-2" />
-                <span className="text-sm text-gray-600">File mới</span>
+                <span className="text-sm text-slate-300">File mới</span>
               </div>
               <span className="text-lg font-semibold">{stats.files.today}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <FolderOpen className="h-5 w-5 text-purple-500 mr-2" />
-                <span className="text-sm text-gray-600">Thư mục mới</span>
+                <span className="text-sm text-slate-300">Thư mục mới</span>
               </div>
               <span className="text-lg font-semibold">
                 {stats.folders.today}
@@ -339,39 +339,39 @@ export default function AdminDashboard() {
         </div>
 
         {/* Storage Overview */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+        <div className="bg-slate-800/50 shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-white mb-4 flex items-center">
             <HardDrive className="h-5 w-5 text-orange-500 mr-2" />
             Tổng quan dung lượng
           </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">Tổng dung lượng</div>
-              <div className="text-lg font-semibold text-gray-900">
+              <div className="text-sm text-slate-300">Tổng dung lượng</div>
+              <div className="text-lg font-semibold text-white">
                 {formatFileSize(stats.system.totalStorage)}
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-slate-300">
                 Dung lượng trung bình/user
               </div>
-              <div className="text-lg font-semibold text-blue-600">
+              <div className="text-lg font-semibold text-indigo-400">
                 {formatFileSize(stats.users.storage.averageStorage)}
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-slate-300">
                 User sử dụng nhiều nhất
               </div>
-              <div className="text-lg font-semibold text-red-600">
+              <div className="text-lg font-semibold text-red-400">
                 {formatFileSize(stats.users.storage.maxStorage)}
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-slate-300">
                 Kích thước file trung bình
               </div>
-              <div className="text-lg font-semibold text-green-600">
+              <div className="text-lg font-semibold text-green-400">
                 {formatFileSize(stats.files.size.averageSize)}
               </div>
             </div>
@@ -379,8 +379,8 @@ export default function AdminDashboard() {
         </div>
 
         {/* File Type Distribution */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="bg-slate-800/50 shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-white mb-4">
             Phân bố loại file
           </h3>
           <div className="space-y-3">
@@ -398,13 +398,13 @@ export default function AdminDashboard() {
                       ][index % 5]
                     }`}
                   ></div>
-                  <span className="text-sm text-gray-600 capitalize">
+                  <span className="text-sm text-slate-300 capitalize">
                     {type._id || "Khác"}
                   </span>
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-semibold">{type.count}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-slate-400">
                     {formatFileSize(type.totalSize)}
                   </div>
                 </div>
@@ -414,56 +414,56 @@ export default function AdminDashboard() {
         </div>
 
         {/* System Health */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="bg-slate-800/50 shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-white mb-4">
             Trạng thái hệ thống
           </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                <span className="text-sm text-gray-600">Database</span>
+                <span className="text-sm text-slate-300">Database</span>
               </div>
-              <span className="text-sm text-green-600 font-medium">
+              <span className="text-sm text-green-400 font-medium">
                 Hoạt động tốt
               </span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                <span className="text-sm text-gray-600">API Services</span>
+                <span className="text-sm text-slate-300">API Services</span>
               </div>
-              <span className="text-sm text-green-600 font-medium">
+              <span className="text-sm text-green-400 font-medium">
                 Hoạt động tốt
               </span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                <span className="text-sm text-gray-600">File Storage</span>
+                <span className="text-sm text-slate-300">File Storage</span>
               </div>
-              <span className="text-sm text-green-600 font-medium">
+              <span className="text-sm text-green-400 font-medium">
                 Hoạt động tốt
               </span>
             </div>
-            <div className="mt-4 p-3 bg-gray-50 rounded-md space-y-2">
-              <div className="text-sm text-gray-600">
+            <div className="mt-4 p-3 bg-slate-800/30 rounded-md space-y-2">
+              <div className="text-sm text-slate-300">
                 <strong>Tổng thực thể:</strong>{" "}
                 {stats.system.totalEntities.toLocaleString()}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-slate-300">
                 <strong>Tổng dung lượng:</strong>{" "}
                 {formatFileSize(stats.system.totalStorage)}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-slate-300">
                 <strong>File lớn nhất:</strong>{" "}
                 {formatFileSize(stats.files.size.maxSize)}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-slate-300">
                 <strong>User dùng nhiều nhất:</strong>{" "}
                 {formatFileSize(stats.users.storage.maxStorage)}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-slate-300">
                 <strong>Loại file phổ biến:</strong>{" "}
                 {stats.files.typeDistribution[0]?._id || "Không có"}
               </div>
@@ -473,9 +473,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Storage Usage by Users */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center">
+      <div className="bg-slate-800/50 shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-slate-700/50">
+          <h3 className="text-lg font-medium text-white flex items-center">
             <HardDrive className="h-5 w-5 text-orange-500 mr-2" />
             Sử dụng dung lượng theo người dùng
           </h3>
@@ -496,18 +496,18 @@ export default function AdminDashboard() {
                 >
                   <div className="flex items-center flex-1">
                     <div className="flex-shrink-0 mr-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-blue-600">
+                      <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-indigo-400">
                           {index + 1}
                         </span>
                       </div>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-white">
                           {user.name}
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-slate-400">
                           {formatFileSize(user.totalStorageUsed)} ({percentage}
                           %)
                         </span>
@@ -526,7 +526,7 @@ export default function AdminDashboard() {
                           style={{ width: `${Math.min(percentage, 100)}%` }}
                         ></div>
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-slate-400 mt-1">
                         {user.totalFilesUploaded} files • {user.email}
                       </div>
                     </div>
@@ -535,7 +535,7 @@ export default function AdminDashboard() {
               );
             })}
             {stats.topUsers.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-slate-400">
                 Chưa có dữ liệu người dùng
               </div>
             )}
@@ -546,14 +546,14 @@ export default function AdminDashboard() {
       {/* Recent Activity Tables */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Users */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">
+        <div className="bg-slate-800/50 shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-slate-700/50">
+            <h3 className="text-lg font-medium text-white">
               Người dùng mới nhất
             </h3>
           </div>
           <div className="overflow-hidden">
-            <ul className="divide-y divide-gray-200">
+            <ul className="divide-y divide-slate-700/50">
               {stats.recentActivity.users.slice(0, 5).map((user) => (
                 <li key={user._id} className="px-6 py-4">
                   <div className="flex items-center justify-between">
@@ -561,36 +561,36 @@ export default function AdminDashboard() {
                       <div className="flex-shrink-0">
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            user.role === "admin" ? "bg-red-100" : "bg-blue-100"
+                            user.role === "admin" ? "bg-red-100" : "bg-blue-500/20"
                           }`}
                         >
                           <Users
                             className={`w-4 h-4 ${
                               user.role === "admin"
-                                ? "text-red-600"
-                                : "text-blue-600"
+                                ? "text-red-400"
+                                : "text-indigo-400"
                             }`}
                           />
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-white">
                           {user.name}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-slate-400">
                           {user.email}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-white">
                         {formatDate(user.createdAt)}
                       </div>
                       <div
                         className={`text-xs ${
                           user.role === "admin"
-                            ? "text-red-600"
-                            : "text-blue-600"
+                            ? "text-red-400"
+                            : "text-indigo-400"
                         }`}
                       >
                         {user.role === "admin" ? "Quản trị viên" : "Người dùng"}
@@ -600,10 +600,10 @@ export default function AdminDashboard() {
                 </li>
               ))}
             </ul>
-            <div className="px-6 py-3 border-t border-gray-200">
+            <div className="px-6 py-3 border-t border-slate-700/50">
               <Link
                 href="/admin/users"
-                className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+                className="text-sm text-indigo-400 hover:text-blue-500 font-medium"
               >
                 Xem tất cả người dùng →
               </Link>
@@ -612,37 +612,37 @@ export default function AdminDashboard() {
         </div>
 
         {/* Recent Files */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">
+        <div className="bg-slate-800/50 shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-slate-700/50">
+            <h3 className="text-lg font-medium text-white">
               File upload mới nhất
             </h3>
           </div>
           <div className="overflow-hidden">
-            <ul className="divide-y divide-gray-200">
+            <ul className="divide-y divide-slate-700/50">
               {stats.recentActivity.files.slice(0, 5).map((file) => (
                 <li key={file._id} className="px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
                         <div className="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center">
-                          <FileText className="w-4 h-4 text-green-600" />
+                          <FileText className="w-4 h-4 text-green-400" />
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900 truncate max-w-48">
+                        <div className="text-sm font-medium text-white truncate max-w-48">
                           {file.name}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-slate-400">
                           bởi {file.userId.name} • {formatFileSize(file.size)}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-white">
                         {formatDate(file.createdAt)}
                       </div>
-                      <div className="text-xs text-gray-500 capitalize">
+                      <div className="text-xs text-slate-400 capitalize">
                         {file.type}
                       </div>
                     </div>
@@ -650,10 +650,10 @@ export default function AdminDashboard() {
                 </li>
               ))}
             </ul>
-            <div className="px-6 py-3 border-t border-gray-200">
+            <div className="px-6 py-3 border-t border-slate-700/50">
               <Link
                 href="/admin/files"
-                className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+                className="text-sm text-indigo-400 hover:text-blue-500 font-medium"
               >
                 Xem tất cả file →
               </Link>
@@ -663,68 +663,68 @@ export default function AdminDashboard() {
       </div>
 
       {/* Top Users by Storage */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">
+      <div className="bg-slate-800/50 shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-slate-700/50">
+          <h3 className="text-lg font-medium text-white">
             Top người dùng theo dung lượng
           </h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-slate-700/50">
+            <thead className="bg-slate-800/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                   Người dùng
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                   Dung lượng sử dụng
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                   Số file
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                   Tham gia
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                   Đăng nhập cuối
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-slate-800/50 divide-y divide-slate-700/50">
               {stats.topUsers.slice(0, 10).map((user, index) => (
                 <tr
                   key={user._id}
-                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  className={index % 2 === 0 ? "bg-slate-800/50" : "bg-slate-800/30"}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-8 w-8">
-                        <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-blue-600">
+                        <div className="h-8 w-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-medium text-indigo-400">
                             {user.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-white">
                           {user.name}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-slate-400">
                           {user.email}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                     {formatFileSize(user.totalStorageUsed || 0)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                     {(user.totalFilesUploaded || 0).toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
                     {formatDate(user.createdAt)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
                     {user.lastLoginAt
                       ? formatDate(user.lastLoginAt)
                       : "Chưa đăng nhập"}

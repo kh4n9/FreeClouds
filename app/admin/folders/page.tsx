@@ -199,18 +199,18 @@ export default function AdminFoldersPage() {
   const hasActiveFilters = searchTerm || userFilter;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Folder Management</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-bold text-white">Folder Management</h1>
+          <p className="mt-2 text-slate-300">
             Manage all folders across the system
           </p>
         </div>
         <button
           onClick={() => fetchFolders()}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="inline-flex items-center px-4 py-2 border border-slate-600/50 rounded-md shadow-sm text-sm font-medium text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
@@ -219,7 +219,7 @@ export default function AdminFoldersPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -227,10 +227,10 @@ export default function AdminFoldersPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     Total Folders
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {pagination.totalFolders.toLocaleString()}
                   </dd>
                 </dl>
@@ -239,7 +239,7 @@ export default function AdminFoldersPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -247,10 +247,10 @@ export default function AdminFoldersPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     Selected Folders
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {selectedFolders.length}
                   </dd>
                 </dl>
@@ -259,7 +259,7 @@ export default function AdminFoldersPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -267,10 +267,10 @@ export default function AdminFoldersPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     Total Files
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {folders.reduce((sum, f) => sum + f.fileCount, 0).toLocaleString()}
                   </dd>
                 </dl>
@@ -279,7 +279,7 @@ export default function AdminFoldersPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -287,10 +287,10 @@ export default function AdminFoldersPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-400 truncate">
                     Total Subfolders
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-white">
                     {folders.reduce((sum, f) => sum + f.subfolderCount, 0).toLocaleString()}
                   </dd>
                 </dl>
@@ -302,7 +302,7 @@ export default function AdminFoldersPage() {
 
       {/* Error Alert */}
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="rounded-md bg-red-500/10 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <AlertTriangle className="h-5 w-5 text-red-400" />
@@ -315,7 +315,7 @@ export default function AdminFoldersPage() {
               <div className="-mx-1.5 -my-1.5">
                 <button
                   onClick={() => setError(null)}
-                  className="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+                  className="inline-flex bg-red-500/10 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -326,7 +326,7 @@ export default function AdminFoldersPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white shadow rounded-lg p-6">
+      <div className="bg-slate-800/50 shadow rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
           <div className="md:col-span-2">
@@ -339,7 +339,7 @@ export default function AdminFoldersPage() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full pl-10 pr-3 py-2 border border-slate-600/50 rounded-md leading-5 bg-slate-800/80 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Search folders..."
                 />
               </div>
@@ -357,7 +357,7 @@ export default function AdminFoldersPage() {
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-3 py-2 border border-slate-600/50 shadow-sm text-sm leading-4 font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <X className="h-4 w-4 mr-2" />
                 Reset
@@ -385,10 +385,10 @@ export default function AdminFoldersPage() {
 
       {/* Bulk Actions */}
       {selectedFolders.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-blue-500/10 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
+              <CheckCircle className="h-5 w-5 text-indigo-400 mr-2" />
               <span className="text-sm font-medium text-blue-800">
                 {selectedFolders.length} folder(s) selected
               </span>
@@ -407,50 +407,50 @@ export default function AdminFoldersPage() {
       )}
 
       {/* Folders Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+      <div className="bg-slate-800/50 shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:p-6">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-slate-700/50">
+              <thead className="bg-slate-800/50">
                 <tr>
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
                       checked={selectedFolders.length === folders.length && folders.length > 0}
                       onChange={handleSelectAll}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
                     />
                   </th>
                   <th
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50"
                     onClick={() => handleSort("name")}
                   >
                     Folder Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                     Location
                   </th>
                   <th
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50"
                     onClick={() => handleSort("ownerName")}
                   >
                     Owner
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                     Contents
                   </th>
                   <th
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50"
                     onClick={() => handleSort("createdAt")}
                   >
                     Created
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-slate-800/50 divide-y divide-slate-700/50">
                 {loading ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-4 text-center">
@@ -461,7 +461,7 @@ export default function AdminFoldersPage() {
                   </tr>
                 ) : folders.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-4 text-center text-slate-400">
                       No folders found
                     </td>
                   </tr>
@@ -473,39 +473,39 @@ export default function AdminFoldersPage() {
                           type="checkbox"
                           checked={selectedFolders.includes(folder.id)}
                           onChange={() => handleSelectFolder(folder.id)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <FolderOpen className="h-5 w-5 text-blue-500 mr-3" />
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-white">
                             {folder.name}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                         <div className="flex items-center">
                           {folder.isRootFolder ? (
-                            <span className="text-gray-500 italic">Root</span>
+                            <span className="text-slate-400 italic">Root</span>
                           ) : folder.parentName ? (
-                            <span className="text-gray-700">{folder.parentName}</span>
+                            <span className="text-slate-200">{folder.parentName}</span>
                           ) : (
-                            <span className="text-gray-500">Root</span>
+                            <span className="text-slate-400">Root</span>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-white">
                             {folder.ownerName}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-slate-400">
                             {folder.ownerEmail}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center">
                             <FileText className="h-4 w-4 text-green-500 mr-1" />
@@ -517,14 +517,14 @@ export default function AdminFoldersPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                         {formatDate(folder.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <Link
                             href={`/admin/users/${folder.owner}`}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-indigo-400 hover:text-blue-900"
                           >
                             <Eye className="h-4 w-4" />
                           </Link>
@@ -539,26 +539,26 @@ export default function AdminFoldersPage() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div className="bg-slate-800/50 px-4 py-3 flex items-center justify-between border-t border-slate-700/50 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
                   onClick={() => fetchFolders(pagination.currentPage - 1)}
                   disabled={!pagination.hasPrevPage}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center px-4 py-2 border border-slate-600/50 text-sm font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => fetchFolders(pagination.currentPage + 1)}
                   disabled={!pagination.hasNextPage}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-600/50 text-sm font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
               </div>
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-slate-200">
                     Showing page{" "}
                     <span className="font-medium">{pagination.currentPage}</span>{" "}
                     of{" "}
@@ -571,14 +571,14 @@ export default function AdminFoldersPage() {
                     <button
                       onClick={() => fetchFolders(pagination.currentPage - 1)}
                       disabled={!pagination.hasPrevPage}
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-600/50 bg-slate-800/50 text-sm font-medium text-slate-400 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => fetchFolders(pagination.currentPage + 1)}
                       disabled={!pagination.hasNextPage}
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-600/50 bg-slate-800/50 text-sm font-medium text-slate-400 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronRight className="h-5 w-5" />
                     </button>
@@ -593,16 +593,16 @@ export default function AdminFoldersPage() {
       {/* Delete Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg shadow-black/20 rounded-md bg-slate-800/50">
             <div className="mt-3 text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <Trash2 className="h-6 w-6 text-red-600" />
+                <Trash2 className="h-6 w-6 text-red-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-2">
+              <h3 className="text-lg font-medium text-white mt-2">
                 Delete Folders
               </h3>
               <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-400">
                   Are you sure you want to delete {selectedFolders.length} folder(s)?
                 </p>
                 <div className="mt-4">
@@ -611,9 +611,9 @@ export default function AdminFoldersPage() {
                       type="checkbox"
                       checked={deleteRecursive}
                       onChange={(e) => setDeleteRecursive(e.target.checked)}
-                      className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-red-400 focus:ring-red-500 border-slate-600/50 rounded"
                     />
-                    <span className="ml-2 text-sm text-gray-700">
+                    <span className="ml-2 text-sm text-slate-200">
                       Delete recursively (including all contents)
                     </span>
                   </label>
@@ -630,7 +630,7 @@ export default function AdminFoldersPage() {
                 <button
                   onClick={() => setShowDeleteModal(false)}
                   disabled={actionLoading}
-                  className="mt-3 px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-3 px-4 py-2 bg-gray-300 text-slate-100 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>

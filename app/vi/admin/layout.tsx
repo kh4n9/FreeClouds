@@ -80,7 +80,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex">
+    <div className="min-h-screen bg-[#0f172a] flex animate-fade-in">
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}

@@ -304,15 +304,15 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="md:flex md:items-center md:justify-between">
         <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+          <h2 className="text-2xl font-bold leading-7 text-white sm:truncate sm:text-3xl sm:tracking-tight">
             Quản lý người dùng
           </h2>
           <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
-            <div className="mt-2 flex items-center text-sm text-gray-500">
+            <div className="mt-2 flex items-center text-sm text-slate-400">
               <Users className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" />
               Tổng cộng {pagination.totalUsers} người dùng
             </div>
@@ -321,21 +321,21 @@ export default function AdminUsersPage() {
         <div className="mt-4 flex space-x-3 md:ml-4 md:mt-0">
           <button
             onClick={exportUsers}
-            className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            className="inline-flex items-center rounded-md bg-slate-800/50 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-black/10 ring-1 ring-inset ring-gray-300 hover:bg-slate-800/30"
           >
             <Download className="mr-2 h-4 w-4" />
             Xuất Excel
           </button>
           <button
             onClick={() => fetchUsers()}
-            className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            className="inline-flex items-center rounded-md bg-slate-800/50 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-black/10 ring-1 ring-inset ring-gray-300 hover:bg-slate-800/30"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Làm mới
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+            className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-black/10 hover:bg-blue-500"
           >
             <Plus className="mr-2 h-4 w-4" />
             Thêm người dùng
@@ -345,7 +345,7 @@ export default function AdminUsersPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-500/10 border border-red-200 rounded-lg p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <UserX className="h-5 w-5 text-red-400" />
@@ -358,7 +358,7 @@ export default function AdminUsersPage() {
       )}
 
       {/* Filters and Search */}
-      <div className="bg-white shadow rounded-lg">
+      <div className="bg-slate-800/50 shadow rounded-lg">
         <div className="px-6 py-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {/* Search */}
@@ -371,7 +371,7 @@ export default function AdminUsersPage() {
                 placeholder="Tìm kiếm theo tên hoặc email..."
                 value={searchTerm}
                 onChange={handleSearch}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full pl-10 pr-3 py-2 border border-slate-600/50 rounded-md leading-5 bg-slate-800/80 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
@@ -379,7 +379,7 @@ export default function AdminUsersPage() {
             <select
               value={roleFilter}
               onChange={handleRoleFilter}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full px-3 py-2 border border-slate-600/50 rounded-md bg-slate-800/80 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">🔍 Tất cả vai trò</option>
               <option value="user">👤 Người dùng thường</option>
@@ -390,7 +390,7 @@ export default function AdminUsersPage() {
             <select
               value={statusFilter}
               onChange={handleStatusFilter}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full px-3 py-2 border border-slate-600/50 rounded-md bg-slate-800/80 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">🔍 Tất cả trạng thái</option>
               <option value="active">✅ Đang hoạt động</option>
@@ -405,7 +405,7 @@ export default function AdminUsersPage() {
                 setSortBy(field || "createdAt");
                 setSortOrder(order || "desc");
               }}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full px-3 py-2 border border-slate-600/50 rounded-md bg-slate-800/80 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="createdAt-desc">Mới nhất</option>
               <option value="createdAt-asc">Cũ nhất</option>
@@ -419,12 +419,12 @@ export default function AdminUsersPage() {
 
           {/* Reset Filters Button and Results Counter */}
           <div className="lg:col-span-4 flex items-center justify-between">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-slate-300">
               📊 Hiển thị {users.length} / {pagination.totalUsers} người dùng
               {(searchTerm ||
                 roleFilter !== "all" ||
                 statusFilter !== "all") && (
-                <span className="ml-2 text-blue-600">(đã lọc)</span>
+                <span className="ml-2 text-indigo-400">(đã lọc)</span>
               )}
             </div>
             <button
@@ -436,7 +436,7 @@ export default function AdminUsersPage() {
                 setSortOrder("desc");
                 setPagination((prev) => ({ ...prev, currentPage: 1 }));
               }}
-              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-3 py-2 border border-slate-600/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               disabled={
                 !searchTerm &&
                 roleFilter === "all" &&
@@ -453,9 +453,9 @@ export default function AdminUsersPage() {
 
         {/* Active Filters */}
         {(searchTerm || roleFilter !== "all" || statusFilter !== "all") && (
-          <div className="px-6 py-3 border-t border-gray-200 bg-gray-50">
+          <div className="px-6 py-3 border-t border-slate-700/50 bg-slate-800/30">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-slate-200">
                 Bộ lọc đang áp dụng:
               </span>
               {searchTerm && (
@@ -483,10 +483,10 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="bg-slate-800/50 shadow rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-slate-700/50">
+            <thead className="bg-slate-800/50">
               <tr>
                 <th className="px-6 py-3 text-left">
                   <input
@@ -495,49 +495,49 @@ export default function AdminUsersPage() {
                       selectedUsers.length === users.length && users.length > 0
                     }
                     onChange={handleSelectAll}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
                   />
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
+                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
                   onClick={() => handleSort("name")}
                 >
                   Người dùng
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
+                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
                   onClick={() => handleSort("role")}
                 >
                   Vai trò
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                   Trạng thái
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
+                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
                   onClick={() => handleSort("totalStorageUsed")}
                 >
                   Dung lượng
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
+                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
                   onClick={() => handleSort("totalFilesUploaded")}
                 >
                   Files
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
+                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
                   onClick={() => handleSort("totalFolders")}
                 >
                   Thư mục
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
+                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
                   onClick={() => handleSort("createdAt")}
                 >
                   Tham gia
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                   Đăng nhập cuối
                 </th>
                 <th className="relative px-6 py-3">
@@ -545,7 +545,7 @@ export default function AdminUsersPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-slate-800/50 divide-y divide-slate-700/50">
               {loading ? (
                 <tr>
                   <td colSpan={9} className="px-6 py-12 text-center">
@@ -558,20 +558,20 @@ export default function AdminUsersPage() {
                 <tr>
                   <td
                     colSpan={9}
-                    className="px-6 py-12 text-center text-gray-500"
+                    className="px-6 py-12 text-center text-slate-400"
                   >
                     Không tìm thấy người dùng nào
                   </td>
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-slate-800/30">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <input
                         type="checkbox"
                         checked={selectedUsers.includes(user.id)}
                         onChange={() => handleSelectUser(user.id)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -585,17 +585,17 @@ export default function AdminUsersPage() {
                             }`}
                           >
                             {user.role === "admin" ? (
-                              <Shield className="h-5 w-5 text-red-600" />
+                              <Shield className="h-5 w-5 text-red-400" />
                             ) : (
-                              <Users className="h-5 w-5 text-blue-600" />
+                              <Users className="h-5 w-5 text-indigo-400" />
                             )}
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-white">
                             {user.name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-slate-400">
                             {user.email}
                           </div>
                         </div>
@@ -617,25 +617,25 @@ export default function AdminUsersPage() {
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           user.isActive
                             ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
+                            : "bg-slate-800/50 text-slate-100"
                         }`}
                       >
                         {user.isActive ? "Hoạt động" : "Vô hiệu hóa"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {formatFileSize(user.totalStorageUsed || 0)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {(user.totalFilesUploaded || 0).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {(user.totalFolders || 0).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
                       {formatDate(user.createdAt)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
                       {user.lastLoginAt
                         ? formatDate(user.lastLoginAt)
                         : "Chưa đăng nhập"}
@@ -644,7 +644,7 @@ export default function AdminUsersPage() {
                       <div className="flex items-center space-x-2">
                         <Link
                           href={`/admin/users/${user.id}`}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-indigo-400 hover:text-blue-900"
                         >
                           <Eye className="h-4 w-4" />
                         </Link>
@@ -659,7 +659,7 @@ export default function AdminUsersPage() {
                             setUserToDelete(user);
                             setShowDeleteModal(true);
                           }}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-400 hover:text-red-900"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -673,26 +673,26 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Pagination */}
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+        <div className="bg-slate-800/50 px-4 py-3 flex items-center justify-between border-t border-slate-700/50 sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">
             <button
               onClick={() => fetchUsers(pagination.currentPage - 1)}
               disabled={!pagination.hasPrevPage}
-              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center px-4 py-2 border border-slate-600/50 text-sm font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Trước
             </button>
             <button
               onClick={() => fetchUsers(pagination.currentPage + 1)}
               disabled={!pagination.hasNextPage}
-              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-600/50 text-sm font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Sau
             </button>
           </div>
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-slate-200">
                 Hiển thị{" "}
                 <span className="font-medium">
                   {(pagination.currentPage - 1) * 20 + 1}
@@ -707,11 +707,11 @@ export default function AdminUsersPage() {
               </p>
             </div>
             <div>
-              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm shadow-black/10 -space-x-px">
                 <button
                   onClick={() => fetchUsers(pagination.currentPage - 1)}
                   disabled={!pagination.hasPrevPage}
-                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-600/50 bg-slate-800/50 text-sm font-medium text-slate-400 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
@@ -729,8 +729,8 @@ export default function AdminUsersPage() {
                         onClick={() => fetchUsers(pageNum)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                           pageNum === pagination.currentPage
-                            ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                            : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                            ? "z-10 bg-blue-500/10 border-blue-500 text-indigo-400"
+                            : "bg-slate-800/50 border-slate-600/50 text-slate-400 hover:bg-slate-800/30"
                         }`}
                       >
                         {pageNum}
@@ -742,7 +742,7 @@ export default function AdminUsersPage() {
                 <button
                   onClick={() => fetchUsers(pagination.currentPage + 1)}
                   disabled={!pagination.hasNextPage}
-                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-600/50 bg-slate-800/50 text-sm font-medium text-slate-400 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -755,12 +755,12 @@ export default function AdminUsersPage() {
       {/* Create User Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-6 border w-full max-w-md shadow-lg rounded-md bg-white">
+          <div className="relative top-10 mx-auto p-6 border w-full max-w-md shadow-lg shadow-black/20 rounded-md bg-slate-800/50">
             <div className="text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
-                <Plus className="h-6 w-6 text-blue-600" />
+                <Plus className="h-6 w-6 text-indigo-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-4 mb-6">
+              <h3 className="text-lg font-medium text-white mt-4 mb-6">
                 Thêm người dùng mới
               </h3>
             </div>
@@ -770,7 +770,7 @@ export default function AdminUsersPage() {
               <div>
                 <label
                   htmlFor="createName"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-slate-200 mb-1"
                 >
                   Họ và tên *
                 </label>
@@ -781,13 +781,13 @@ export default function AdminUsersPage() {
                   required
                   value={createForm.name}
                   onChange={handleCreateFormChange}
-                  className={`block w-full px-3 py-2 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    createErrors.name ? "border-red-300" : "border-gray-300"
+className={`block w-full px-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                     createErrors.name ? "border-red-300" : "border-slate-600/50"
                   }`}
                   placeholder="Nhập họ và tên"
                 />
                 {createErrors.name && (
-                  <p className="mt-1 text-sm text-red-600">
+                  <p className="mt-1 text-sm text-red-400">
                     {createErrors.name}
                   </p>
                 )}
@@ -797,7 +797,7 @@ export default function AdminUsersPage() {
               <div>
                 <label
                   htmlFor="createEmail"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-slate-200 mb-1"
                 >
                   Địa chỉ email *
                 </label>
@@ -808,13 +808,13 @@ export default function AdminUsersPage() {
                   required
                   value={createForm.email}
                   onChange={handleCreateFormChange}
-                  className={`block w-full px-3 py-2 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    createErrors.email ? "border-red-300" : "border-gray-300"
+className={`block w-full px-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                     createErrors.email ? "border-red-300" : "border-slate-600/50"
                   }`}
                   placeholder="Nhập địa chỉ email"
                 />
                 {createErrors.email && (
-                  <p className="mt-1 text-sm text-red-600">
+                  <p className="mt-1 text-sm text-red-400">
                     {createErrors.email}
                   </p>
                 )}
@@ -824,7 +824,7 @@ export default function AdminUsersPage() {
               <div>
                 <label
                   htmlFor="createPassword"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-slate-200 mb-1"
                 >
                   Mật khẩu *
                 </label>
@@ -835,13 +835,13 @@ export default function AdminUsersPage() {
                   required
                   value={createForm.password}
                   onChange={handleCreateFormChange}
-                  className={`block w-full px-3 py-2 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    createErrors.password ? "border-red-300" : "border-gray-300"
+className={`block w-full px-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                     createErrors.password ? "border-red-300" : "border-slate-600/50"
                   }`}
                   placeholder="Nhập mật khẩu (ít nhất 8 ký tự)"
                 />
                 {createErrors.password && (
-                  <p className="mt-1 text-sm text-red-600">
+                  <p className="mt-1 text-sm text-red-400">
                     {createErrors.password}
                   </p>
                 )}
@@ -851,7 +851,7 @@ export default function AdminUsersPage() {
               <div>
                 <label
                   htmlFor="createRole"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-slate-200 mb-1"
                 >
                   Vai trò *
                 </label>
@@ -860,7 +860,7 @@ export default function AdminUsersPage() {
                   name="role"
                   value={createForm.role}
                   onChange={handleCreateFormChange}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="block w-full px-3 py-2 border border-slate-600/50 rounded-md bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="user">Người dùng</option>
                   <option value="admin">Quản trị viên</option>
@@ -869,7 +869,7 @@ export default function AdminUsersPage() {
 
               {/* Error Message */}
               {createErrors.general && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="bg-red-500/10 border border-red-200 rounded-lg p-3">
                   <p className="text-sm text-red-700">{createErrors.general}</p>
                 </div>
               )}
@@ -909,16 +909,16 @@ export default function AdminUsersPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && userToDelete && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg shadow-black/20 rounded-md bg-slate-800/50">
             <div className="mt-3 text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <Trash2 className="h-6 w-6 text-red-600" />
+                <Trash2 className="h-6 w-6 text-red-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-5">
+              <h3 className="text-lg font-medium text-white mt-5">
                 Xóa người dùng
               </h3>
               <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-400">
                   Bạn có chắc chắn muốn xóa người dùng{" "}
                   <strong>{userToDelete.name}</strong>? Tất cả dữ liệu của người
                   dùng này sẽ bị xóa vĩnh viễn.
@@ -928,7 +928,7 @@ export default function AdminUsersPage() {
                 <div className="flex space-x-3">
                   <button
                     onClick={() => handleDeleteUser(userToDelete)}
-                    className="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300"
+                    className="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm shadow-black/10 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300"
                   >
                     Xóa
                   </button>
@@ -937,7 +937,7 @@ export default function AdminUsersPage() {
                       setShowDeleteModal(false);
                       setUserToDelete(null);
                     }}
-                    className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                    className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md shadow-sm shadow-black/10 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300"
                   >
                     Hủy
                   </button>

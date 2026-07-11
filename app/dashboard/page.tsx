@@ -414,7 +414,7 @@ export default function DashboardPage() {
   if (!user) return null;
 
   return (
-    <div className="h-screen bg-[#0f172a] flex flex-col overflow-hidden">
+    <div className="h-screen bg-[#0f172a] flex flex-col overflow-hidden animate-fade-in">
       <Navbar user={user} onOpenUserProfile={() => setShowUserProfile(true)} />
 
       <div className="flex-1 flex overflow-hidden">

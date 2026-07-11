@@ -61,8 +61,8 @@ export default function AdminTestPage() {
 
   const getStatusColor = (status: number) => {
     if (status === 200) return "text-green-600";
-    if (status === 401 || status === 403) return "text-red-600";
-    if (status === 0) return "text-gray-600";
+    if (status === 401 || status === 403) return "text-red-400";
+    if (status === 0) return "text-slate-300";
     return "text-yellow-600";
   };
 
@@ -74,12 +74,12 @@ export default function AdminTestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-slate-800/30 py-8 animate-fade-in">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-slate-800/50 rounded-lg shadow-lg shadow-black/20 p-6">
           <div className="flex items-center gap-3 mb-6">
-            <Shield className="w-8 h-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">
+            <Shield className="w-8 h-8 text-indigo-400" />
+            <h1 className="text-2xl font-bold text-white">
               Admin Access Test Panel
             </h1>
           </div>
@@ -87,7 +87,7 @@ export default function AdminTestPage() {
           <div className="grid md:grid-cols-2 gap-6">
             {/* Controls */}
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
                 <Database className="w-5 h-5" />
                 Test Controls
               </h2>
@@ -105,7 +105,7 @@ export default function AdminTestPage() {
                 Run Admin Tests
               </button>
 
-              <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+              <div className="text-sm text-slate-300 bg-blue-500/10 p-3 rounded">
                 <strong>This page tests:</strong>
                 <ul className="mt-1 list-disc list-inside space-y-1">
                   <li>Authentication status (/api/auth/me)</li>
@@ -115,7 +115,7 @@ export default function AdminTestPage() {
                 </ul>
               </div>
 
-              <div className="text-sm text-gray-600 bg-yellow-50 p-3 rounded border border-yellow-200">
+              <div className="text-sm text-slate-300 bg-yellow-500/10 p-3 rounded border border-yellow-200">
                 <strong>Expected Results:</strong>
                 <ul className="mt-1 list-disc list-inside space-y-1">
                   <li>Auth status: 200 (if logged in as admin)</li>
@@ -127,19 +127,19 @@ export default function AdminTestPage() {
 
             {/* Debug Results */}
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
                 <Clock className="w-5 h-5" />
                 Test Results
               </h2>
 
               {debugInfo && (
                 <div className="space-y-3">
-                  <div className="bg-gray-50 p-3 rounded text-sm">
+                  <div className="bg-slate-800/30 p-3 rounded text-sm">
                     <strong>Test Time:</strong> {debugInfo.timestamp}
                   </div>
 
                   {/* Auth Status */}
-                  <div className="bg-gray-50 p-3 rounded">
+                  <div className="bg-slate-800/30 p-3 rounded">
                     <div className="flex items-center gap-2 mb-2">
                       <User className="w-4 h-4" />
                       <strong className="text-sm">Authentication Status</strong>
@@ -152,7 +152,7 @@ export default function AdminTestPage() {
                         <div>Name: {debugInfo.user.name}</div>
                         <div>Email: {debugInfo.user.email}</div>
                         <div className={`font-semibold ${
-                          debugInfo.user.role === 'admin' ? 'text-green-600' : 'text-red-600'
+                          debugInfo.user.role === 'admin' ? 'text-green-600' : 'text-red-400'
                         }`}>
                           Role: {debugInfo.user.role || 'undefined'}
                         </div>
@@ -161,7 +161,7 @@ export default function AdminTestPage() {
                   </div>
 
                   {/* Admin Stats Status */}
-                  <div className="bg-gray-50 p-3 rounded">
+                  <div className="bg-slate-800/30 p-3 rounded">
                     <div className="flex items-center gap-2 mb-2">
                       <Shield className="w-4 h-4" />
                       <strong className="text-sm">Admin Stats API</strong>
@@ -177,16 +177,16 @@ export default function AdminTestPage() {
                   </div>
 
                   {/* Raw Response Data */}
-                  <div className="bg-gray-50 p-3 rounded">
+                  <div className="bg-slate-800/30 p-3 rounded">
                     <strong className="text-sm">Raw Auth Response:</strong>
-                    <pre className="text-xs font-mono mt-1 p-2 bg-white rounded border overflow-auto max-h-32">
+                    <pre className="text-xs font-mono mt-1 p-2 bg-slate-800/80 rounded border overflow-auto max-h-32">
                       {JSON.stringify(debugInfo.authResponse, null, 2)}
                     </pre>
                   </div>
 
-                  <div className="bg-gray-50 p-3 rounded">
+                  <div className="bg-slate-800/30 p-3 rounded">
                     <strong className="text-sm">Raw Stats Response:</strong>
-                    <pre className="text-xs font-mono mt-1 p-2 bg-white rounded border overflow-auto max-h-32">
+                    <pre className="text-xs font-mono mt-1 p-2 bg-slate-800/80 rounded border overflow-auto max-h-32">
                       {typeof debugInfo.adminStatsResponse === 'object'
                         ? JSON.stringify(debugInfo.adminStatsResponse, null, 2)
                         : debugInfo.adminStatsResponse}
@@ -198,14 +198,14 @@ export default function AdminTestPage() {
           </div>
 
           {/* Diagnostics */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">Diagnostics</h3>
+          <div className="mt-8 pt-6 border-t border-slate-700/50">
+            <h3 className="text-md font-semibold text-slate-100 mb-3">Diagnostics</h3>
 
             {debugInfo && (
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div className="space-y-2">
                   <div className={`p-2 rounded ${
-                    debugInfo.authStatus === 200 ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                    debugInfo.authStatus === 200 ? 'bg-green-500/10 text-green-800' : 'bg-red-500/10 text-red-800'
                   }`}>
                     <strong>Authentication:</strong> {
                       debugInfo.authStatus === 200 ? 'Working' : 'Failed'
@@ -213,7 +213,7 @@ export default function AdminTestPage() {
                   </div>
 
                   <div className={`p-2 rounded ${
-                    debugInfo.user?.role === 'admin' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                    debugInfo.user?.role === 'admin' ? 'bg-green-500/10 text-green-800' : 'bg-red-500/10 text-red-800'
                   }`}>
                     <strong>Admin Role:</strong> {
                       debugInfo.user?.role === 'admin' ? 'Verified' : 'Missing'
@@ -223,14 +223,14 @@ export default function AdminTestPage() {
 
                 <div className="space-y-2">
                   <div className={`p-2 rounded ${
-                    debugInfo.adminStatsStatus === 200 ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                    debugInfo.adminStatsStatus === 200 ? 'bg-green-500/10 text-green-800' : 'bg-red-500/10 text-red-800'
                   }`}>
                     <strong>Admin API:</strong> {
                       debugInfo.adminStatsStatus === 200 ? 'Accessible' : 'Blocked'
                     }
                   </div>
 
-                  <div className="p-2 rounded bg-blue-50 text-blue-800">
+                  <div className="p-2 rounded bg-blue-500/10 text-blue-800">
                     <strong>Overall Status:</strong> {
                       debugInfo.authStatus === 200 &&
                       debugInfo.user?.role === 'admin' &&
@@ -245,21 +245,21 @@ export default function AdminTestPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <h4 className="font-semibold text-gray-800 mb-3">Quick Actions</h4>
+          <div className="mt-6 pt-4 border-t border-slate-700/50">
+            <h4 className="font-semibold text-slate-100 mb-3">Quick Actions</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-              <a href="/debug" className="text-blue-600 hover:underline">
+              <a href="/debug" className="text-indigo-400 hover:underline">
                 → General Debug
               </a>
-              <a href="/admin" className="text-blue-600 hover:underline">
+              <a href="/admin" className="text-indigo-400 hover:underline">
                 → Admin Dashboard
               </a>
-              <a href="/login" className="text-blue-600 hover:underline">
+              <a href="/login" className="text-indigo-400 hover:underline">
                 → Login Page
               </a>
               <button
                 onClick={() => window.location.reload()}
-                className="text-blue-600 hover:underline text-left"
+                className="text-indigo-400 hover:underline text-left"
               >
                 → Refresh Tests
               </button>
