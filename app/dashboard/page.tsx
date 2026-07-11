@@ -379,7 +379,11 @@ export default function DashboardPage() {
       const res = await fetch(`/api/files/${fileId}/download`);
       if (res.ok) {
         const blob = await res.blob(); const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a"); a.href = url; a.download = fileName;
+        const a = document.createElement("a"); a.href = url;
+        // Use filename from server's Content-Disposition (restores originalExt for blocked types)
+        const cd = res.headers.get("Content-Disposition");
+        const match = cd?.match(/filename\*?=(?:UTF-8'')?([^;]+)/);
+        a.download = match ? decodeURIComponent(match[1]!) : fileName;
         document.body.appendChild(a); a.click();
         window.URL.revokeObjectURL(url); document.body.removeChild(a);
       }
