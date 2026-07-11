@@ -332,5 +332,6 @@ export function isAllowedFileType(mimeType: string, fileName: string): boolean {
   return true;
 }
 
-export const TELEGRAM_FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
+export const TELEGRAM_FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB (upload limit)
+export const TELEGRAM_DOWNLOAD_LIMIT = 20 * 1024 * 1024; // 20MB (download limit via getFile)
 export const MAX_CAPTION_LENGTH = 1024;

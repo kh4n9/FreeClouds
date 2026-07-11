@@ -25,7 +25,7 @@ import {
   TELEGRAM_FILE_SIZE_LIMIT,
 } from "@/lib/telegram";
 
-const CHUNK_SIZE = 48 * 1024 * 1024; // 48MB per chunk (safe margin under Telegram's 50MB limit)
+const CHUNK_SIZE = 15 * 1024 * 1024; // 15MB per chunk (Telegram download limit is 20MB via getFile)
 const STORAGE_LIMIT = 1024 * 1024 * 1024 * 1024; // 1TB per account
 const uploadSchema = z.object({
   folderId: z.string().optional().nullable(),
