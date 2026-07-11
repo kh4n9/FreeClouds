@@ -26,6 +26,7 @@ import {
 } from "@/lib/telegram";
 
 const CHUNK_SIZE = 48 * 1024 * 1024; // 48MB per chunk (safe margin under Telegram's 50MB limit)
+const STORAGE_LIMIT = 1024 * 1024 * 1024 * 1024; // 1TB per account
 const uploadSchema = z.object({
   folderId: z.string().optional().nullable(),
 });
@@ -60,6 +61,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (file.size === 0) return NextResponse.json({ error: "Empty file not allowed" }, { status: 400 });
+
+    // Check storage limit
+    const userStats = await (File as any).getStorageUsage(user.id);
+    if ((userStats.totalSize || 0) + file.size > STORAGE_LIMIT) {
+      return NextResponse.json({ error: "Storage limit exceeded (1TB per account)" }, { status: 413 });
+    }
 
     let fileName = file.name;
     if (!validateFileName(fileName)) fileName = sanitizeFileName(fileName);
@@ -167,22 +174,35 @@ export async function POST(request: NextRequest) {
       ...(originalExt ? { originalExt } : {}),
     }));
 
-    await (File as any).insertMany(chunkFileDocs);
+    try {
+      await (File as any).insertMany(chunkFileDocs);
+    } catch (err) {
+      console.error("Failed to save chunk records:", err);
+      return NextResponse.json({ error: "Failed to save file chunks. Please try again." }, { status: 500 });
+    }
 
     // Save parent file record (what users see) with a synthetic fileId to avoid unique constraint conflict
-    const parentFile = new (File as any)({
-      name: fileName,
-      size: totalSize,
-      mime: mimeType,
-      fileId: `chunked_parent_${chunkedId}`,
-      owner: user.id,
-      folder: folderId,
-      chunkedId,
-      chunkIndex: -1,
-      totalChunks,
-      ...(originalExt ? { originalExt } : {}),
-    });
-    await parentFile.save();
+    let parentFile;
+    try {
+      parentFile = new (File as any)({
+        name: fileName,
+        size: totalSize,
+        mime: mimeType,
+        fileId: `chunked_parent_${chunkedId}`,
+        owner: user.id,
+        folder: folderId,
+        chunkedId,
+        chunkIndex: -1,
+        totalChunks,
+        ...(originalExt ? { originalExt } : {}),
+      });
+      await parentFile.save();
+    } catch (err) {
+      // If parent save fails, clean up the chunks that were just inserted
+      console.error("Failed to save parent record, cleaning up chunks:", err);
+      await (File as any).deleteMany({ chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+      return NextResponse.json({ error: "Failed to finalize file upload. Please try again." }, { status: 500 });
+    }
 
     return NextResponse.json({
       id: parentFile._id.toString(),

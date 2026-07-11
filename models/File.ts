@@ -288,9 +288,16 @@ fileSchema.statics.findByOwnerWithCount = async function (
     query.name = { $regex: search, $options: "i" };
   }
 
+  // Also exclude chunks from the count
+  const countQuery = { ...query };
+  countQuery.$or = [
+    { chunkedId: null },
+    { chunkIndex: -1 },
+  ];
+
   const [files, total] = await Promise.all([
     (this as any).findByOwner(ownerId, options),
-    this.countDocuments(query),
+    this.countDocuments(countQuery),
   ]);
 
   return {

@@ -429,6 +429,31 @@ export default function FileGrid({
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedFiles.length === 0) return;
+
+    const confirmed = window.confirm(`Delete ${selectedFiles.length} file(s)? This cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch("/api/files/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileIds: selectedFiles }),
+      });
+
+      if (res.ok) {
+        setSelectedFiles([]);
+        window.location.reload();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to delete files");
+      }
+    } catch {
+      alert("Failed to delete files");
+    }
+  };
+
   const handleBulkDownload = async () => {
     if (selectedFiles.length === 0) return;
 
@@ -786,6 +811,18 @@ export default function FileGrid({
                 >
                   <Download className="w-4 h-4" />
                   Download selected ({selectedFiles.length})
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={selectedFiles.length === 0}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                    selectedFiles.length > 0
+                      ? "bg-red-600 text-white hover:bg-red-700"
+                      : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
                 </button>
                 <button
                   onClick={handleSelectAll}
