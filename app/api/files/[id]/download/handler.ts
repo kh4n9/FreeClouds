@@ -158,14 +158,19 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
     let blobUrl: string | null = null;
 
     try {
-      const hasToken = !!(process as any).env?.BLOB_READ_WRITE_TOKEN;
-      console.log(`[download] BLOB_READ_WRITE_TOKEN exists: ${hasToken}, blob budget: ${blobBudget}ms`);
+      const token = (process as any).env?.BLOB_READ_WRITE_TOKEN;
+      console.log(`[download] BLOB_READ_WRITE_TOKEN exists: ${!!token}, blob budget: ${blobBudget}ms`);
+
+      if (!token) {
+        throw new Error("BLOB_READ_WRITE_TOKEN not set in environment");
+      }
 
       const result = await Promise.race([
         blobPut(`downloads/${file.chunkedId}`, assembled, {
           access: "public",
           addRandomSuffix: true,
           contentType: file.mime || "application/octet-stream",
+          token,
         }),
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Blob timeout ${blobBudget}ms`)), blobBudget)),
       ]);
