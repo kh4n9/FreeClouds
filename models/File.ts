@@ -161,7 +161,7 @@ fileSchema.index({ owner: 1, folder: 1, deletedAt: 1 });
 fileSchema.index({ owner: 1, name: 1, deletedAt: 1 });
 fileSchema.index({ createdAt: -1 });
 fileSchema.index({ deletedAt: 1, createdAt: -1 });
-fileSchema.index({ chunkedId: 1, chunkIndex: 1 });
+fileSchema.index({ chunkedId: 1, chunkIndex: 1 }, { unique: true, partialFilterExpression: { chunkIndex: { $gte: 0 } } });
 fileSchema.index({ owner: 1, trashExpiresAt: 1 });
 fileSchema.index({ trashExpiresAt: 1 }, { expireAfterSeconds: 0 });
 

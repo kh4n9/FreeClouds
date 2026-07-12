@@ -55,18 +55,24 @@ export async function handleChunk(request: NextRequest) {
 
     const folderId = folderIdParam && folderIdParam !== "null" ? folderIdParam : null;
 
-    const chunkRecord = new (File as any)({
-      name: chunkFileName,
-      size: buffer.length,
-      mime: originalMime || "application/octet-stream",
-      fileId: telegramResponse.document.file_id,
-      owner: user.id,
-      folder: folderId,
-      chunkedId,
-      chunkIndex,
-      totalChunks,
-    });
-    await chunkRecord.save();
+    // Upsert — prevent duplicate chunk records from parallel uploads + retries
+    await (File as any).findOneAndUpdate(
+      { chunkedId, chunkIndex, owner: user.id },
+      {
+        name: chunkFileName,
+        size: buffer.length,
+        mime: originalMime || "application/octet-stream",
+        fileId: telegramResponse.document.file_id,
+        owner: user.id,
+        folder: folderId,
+        chunkedId,
+        chunkIndex,
+        totalChunks,
+        deletedAt: null,
+        telegramFilePath: null,
+      },
+      { upsert: true, new: true },
+    );
 
     return NextResponse.json({
       chunkIndex,

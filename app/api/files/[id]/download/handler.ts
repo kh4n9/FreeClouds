@@ -110,7 +110,11 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
       deletedAt: null,
     }).sort({ chunkIndex: 1 });
 
+    const foundIndices = chunks.map((c: any) => c.chunkIndex);
+    console.log(`[download] Chunked file ${file.chunkedId}: totalChunks=${file.totalChunks}, found=${chunks.length}, indices=[${foundIndices.join(",")}]`);
+
     if (!chunks.length || chunks.length !== file.totalChunks) {
+      console.error(`[download] Chunk mismatch: expected ${file.totalChunks} chunks, found ${chunks.length}`);
       return NextResponse.json({ error: "File chunks not found" }, { status: 404 });
     }
 
