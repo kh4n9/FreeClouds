@@ -371,10 +371,9 @@ export default function DashboardPage() {
     finally { setDeleting(false); setFileDeleteModal({ show: false }); setTimeout(() => setToast(null), 3000); }
   };
 
-  const handleDownload = async (fileId: string, _fileName: string) => {
+  const handleDownload = (fileId: string, _fileName: string) => {
     const a = document.createElement("a");
     a.href = `/api/files/${fileId}/download`;
-    a.download = _fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
