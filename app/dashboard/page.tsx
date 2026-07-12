@@ -374,20 +374,13 @@ export default function DashboardPage() {
     finally { setDeleting(false); setFileDeleteModal({ show: false }); setTimeout(() => setToast(null), 3000); }
   };
 
-  const handleDownload = async (fileId: string, fileName: string) => {
-    try {
-      const res = await fetch(`/api/files/${fileId}/download`);
-      if (res.ok) {
-        const blob = await res.blob(); const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a"); a.href = url;
-        // Use filename from server's Content-Disposition (restores originalExt for blocked types)
-        const cd = res.headers.get("Content-Disposition");
-        const match = cd?.match(/filename\*?=(?:UTF-8'')?([^;]+)/);
-        a.download = match ? decodeURIComponent(match[1]!) : fileName;
-        document.body.appendChild(a); a.click();
-        window.URL.revokeObjectURL(url); document.body.removeChild(a);
-      }
-    } catch { /* ignore */ }
+  const handleDownload = async (fileId: string, _fileName: string) => {
+    const a = document.createElement("a");
+    a.href = `/api/files/${fileId}/download`;
+    a.download = _fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const handleLogout = async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/login"); };
