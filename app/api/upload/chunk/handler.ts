@@ -36,8 +36,9 @@ export async function handleChunk(request: NextRequest) {
     try {
       telegramResponse = await telegramAPI.sendDocument(buffer, chunkFileName, originalMime || "application/octet-stream");
     } catch (error) {
-      console.error("Chunk Telegram upload failed:", error);
-      return NextResponse.json({ error: "Chunk upload failed" }, { status: 500 });
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(`Chunk ${chunkIndex + 1}/${totalChunks} Telegram upload failed:`, msg);
+      return NextResponse.json({ error: `Chunk upload failed: ${msg}` }, { status: 500 });
     }
 
     const folderId = folderIdParam && folderIdParam !== "null" ? folderIdParam : null;

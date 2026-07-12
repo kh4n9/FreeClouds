@@ -130,24 +130,35 @@ export default function UploadDropzone({
         const end = Math.min(start + CLIENT_CHUNK_SIZE, totalSize);
         const chunkBlob = file.slice(start, end);
 
-        const fd = new FormData();
-        fd.append("chunk", chunkBlob, `chunk_${i}`);
-        fd.append("chunkedId", chunkedId);
-        fd.append("chunkIndex", String(i));
-        fd.append("totalChunks", String(totalChunks));
-        fd.append("originalName", file.name);
-        fd.append("originalMime", file.type);
-        fd.append("folderId", folderId || "");
+        let lastError: string | null = null;
+        let uploaded = false;
 
-        const resp = await fetch("/api/upload/chunk", {
-          method: "POST",
-          body: fd,
-        });
+        for (let attempt = 0; attempt < 3 && !uploaded; attempt++) {
+          if (attempt > 0) await new Promise((r) => setTimeout(r, 2000));
 
-        if (!resp.ok) {
-          const errData = await resp.json().catch(() => null);
-          throw new Error(errData?.error || `Chunk ${i + 1}/${totalChunks} failed`);
+          const fd = new FormData();
+          fd.append("chunk", chunkBlob, `chunk_${i}`);
+          fd.append("chunkedId", chunkedId);
+          fd.append("chunkIndex", String(i));
+          fd.append("totalChunks", String(totalChunks));
+          fd.append("originalName", file.name);
+          fd.append("originalMime", file.type);
+          fd.append("folderId", folderId || "");
+
+          const resp = await fetch("/api/upload/chunk", {
+            method: "POST",
+            body: fd,
+          });
+
+          if (resp.ok) {
+            uploaded = true;
+          } else {
+            const errData = await resp.json().catch(() => null);
+            lastError = errData?.error || `Chunk ${i + 1}/${totalChunks} failed`;
+          }
         }
+
+        if (!uploaded) throw new Error(lastError!);
 
         const overallPct = Math.round(((i + 1) / totalChunks) * 100);
         setUploadFiles((prev) =>
