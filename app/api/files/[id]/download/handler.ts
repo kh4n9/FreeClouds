@@ -9,17 +9,7 @@ import {
 } from "@/lib/auth";
 import { telegramAPI, TelegramError } from "@/lib/telegram";
 
-async function* chunkStreamGenerator(chunks: IFile[]) {
-  const results = await Promise.all(
-    chunks.map(async (c) => {
-      const cachedPath = (c as any).telegramFilePath;
-      const result = await telegramAPI.getFileStream(c.fileId, cachedPath || undefined);
-      if (!cachedPath && result.filePath) {
-        (File as any).updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
-      }
-      return result;
-    }),
-  );
+async function* chunkStreamGenerator(results: { stream: ReadableStream<Uint8Array> }[]) {
   for (const s of results) {
     const reader = s.stream.getReader();
     try {
@@ -99,7 +89,25 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
         return NextResponse.json({ error: "File chunks not found" }, { status: 404 });
       }
 
-      const stream = iterableToStream(chunkStreamGenerator(chunks));
+      // Verify all chunks are downloadable BEFORE sending any data
+      let chunkStreams: { stream: ReadableStream<Uint8Array> }[];
+      try {
+        chunkStreams = await Promise.all(
+          chunks.map(async (c) => {
+            const cachedPath = (c as any).telegramFilePath;
+            const result = await telegramAPI.getFileStream(c.fileId, cachedPath || undefined);
+            if (!cachedPath && result.filePath) {
+              (File as any).updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
+            }
+            return result;
+          }),
+        );
+      } catch (error) {
+        console.error("Failed to get chunk streams:", error);
+        return NextResponse.json({ error: "File temporarily unavailable" }, { status: 503 });
+      }
+
+      const stream = iterableToStream(chunkStreamGenerator(chunkStreams));
       return new Response(stream, { status: 200, headers });
     }
 
