@@ -128,7 +128,6 @@ const fileSchema = new Schema<IFile>({
   trashExpiresAt: {
     type: Date,
     default: null,
-    index: true,
   },
   createdAt: {
     type: Date,
