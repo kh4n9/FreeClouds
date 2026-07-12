@@ -23,6 +23,7 @@ interface UploadDropzoneProps {
 }
 
 const CLIENT_CHUNK_SIZE = 4 * 1024 * 1024; // 4MB per chunk (Vercel hobby 4.5MB body limit)
+const PARALLEL_CHUNKS = 3; // max concurrent chunk uploads
 
 function formatFileSize(bytes: number): string {
   const sizes = ["Bytes", "KB", "MB", "GB"];
@@ -125,18 +126,12 @@ export default function UploadDropzone({
       const totalChunks = Math.ceil(file.size / CLIENT_CHUNK_SIZE);
       const totalSize = file.size;
 
-      let chunkTimings: number[] = [];
-
-      for (let i = 0; i < totalChunks; i++) {
+      const uploadOneChunk = async (i: number): Promise<void> => {
         const start = i * CLIENT_CHUNK_SIZE;
         const end = Math.min(start + CLIENT_CHUNK_SIZE, totalSize);
         const chunkBlob = file.slice(start, end);
 
-        let lastError: string | null = null;
-        let uploaded = false;
-        const chunkStartTime = Date.now();
-
-        for (let attempt = 0; attempt < 3 && !uploaded; attempt++) {
+        for (let attempt = 0; attempt < 3; attempt++) {
           if (attempt > 0) {
             const delay = Math.min(3000, 1000 * Math.pow(2, attempt));
             await new Promise((r) => setTimeout(r, delay));
@@ -156,28 +151,25 @@ export default function UploadDropzone({
             body: fd,
           });
 
-          if (resp.ok) {
-            uploaded = true;
-          } else {
-            const errData = await resp.json().catch(() => null);
-            lastError = errData?.error || `Chunk ${i + 1}/${totalChunks} failed`;
-            // If rate limited (429), wait longer before retry
-            if (resp.status === 429) await new Promise((r) => setTimeout(r, 5000));
+          if (resp.ok) return;
+
+          if (resp.status === 429) {
+            await new Promise((r) => setTimeout(r, 5000));
           }
+          const errData = await resp.json().catch(() => null);
+          if (attempt === 2) throw new Error(errData?.error || `Chunk ${i + 1}/${totalChunks} failed`);
         }
+      };
 
-        if (!uploaded) throw new Error(lastError!);
-
-        const chunkTime = Date.now() - chunkStartTime;
-        chunkTimings.push(chunkTime);
-
-        // Adaptive pacing: if chunks are getting slower, add more delay
-        if (i > 0 && i % 3 === 0) {
-          const recentAvg = chunkTimings.slice(-3).reduce((a, b) => a + b, 0) / 3;
-          if (recentAvg > 3000) await new Promise((r) => setTimeout(r, 1000));
+      for (let i = 0; i < totalChunks; i += PARALLEL_CHUNKS) {
+        const batch = [];
+        for (let j = i; j < Math.min(i + PARALLEL_CHUNKS, totalChunks); j++) {
+          batch.push(uploadOneChunk(j));
         }
+        await Promise.all(batch);
 
-        const overallPct = Math.round(((i + 1) / totalChunks) * 100);
+        const done = Math.min(i + PARALLEL_CHUNKS, totalChunks);
+        const overallPct = Math.round((done / totalChunks) * 100);
         setUploadFiles((prev) =>
           prev.map((uf) =>
             uf.file === file ? { ...uf, progress: overallPct } : uf,
