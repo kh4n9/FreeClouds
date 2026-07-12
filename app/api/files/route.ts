@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
+import "@/models/Folder";
 import { requireAuth, AuthError, createAuthResponse } from "@/lib/auth";
 
 const querySchema = z.object({
