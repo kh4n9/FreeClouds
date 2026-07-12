@@ -56,34 +56,6 @@ function validateFile(
     }
   }
 
-  // Check for potentially dangerous files
-  const dangerousExtensions = [
-    ".exe",
-    ".bat",
-    ".cmd",
-    ".com",
-    ".pif",
-    ".scr",
-    ".vbs",
-    ".js",
-    ".jar",
-    ".ws",
-    ".wsf",
-    ".wsc",
-    ".msi",
-    ".msp",
-    ".dll",
-    ".sys",
-    ".scf",
-  ];
-
-  const fileName = file.name.toLowerCase();
-  const isDangerous = dangerousExtensions.some((ext) => fileName.endsWith(ext));
-
-  if (isDangerous) {
-    return "File type blocked for security reasons";
-  }
-
   return null;
 }
 
