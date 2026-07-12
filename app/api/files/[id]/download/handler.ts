@@ -101,6 +101,8 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
     }
 
     // Chunked file
+    const startTime = Date.now();
+
     const chunks = await File.find({
       chunkedId: file.chunkedId,
       chunkIndex: { $gte: 0 },
@@ -112,7 +114,7 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
       return NextResponse.json({ error: "File chunks not found" }, { status: 404 });
     }
 
-    // If blobCacheUrl exists, redirect to cached blob
+    // Already cached in Blob — redirect immediately
     if ((file as any).blobCacheUrl) {
       const redirectHeaders = new Headers();
       redirectHeaders.set("Location", (file as any).blobCacheUrl);
@@ -147,43 +149,51 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
       return NextResponse.json({ error: "File temporarily unavailable" }, { status: 503 });
     }
 
-    // Try to upload to Vercel Blob (with 5s timeout), then redirect
+    const elapsed = Date.now() - startTime;
+    const fileSizeMB = (assembled.length / 1024 / 1024).toFixed(1);
+    console.log(`[download] Assembled ${fileSizeMB}MB in ${elapsed}ms`);
+
+    // Try to cache in Vercel Blob (must complete within function timeout)
+    const blobBudget = Math.max(1000, 9500 - elapsed);
+    let blobUrl: string | null = null;
+
     try {
       const hasToken = !!(process as any).env?.BLOB_READ_WRITE_TOKEN;
-      console.log(`[download] BLOB_READ_WRITE_TOKEN exists: ${hasToken}, blobCacheUrl: ${(file as any).blobCacheUrl}`);
+      console.log(`[download] BLOB_READ_WRITE_TOKEN exists: ${hasToken}, blob budget: ${blobBudget}ms`);
 
-      const blobResult = await Promise.race([
+      const result = await Promise.race([
         blobPut(`downloads/${file.chunkedId}`, assembled, {
           access: "public",
           addRandomSuffix: true,
           contentType: file.mime || "application/octet-stream",
         }),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Blob upload timeout after 5s")), 5000)),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Blob timeout ${blobBudget}ms`)), blobBudget)),
       ]);
-      console.log(`[download] Blob upload success: ${blobResult.url}`);
+      blobUrl = result.url;
+      console.log(`[download] Blob success: ${blobUrl}`);
+    } catch (err: any) {
+      console.error(`[download] Blob failed: ${err?.message || err}`);
+    }
 
-      (File as any).updateOne({ _id: file._id }, { blobCacheUrl: blobResult.url }).catch((e: any) =>
-        console.error("[download] Failed to save blobCacheUrl:", e)
-      );
-
+    if (blobUrl) {
+      (File as any).updateOne({ _id: file._id }, { blobCacheUrl: blobUrl }).catch(() => {});
       const redirectHeaders = new Headers();
-      redirectHeaders.set("Location", blobResult.url);
+      redirectHeaders.set("Location", blobUrl);
       redirectHeaders.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
       return new Response(null, { status: 302, headers: redirectHeaders });
-    } catch (error: any) {
-      console.error(`[download] Blob upload failed: ${error?.message || error}. Falling back to direct stream.`);
-
-      // Stream the assembled buffer using chunked transfer encoding (no Content-Length)
-      const headers = new Headers();
-      headers.set("Content-Type", file.mime || "application/octet-stream");
-      headers.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
-      headers.set("Cache-Control", "private, max-age=3600");
-      headers.set("X-Content-Type-Options", "nosniff");
-      headers.set("X-Frame-Options", "DENY");
-
-      const stream = bufferToStream(assembled);
-      return new Response(stream, { status: 200, headers });
     }
+
+    // Fallback: stream the assembled buffer (chunked, no Content-Length)
+    console.log(`[download] Streaming ${fileSizeMB}MB directly`);
+    const headers = new Headers();
+    headers.set("Content-Type", file.mime || "application/octet-stream");
+    headers.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
+    headers.set("Cache-Control", "private, max-age=3600");
+    headers.set("X-Content-Type-Options", "nosniff");
+    headers.set("X-Frame-Options", "DENY");
+
+    const stream = bufferToStream(assembled);
+    return new Response(stream, { status: 200, headers });
   } catch (error) {
     console.error("Download error:", error);
     if (error instanceof AuthError) return createAuthResponse(error);
