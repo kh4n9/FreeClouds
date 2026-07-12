@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import { requireAuth, AuthError, createAuthResponse, validateOrigin, createCsrfError } from "@/lib/auth";
-import { isAllowedFileType, validateFileName, sanitizeFileName } from "@/lib/telegram";
+import { telegramAPI, isAllowedFileType, validateFileName, sanitizeFileName } from "@/lib/telegram";
 
 const STORAGE_LIMIT = 1024 * 1024 * 1024 * 1024;
 
@@ -19,11 +19,22 @@ export async function handleComplete(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Verify chunks exist
+    // Verify chunks exist + cache file_paths for faster downloads
     const chunks = await (File as any).find({ chunkedId, chunkIndex: { $gte: 0 } }).sort({ chunkIndex: 1 });
     if (chunks.length === 0) {
       return NextResponse.json({ error: "No chunks found" }, { status: 404 });
     }
+
+    // Fetch and cache Telegram file_paths (skip getFile on future downloads)
+    await Promise.all(chunks.map(async (chunk: any) => {
+      if (chunk.telegramFilePath) return;
+      try {
+        const info = await telegramAPI.getFile(chunk.fileId);
+        if (info.file_path) {
+          await (File as any).updateOne({ _id: chunk._id }, { telegramFilePath: info.file_path });
+        }
+      } catch {}
+    }));
 
     // Check storage limit
     const userStats = await (File as any).getStorageUsage(user.id);

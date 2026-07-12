@@ -11,7 +11,15 @@ import { telegramAPI, TelegramError } from "@/lib/telegram";
 
 async function* chunkStreamGenerator(chunks: IFile[]) {
   const streams = await Promise.all(
-    chunks.map(c => telegramAPI.getFileStream(c.fileId)),
+    chunks.map(async (c) => {
+      const cachedPath = (c as any).telegramFilePath;
+      const result = await telegramAPI.getFileStream(c.fileId, cachedPath || undefined);
+      // Lazy cache file_path for future downloads
+      if (!cachedPath && result.filePath) {
+        (File as any).updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
+      }
+      return result;
+    }),
   );
   for (const s of streams) {
     const reader = s.stream.getReader();
@@ -98,7 +106,11 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
 
     let fileStream: ReadableStream<Uint8Array>;
     try {
-      const result = await telegramAPI.getFileStream(file.fileId);
+      const cachedPath = (file as any).telegramFilePath;
+      const result = await telegramAPI.getFileStream(file.fileId, cachedPath || undefined);
+      if (!cachedPath && result.filePath) {
+        (File as any).updateOne({ _id: file._id }, { telegramFilePath: result.filePath }).catch(() => {});
+      }
       fileStream = result.stream;
     } catch (error) {
       console.error("Failed to get file from Telegram:", error);

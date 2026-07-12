@@ -5,6 +5,7 @@ export interface IFile extends Document {
   size: number;
   mime: string;
   fileId: string; // Telegram file_id (for chunks, each chunk has its own fileId)
+  telegramFilePath?: string; // cached Telegram file_path (skip getFile call on download)
   owner: Types.ObjectId;
   folder: Types.ObjectId | null;
   deletedAt: Date | null;
@@ -92,6 +93,10 @@ const fileSchema = new Schema<IFile>({
     required: [true, "Telegram file ID is required"],
     unique: true,
     index: true,
+  },
+  telegramFilePath: {
+    type: String,
+    default: null,
   },
   owner: {
     type: Schema.Types.ObjectId,

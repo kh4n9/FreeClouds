@@ -181,12 +181,18 @@ class TelegramAPI {
     }
   }
 
-  async getFileStream(fileId: string): Promise<{
+  async getFileStream(fileId: string, filePath?: string): Promise<{
     stream: ReadableStream<Uint8Array>;
     size?: number;
     mimeType?: string;
+    filePath?: string;
   }> {
     try {
+      if (filePath) {
+        const stream = await this.downloadFile(filePath);
+        return { stream, filePath };
+      }
+
       const fileInfo = await this.getFile(fileId);
 
       if (!fileInfo.file_path) {
@@ -197,6 +203,7 @@ class TelegramAPI {
 
       return {
         stream,
+        filePath: fileInfo.file_path,
         ...(fileInfo.file_size !== undefined && { size: fileInfo.file_size }),
       };
     } catch (error) {

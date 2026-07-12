@@ -41,6 +41,7 @@ export async function handleChunk(request: NextRequest) {
     }
 
     const folderId = folderIdParam && folderIdParam !== "null" ? folderIdParam : null;
+
     const chunkRecord = new (File as any)({
       name: chunkFileName,
       size: buffer.length,

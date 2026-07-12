@@ -106,11 +106,18 @@ export async function handleUpload(request: NextRequest) {
         return NextResponse.json({ error: "File upload failed. Please try again." }, { status: 500 });
       }
 
+      let telegramFilePath: string | null = null;
+      try {
+        const fileInfo = await telegramAPI.getFile(telegramResponse.document.file_id);
+        telegramFilePath = fileInfo.file_path || null;
+      } catch {}
+
       const fileRecord = new (File as any)({
         name: fileName,
         size: totalSize,
         mime: mimeType,
         fileId: telegramResponse.document.file_id,
+        telegramFilePath,
         owner: user.id,
         folder: folderId,
         ...(originalExt ? { originalExt } : {}),
@@ -155,11 +162,26 @@ export async function handleUpload(request: NextRequest) {
       return NextResponse.json({ error: `Failed to upload some chunks. Please try again.` }, { status: 500 });
     }
 
-    const chunkFileDocs = chunkResults.map((result, i) => ({
+    const chunkArray = chunkResults as NonNullable<typeof chunkResults[number]>[];
+
+    // Fetch file paths from Telegram in parallel for future speed
+    const filePaths: (string | null)[] = await Promise.all(
+      chunkArray.map(async (r) => {
+        try {
+          const info = await telegramAPI.getFile(r.document.file_id);
+          return info.file_path || null;
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    const chunkFileDocs = chunkArray.map((result, i) => ({
       name: `${fileName}.part${i + 1}`,
       size: (chunks[i] as Buffer).length,
       mime: mimeType,
-      fileId: (result as NonNullable<typeof result>).document.file_id,
+      fileId: result.document.file_id,
+      telegramFilePath: filePaths[i],
       owner: user.id,
       folder: folderId,
       chunkedId,
