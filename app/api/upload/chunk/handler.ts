@@ -32,7 +32,10 @@ export async function handleChunk(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await chunkData.arrayBuffer());
-    const chunkFileName = `${originalName}.part${chunkIndex + 1}`;
+    // Strip original extension from chunk name to avoid Telegram blocking
+    // The original extension is restored in the complete handler
+    const safeName = originalName.replace(/\.[^/.]+$/, "");
+    const chunkFileName = `${safeName}.part${chunkIndex + 1}`;
 
     let telegramResponse;
     try {
