@@ -124,9 +124,13 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
 
     // Download all chunks and assemble into buffer
     let assembled: Buffer;
+    let elapsed = 0;
+    let fileSizeMB = "0";
+    const chunkTimings: number[] = [];
     try {
       const chunkBuffers: Buffer[] = await Promise.all(
         chunks.map(async (c) => {
+          const t0 = Date.now();
           const cachedPath = (c as any).telegramFilePath;
           const result = await telegramAPI.getFileStream(c.fileId, cachedPath || undefined);
           if (!cachedPath && result.filePath) {
@@ -140,18 +144,25 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
             parts.push(value);
           }
           reader.releaseLock();
+          const t1 = Date.now();
+          const mb = (c as any).size / 1024 / 1024 || 0;
+          chunkTimings.push(t1 - t0);
+          console.log(`[download] Chunk ${(c as any).chunkIndex + 1}/${chunks.length}: ${mb.toFixed(1)}MB in ${t1 - t0}ms`);
           return Buffer.concat(parts);
         }),
       );
       assembled = Buffer.concat(chunkBuffers);
+
+      elapsed = Date.now() - startTime;
+      fileSizeMB = (assembled.length / 1024 / 1024).toFixed(1);
+      const avgChunk = (chunkTimings.reduce((a, b) => a + b, 0) / chunkTimings.length).toFixed(0);
+      const minChunk = Math.min(...chunkTimings);
+      const maxChunk = Math.max(...chunkTimings);
+      console.log(`[download] Assembled ${fileSizeMB}MB in ${elapsed}ms | chunks avg=${avgChunk}ms min=${minChunk}ms max=${maxChunk}ms`);
     } catch (error) {
       console.error("Failed to download/assemble chunks:", error);
       return NextResponse.json({ error: "File temporarily unavailable" }, { status: 503 });
     }
-
-    const elapsed = Date.now() - startTime;
-    const fileSizeMB = (assembled.length / 1024 / 1024).toFixed(1);
-    console.log(`[download] Assembled ${fileSizeMB}MB in ${elapsed}ms`);
 
     // Try to cache in Vercel Blob (must complete within function timeout)
     const blobBudget = Math.max(1000, 9500 - elapsed);
