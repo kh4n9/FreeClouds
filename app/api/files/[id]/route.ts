@@ -103,14 +103,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Soft delete the file
+    // Soft delete the file (moves to trash, auto-expires in 30 days)
     await file.softDelete();
 
-    // If file is chunked parent, also soft-delete all chunks
+    // If file is chunked parent, also soft-delete all chunks with same expiry
     if (file.chunkedId && file.totalChunks && file.totalChunks > 1) {
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       await File.updateMany(
         { chunkedId: file.chunkedId, chunkIndex: { $gte: 0 }, deletedAt: null },
-        { deletedAt: new Date() },
+        { deletedAt: new Date(), trashExpiresAt: expiresAt },
       );
     }
 
@@ -165,6 +166,21 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       file.name = baseName;
       await file.save();
       return NextResponse.json({ id: file._id.toString(), name: file.name }, { status: 200 });
+    }
+
+    if (action === "restore") {
+      const file = await File.findById(fileId);
+      if (!file || !file.deletedAt) return NextResponse.json({ error: "File not found in trash" }, { status: 404 });
+      if (!(await verifyOwnership(user.id, file))) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      await file.restore();
+      // Also restore chunks if chunked parent
+      if (file.chunkedId && file.totalChunks && file.totalChunks > 1) {
+        await File.updateMany(
+          { chunkedId: file.chunkedId, chunkIndex: { $gte: 0 }, deletedAt: { $ne: null } },
+          { deletedAt: null, trashExpiresAt: null },
+        );
+      }
+      return NextResponse.json({ id: file._id.toString(), restored: true }, { status: 200 });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

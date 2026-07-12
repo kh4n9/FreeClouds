@@ -6,6 +6,7 @@ import {
   FolderPlus, Upload, RefreshCw, AlertCircle, X, Cloud, Search,
   HardDrive, FileIcon, FolderIcon, LogOut, Settings, Grid3X3,
   List, ChevronLeft, ChevronRight, Sidebar, Trash2, FileText,
+  RotateCcw, Clock,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 const DynamicFileGrid = dynamic(() => import("@/components/FileGrid"), { ssr: false });
@@ -19,6 +20,7 @@ import Footer from "@/components/Footer";
 interface User { id: string; email: string; name: string; createdAt: string; updatedAt: string; stats?: { totalFiles: number; totalSize: number; totalFolders: number; }; }
 interface FolderData { id: string; name: string; parent: string | null; createdAt: string; }
 interface FileData { id: string; name: string; displayName?: string; size: number; mime: string; folderId: string | null; folderName?: string | null; createdAt: string; }
+interface TrashFileData { id: string; name: string; displayName?: string; size: number; mime: string; deletedAt: string; trashExpiresAt: string; }
 type CacheKey = string;
 
 function formatSize(bytes: number): string {
@@ -185,6 +187,10 @@ export default function DashboardPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [spaceMenu, setSpaceMenu] = useState<{ x: number; y: number } | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showTrash, setShowTrash] = useState(false);
+  const [trashFiles, setTrashFiles] = useState<TrashFileData[]>([]);
+  const [trashLoading, setTrashLoading] = useState(false);
+  const [emptyingTrash, setEmptyingTrash] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
@@ -379,6 +385,48 @@ export default function DashboardPage() {
     document.body.removeChild(a);
   };
 
+  const loadTrashFiles = useCallback(async () => {
+    setTrashLoading(true);
+    try {
+      const res = await fetch("/api/trash");
+      if (res.ok) {
+        const data = await res.json();
+        setTrashFiles(data.files || []);
+      }
+    } catch { /* ignore */ }
+    finally { setTrashLoading(false); }
+  }, []);
+
+  const handleRestoreFile = async (fileId: string) => {
+    try {
+      const res = await fetch(`/api/files/${fileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "restore" }),
+      });
+      if (res.ok) {
+        setToast({ type: "success", message: "Đã khôi phục file" });
+        loadTrashFiles();
+        fileCache.current.clear();
+        if (!showTrash) loadFiles(selectedFolderId, debouncedSearch, false);
+      }
+    } catch { setToast({ type: "error", message: "Khôi phục file thất bại" }); }
+    finally { setTimeout(() => setToast(null), 3000); }
+  };
+
+  const handleEmptyTrash = async () => {
+    setEmptyingTrash(true);
+    try {
+      const res = await fetch("/api/trash/empty", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setToast({ type: "success", message: `Đã xoá vĩnh viễn ${data.deleted} file` });
+        setTrashFiles([]);
+      }
+    } catch { setToast({ type: "error", message: "Dọn thùng rác thất bại" }); }
+    finally { setEmptyingTrash(false); setTimeout(() => setToast(null), 3000); }
+  };
+
   const handleLogout = async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/login"); };
 
   const totalSize = user?.stats?.totalSize ?? 0;
@@ -478,6 +526,10 @@ export default function DashboardPage() {
               </div>
               <div className="p-3 border-t border-slate-800/50">
                 <div className="flex flex-col gap-1">
+                  <button onClick={() => { setShowTrash(!showTrash); loadTrashFiles(); setSidebarOpen(false); }}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${showTrash ? "text-indigo-400 bg-indigo-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
+                    <Trash2 className="w-4 h-4" /> Thùng rác
+                  </button>
                   <button onClick={() => { setShowUserProfile(true); setSidebarOpen(false); }}
                     className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all min-h-[44px]">
                     <Settings className="w-4 h-4" /> Cài đặt
@@ -504,6 +556,10 @@ export default function DashboardPage() {
                 <FolderPlus className="w-4 h-4" />
               </button>
               <div className="flex-1" />
+              <button onClick={() => { setShowTrash(!showTrash); loadTrashFiles(); }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${showTrash ? "text-indigo-400 bg-indigo-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`} title="Thùng rác">
+                <Trash2 className="w-4 h-4" />
+              </button>
               <button onClick={() => setShowUserProfile(true)}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all" title="Cài đặt">
                 <Settings className="w-4 h-4" />
@@ -595,72 +651,129 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Sub-folders */}
-            {childFolders.length > 0 && !debouncedSearch && (
-              <div className="px-6 pt-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <FolderIcon className="w-4 h-4 text-purple-400" />
-                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Thư mục con</h3>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                  {childFolders.map(child => (
-                    <ContextMenu key={child.id}
-                      items={[
-                        { label: "Mở", icon: <FolderIcon className="w-4 h-4" />, onClick: () => handleFolderSelect(child.id) },
-                        { divider: true },
-                        { label: "Tạo thư mục con", icon: <FolderPlus className="w-4 h-4" />, onClick: () => handleCreateFolder(child.id) },
-                        { divider: true },
-                        { label: "Đổi tên", icon: <FileText className="w-4 h-4" />, onClick: () => { const name = prompt("Đổi tên thư mục:", child.name); if (name && name.trim()) handleRenameFolder(child.id, name.trim()); } },
-                        { label: "Xoá", icon: <Trash2 className="w-4 h-4" />, onClick: () => handleDeleteFolder(child.id), danger: true },
-                      ]}>
-                      <div data-context-menu="true" onClick={() => handleFolderSelect(child.id)}
-                        className="group relative flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-purple-500/30 hover:bg-slate-800/50 cursor-pointer transition-all">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
-                          <FolderIcon className="w-5 h-5 text-purple-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-200 truncate">{child.name}</p>
-                          <p className="text-xs text-slate-400">{folders.filter(f => f.parent === child.id).length} thư mục con</p>
-                        </div>
-                      </div>
-                    </ContextMenu>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Files */}
-            <div className="p-6">
-              {filesLoading && files.length === 0 && !selectedFolderId ? (
-                <SkeletonLoader />
-              ) : files.length === 0 && childFolders.length === 0 ? (
-                <div className="text-center py-20">
-                  <div className="w-20 h-20 rounded-3xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center mx-auto mb-6">
-                    <Cloud className="w-10 h-10 text-slate-500" />
+            {/* Trash view */}
+            {showTrash ? (
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="w-5 h-5 text-red-400" />
+                    <h2 className="text-lg font-semibold text-white">Thùng rác</h2>
+                    <span className="text-xs text-slate-400">File tự động xoá sau 30 ngày</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-300 mb-2">
-                    {debouncedSearch ? `Không có kết quả cho "${debouncedSearch}"` : selectedFolderId ? "Thư mục này trống" : "Chưa có file nào"}
-                  </h3>
-                  <p className="text-sm text-slate-400 mb-6 max-w-md mx-auto">
-                    {debouncedSearch ? "Thử từ khoá khác hoặc duyệt thư mục của bạn." : selectedFolderId ? "Kéo thả file vào đây hoặc dùng nút tải lên để thêm files." : "Tải file đầu tiên để bắt đầu với FreeClouds."}
-                  </p>
-                  {!debouncedSearch && (
-                    <div className="flex gap-3 justify-center">
-                      <button onClick={() => setShowUpload(true)} className="btn-primary px-5 py-2.5 rounded-xl text-sm flex items-center gap-2">
-                        <Upload className="w-4 h-4" /> Tải files lên
-                      </button>
-                      <button onClick={() => handleCreateFolder(selectedFolderId)} className="btn-secondary px-5 py-2.5 rounded-xl text-sm flex items-center gap-2">
-                        <FolderPlus className="w-4 h-4" /> Tạo thư mục
-                      </button>
-                    </div>
-                  )}
+                  <button onClick={handleEmptyTrash} disabled={trashFiles.length === 0 || emptyingTrash}
+                    className="px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-red-500 to-rose-600 text-white hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2">
+                    {emptyingTrash ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    Dọn thùng rác
+                  </button>
                 </div>
-              ) : (
-                <>
-                  {filesLoading && files.length > 0 && (
-                    <div className="flex items-center gap-2 mb-4 text-sm text-slate-400">
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      Đang làm mới...
+                {trashLoading ? (
+                  <SkeletonLoader />
+                ) : trashFiles.length === 0 ? (
+                  <div className="text-center py-20">
+                    <div className="w-20 h-20 rounded-3xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center mx-auto mb-6">
+                      <Trash2 className="w-10 h-10 text-slate-500" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-300 mb-2">Thùng rác trống</h3>
+                    <p className="text-sm text-slate-400">File đã xoá sẽ xuất hiện ở đây và tự động xoá sau 30 ngày.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {trashFiles.map((file) => {
+                      const expiresAt = new Date(file.trashExpiresAt);
+                      const now = new Date();
+                      const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                      return (
+                        <div key={file.id}
+                          className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-slate-600/50 transition-all">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500/20 to-rose-500/20 flex items-center justify-center flex-shrink-0">
+                            <FileIcon className="w-5 h-5 text-red-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-200 truncate">{file.displayName || file.name}</p>
+                            <p className="text-xs text-slate-400">{formatSize(file.size)}</p>
+                          </div>
+                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${daysLeft <= 3 ? "text-red-400 bg-red-500/10" : "text-slate-400 bg-slate-700/30"}`}>
+                            <Clock className="w-3 h-3" />
+                            {daysLeft > 0 ? `Còn ${daysLeft} ngày` : "Hết hạn"}
+                          </div>
+                          <button onClick={() => handleRestoreFile(file.id)}
+                            className="px-3 py-2 rounded-lg text-sm text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all flex items-center gap-1.5 min-h-[44px]">
+                            <RotateCcw className="w-4 h-4" /> Khôi phục
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Sub-folders */}
+                {childFolders.length > 0 && !debouncedSearch && (
+                  <div className="px-6 pt-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FolderIcon className="w-4 h-4 text-purple-400" />
+                      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Thư mục con</h3>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                      {childFolders.map(child => (
+                        <ContextMenu key={child.id}
+                          items={[
+                            { label: "Mở", icon: <FolderIcon className="w-4 h-4" />, onClick: () => handleFolderSelect(child.id) },
+                            { divider: true },
+                            { label: "Tạo thư mục con", icon: <FolderPlus className="w-4 h-4" />, onClick: () => handleCreateFolder(child.id) },
+                            { divider: true },
+                            { label: "Đổi tên", icon: <FileText className="w-4 h-4" />, onClick: () => { const name = prompt("Đổi tên thư mục:", child.name); if (name && name.trim()) handleRenameFolder(child.id, name.trim()); } },
+                            { label: "Xoá", icon: <Trash2 className="w-4 h-4" />, onClick: () => handleDeleteFolder(child.id), danger: true },
+                          ]}>
+                          <div data-context-menu="true" onClick={() => handleFolderSelect(child.id)}
+                            className="group relative flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-purple-500/30 hover:bg-slate-800/50 cursor-pointer transition-all">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
+                              <FolderIcon className="w-5 h-5 text-purple-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-200 truncate">{child.name}</p>
+                              <p className="text-xs text-slate-400">{folders.filter(f => f.parent === child.id).length} thư mục con</p>
+                            </div>
+                          </div>
+                        </ContextMenu>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Files */}
+                <div className="p-6">
+                  {filesLoading && files.length === 0 && !selectedFolderId ? (
+                    <SkeletonLoader />
+                  ) : files.length === 0 && childFolders.length === 0 ? (
+                    <div className="text-center py-20">
+                      <div className="w-20 h-20 rounded-3xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center mx-auto mb-6">
+                        <Cloud className="w-10 h-10 text-slate-500" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-slate-300 mb-2">
+                        {debouncedSearch ? `Không có kết quả cho "${debouncedSearch}"` : selectedFolderId ? "Thư mục này trống" : "Chưa có file nào"}
+                      </h3>
+                      <p className="text-sm text-slate-400 mb-6 max-w-md mx-auto">
+                        {debouncedSearch ? "Thử từ khoá khác hoặc duyệt thư mục của bạn." : selectedFolderId ? "Kéo thả file vào đây hoặc dùng nút tải lên để thêm files." : "Tải file đầu tiên để bắt đầu với FreeClouds."}
+                      </p>
+                      {!debouncedSearch && (
+                        <div className="flex gap-3 justify-center">
+                          <button onClick={() => setShowUpload(true)} className="btn-primary px-5 py-2.5 rounded-xl text-sm flex items-center gap-2">
+                            <Upload className="w-4 h-4" /> Tải files lên
+                          </button>
+                          <button onClick={() => handleCreateFolder(selectedFolderId)} className="btn-secondary px-5 py-2.5 rounded-xl text-sm flex items-center gap-2">
+                            <FolderPlus className="w-4 h-4" /> Tạo thư mục
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      {filesLoading && files.length > 0 && (
+                        <div className="flex items-center gap-2 mb-4 text-sm text-slate-400">
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          Đang làm mới...
                     </div>
                   )}
                   <DynamicFileGrid files={files} loading={filesLoading}
@@ -669,11 +782,13 @@ export default function DashboardPage() {
                 </>
               )}
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
+    </div>
+  </div>
 
-      {spaceMenu && (
+  {spaceMenu && (
         <div className="fixed z-[100] min-w-[180px] py-1.5 rounded-xl bg-slate-800 border border-slate-700 shadow-2xl shadow-black/30 backdrop-blur-xl"
           style={{ left: spaceMenu.x, top: spaceMenu.y }}
           onClick={() => setSpaceMenu(null)}>

@@ -17,6 +17,9 @@ export interface IFile extends Document {
   chunkIndex?: number;      // 0-based index for chunks (parent = -1 or null)
   totalChunks?: number;     // total number of chunks
 
+  // Trash support (auto-delete after 30 days)
+  trashExpiresAt?: Date | null;
+
   // Instance methods (typed) so TypeScript recognizes document methods
   softDelete(): Promise<IFile>;
   restore(): Promise<IFile>;
@@ -58,7 +61,11 @@ export interface IFileStatics {
   findDuplicates(ownerId: string): Promise<any[]>;
 }
 
-export interface IFileModel extends mongoose.Model<IFile>, IFileStatics {}
+export interface IFileModel extends mongoose.Model<IFile>, IFileStatics {
+  findTrashByOwner(ownerId: string): Promise<IFile[]>;
+  findTrashByOwnerWithCount(ownerId: string, page?: number, limit?: number): Promise<{ files: IFile[]; total: number; page: number; limit: number; totalPages: number }>;
+  cleanupExpiredTrash(): Promise<number>;
+}
 
 const fileSchema = new Schema<IFile>({
   name: {
@@ -115,6 +122,11 @@ const fileSchema = new Schema<IFile>({
     default: null,
     index: true,
   },
+  trashExpiresAt: {
+    type: Date,
+    default: null,
+    index: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -144,6 +156,8 @@ fileSchema.index({ owner: 1, name: 1, deletedAt: 1 });
 fileSchema.index({ createdAt: -1 });
 fileSchema.index({ deletedAt: 1, createdAt: -1 });
 fileSchema.index({ chunkedId: 1, chunkIndex: 1 });
+fileSchema.index({ owner: 1, trashExpiresAt: 1 });
+fileSchema.index({ trashExpiresAt: 1 }, { expireAfterSeconds: 0 });
 
 // Virtual for id
 fileSchema.virtual("id").get(function (this: IFile) {
@@ -370,11 +384,13 @@ fileSchema.statics.findDuplicates = function (ownerId: string) {
 // Instance methods
 fileSchema.methods.softDelete = function () {
   this.deletedAt = new Date();
+  this.trashExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   return this.save();
 };
 
 fileSchema.methods.restore = function () {
   this.deletedAt = null;
+  this.trashExpiresAt = null;
   return this.save();
 };
 
@@ -410,6 +426,48 @@ function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
 }
+
+// Static methods for trash
+fileSchema.statics.findTrashByOwner = function (ownerId: string) {
+  return this.find({
+    owner: ownerId,
+    deletedAt: { $ne: null },
+    $or: [
+      { chunkedId: null },
+      { chunkIndex: -1 },
+    ],
+  }).sort({ deletedAt: -1 });
+};
+
+fileSchema.statics.findTrashByOwnerWithCount = async function (ownerId: string, page = 1, limit = 50) {
+  const query: any = {
+    owner: ownerId,
+    deletedAt: { $ne: null },
+    $or: [
+      { chunkedId: null },
+      { chunkIndex: -1 },
+    ],
+  };
+  const [files, total] = await Promise.all([
+    this.find(query).sort({ deletedAt: -1 }).skip((page - 1) * limit).limit(limit),
+    this.countDocuments(query),
+  ]);
+  return { files, total, page, limit, totalPages: Math.ceil(total / limit) };
+};
+
+fileSchema.statics.cleanupExpiredTrash = async function () {
+  const now = new Date();
+  const expired = await this.find({ trashExpiresAt: { $lte: now }, deletedAt: { $ne: null } });
+  let count = 0;
+  for (const file of expired) {
+    if ((file as any).chunkedId && (file as any).totalChunks > 1) {
+      await this.deleteMany({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+    }
+    await this.findByIdAndDelete(file._id).catch(() => {});
+    count++;
+  }
+  return count;
+};
 
 export const File =
   (mongoose.models.File as unknown as IFileModel) ||

@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No files found" }, { status: 404 });
     }
 
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     let deleted = 0;
     for (const file of files) {
       await file.softDelete();
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
       if (file.chunkedId && file.totalChunks && file.totalChunks > 1) {
         await File.updateMany(
           { chunkedId: file.chunkedId, chunkIndex: { $gte: 0 }, deletedAt: null },
-          { deletedAt: new Date() },
+          { deletedAt: new Date(), trashExpiresAt: expiresAt },
         );
       }
       deleted++;
