@@ -3,24 +3,38 @@ import dns from "dns";
 import { env } from "./env";
 
 // Fix Node.js DNS resolution on Windows (ECONNREFUSED for SRV/A queries)
+const dnsFallbackServers = ["8.8.8.8", "1.1.1.1", "9.9.9.9", "208.67.222.222"];
 try {
-  dns.setServers(["8.8.8.8", "1.1.1.1", "9.9.9.9", "208.67.222.222"]);
+  dns.setServers(dnsFallbackServers);
   dns.setDefaultResultOrder("ipv4first");
 } catch {}
 
-// Monkey-patch DNS SRV resolution to fall back to custom resolver
-// (MongoDB Atlas +srv connections fail on Windows when default DNS can't resolve SRV)
+// Monkey-patch DNS SRV and TXT resolution to fall back to custom resolver
+// (MongoDB Atlas +srv connections fail on Windows when default DNS can't resolve)
+
 const origResolveSrv = dns.promises.resolveSrv.bind(dns.promises);
 dns.promises.resolveSrv = ((hostname: string) => {
   return origResolveSrv(hostname).catch((err: NodeJS.ErrnoException) => {
     if (err.code === "ECONNREFUSED" || err.code === "ENOTFOUND" || err.code === "ETIMEOUT") {
       const r = new dns.promises.Resolver();
-      r.setServers(["8.8.8.8", "1.1.1.1", "9.9.9.9", "208.67.222.222"]);
+      r.setServers(dnsFallbackServers);
       return r.resolveSrv(hostname);
     }
     throw err;
   });
 }) as typeof dns.promises.resolveSrv;
+
+const origResolveTxt = dns.promises.resolveTxt.bind(dns.promises);
+dns.promises.resolveTxt = ((hostname: string) => {
+  return origResolveTxt(hostname).catch((err: NodeJS.ErrnoException) => {
+    if (err.code === "ECONNREFUSED" || err.code === "ENOTFOUND" || err.code === "ETIMEOUT") {
+      const r = new dns.promises.Resolver();
+      r.setServers(dnsFallbackServers);
+      return r.resolveTxt(hostname);
+    }
+    throw err;
+  });
+}) as typeof dns.promises.resolveTxt;
 
 interface GlobalMongoose {
   conn: mongoose.Connection | null;
