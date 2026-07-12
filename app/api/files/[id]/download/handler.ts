@@ -60,6 +60,8 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
+    const isChunked = file.chunkedId && file.totalChunks && file.totalChunks > 1;
+
     const headers = new Headers();
     headers.set("Content-Type", file.mime || "application/octet-stream");
 
@@ -69,13 +71,11 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
     const encodedFileName = encodeURIComponent(displayName);
     headers.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
 
-    if (file.size) headers.set("Content-Length", file.size.toString());
+    if (file.size && !isChunked) headers.set("Content-Length", file.size.toString());
     headers.set("Cache-Control", "private, max-age=3600");
     headers.set("ETag", `"${(file._id as any).toString()}-${file.createdAt.getTime()}"`);
     headers.set("X-Content-Type-Options", "nosniff");
     headers.set("X-Frame-Options", "DENY");
-
-    const isChunked = file.chunkedId && file.totalChunks && file.totalChunks > 1;
 
     if (isChunked) {
       const chunks = await File.find({
