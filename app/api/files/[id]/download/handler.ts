@@ -19,8 +19,8 @@ async function* chunkStreamGenerator(chunks: IFile[]) {
     return result;
   });
   for (let i = 0; i < chunks.length; i++) {
-    const s = await pending[i];
-    const reader = s.stream.getReader();
+    const result = await pending[i]!;
+    const reader = result.stream.getReader();
     try {
       while (true) {
         const { done, value } = await reader.read();
