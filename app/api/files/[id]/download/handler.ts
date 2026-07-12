@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
-import { File, IFile } from "@/models/File";
+import { File } from "@/models/File";
 import {
   requireAuth,
   AuthError,
@@ -8,39 +8,6 @@ import {
   verifyOwnership,
 } from "@/lib/auth";
 import { telegramAPI, TelegramError } from "@/lib/telegram";
-
-async function* chunkStreamGenerator(results: { stream: ReadableStream<Uint8Array> }[]) {
-  for (const s of results) {
-    const reader = s.stream.getReader();
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        yield value;
-      }
-    } finally {
-      reader.releaseLock();
-    }
-  }
-}
-
-function iterableToStream(iterable: AsyncIterable<Uint8Array>): ReadableStream<Uint8Array> {
-  const iterator = iterable[Symbol.asyncIterator]();
-  return new ReadableStream<Uint8Array>({
-    async pull(controller) {
-      try {
-        const { done, value } = await iterator.next();
-        if (done) controller.close();
-        else controller.enqueue(value);
-      } catch (err) {
-        controller.error(err);
-      }
-    },
-    cancel() {
-      iterator.return?.();
-    },
-  });
-}
 
 export async function handleDownload(request: NextRequest, paramsPromise: Promise<{ id: string }>) {
   try {
@@ -62,21 +29,12 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
 
     const isChunked = file.chunkedId && file.totalChunks && file.totalChunks > 1;
 
-    const headers = new Headers();
-    headers.set("Content-Type", file.mime || "application/octet-stream");
-
     const displayName = file.originalExt
       ? file.name.replace(/\.bin$/i, "") + file.originalExt
       : file.name;
     const encodedFileName = encodeURIComponent(displayName);
-    headers.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
 
-    if (file.size && !isChunked) headers.set("Content-Length", file.size.toString());
-    headers.set("Cache-Control", "private, max-age=3600");
-    headers.set("ETag", `"${(file._id as any).toString()}-${file.createdAt.getTime()}"`);
-    headers.set("X-Content-Type-Options", "nosniff");
-    headers.set("X-Frame-Options", "DENY");
-
+    // For chunked files: check Vercel Blob cache first
     if (isChunked) {
       const chunks = await File.find({
         chunkedId: file.chunkedId,
@@ -89,28 +47,70 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
         return NextResponse.json({ error: "File chunks not found" }, { status: 404 });
       }
 
-      // Verify all chunks are downloadable BEFORE sending any data
-      let chunkStreams: { stream: ReadableStream<Uint8Array> }[];
+      // If blobCacheUrl exists, redirect to cached blob
+      if ((file as any).blobCacheUrl) {
+        const redirectHeaders = new Headers();
+        redirectHeaders.set("Location", (file as any).blobCacheUrl);
+        redirectHeaders.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
+        return new Response(null, { status: 302, headers: redirectHeaders });
+      }
+
+      // Download all chunks and assemble
+      let assembled: Buffer;
       try {
-        chunkStreams = await Promise.all(
+        const chunkBuffers: Buffer[] = await Promise.all(
           chunks.map(async (c) => {
             const cachedPath = (c as any).telegramFilePath;
             const result = await telegramAPI.getFileStream(c.fileId, cachedPath || undefined);
             if (!cachedPath && result.filePath) {
               (File as any).updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
             }
-            return result;
+            const reader = result.stream.getReader();
+            const parts: Uint8Array[] = [];
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              parts.push(value);
+            }
+            reader.releaseLock();
+            return Buffer.concat(parts);
           }),
         );
+        assembled = Buffer.concat(chunkBuffers);
       } catch (error) {
-        console.error("Failed to get chunk streams:", error);
+        console.error("Failed to assemble chunks:", error);
         return NextResponse.json({ error: "File temporarily unavailable" }, { status: 503 });
       }
 
-      const stream = iterableToStream(chunkStreamGenerator(chunkStreams));
-      return new Response(stream, { status: 200, headers });
+      // Try to upload to Vercel Blob
+      try {
+        const { put } = await import("@vercel/blob");
+        const blobResult = await put(`downloads/${file.chunkedId}`, assembled, {
+          access: "public",
+          addRandomSuffix: true,
+          contentType: file.mime || "application/octet-stream",
+        });
+        // Cache the URL for future requests
+        (File as any).updateOne({ _id: file._id }, { blobCacheUrl: blobResult.url }).catch(() => {});
+
+        const redirectHeaders = new Headers();
+        redirectHeaders.set("Location", blobResult.url);
+        redirectHeaders.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
+        return new Response(null, { status: 302, headers: redirectHeaders });
+      } catch {
+        // Blob upload failed (e.g., no token configured), fall back to streaming
+        const headers = new Headers();
+        headers.set("Content-Type", file.mime || "application/octet-stream");
+        headers.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
+        headers.set("Cache-Control", "private, max-age=3600");
+        headers.set("X-Content-Type-Options", "nosniff");
+        headers.set("X-Frame-Options", "DENY");
+
+        return new Response(new Uint8Array(assembled), { status: 200, headers });
+      }
     }
 
+    // Non-chunked file: stream directly from Telegram
     let fileStream: ReadableStream<Uint8Array>;
     try {
       const cachedPath = (file as any).telegramFilePath;
@@ -126,6 +126,15 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
       }
       return NextResponse.json({ error: "Failed to download file" }, { status: 500 });
     }
+
+    const headers = new Headers();
+    headers.set("Content-Type", file.mime || "application/octet-stream");
+    headers.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
+    if (file.size) headers.set("Content-Length", file.size.toString());
+    headers.set("Cache-Control", "private, max-age=3600");
+    headers.set("ETag", `"${(file._id as any).toString()}-${file.createdAt.getTime()}"`);
+    headers.set("X-Content-Type-Options", "nosniff");
+    headers.set("X-Frame-Options", "DENY");
 
     const range = request.headers.get("range");
     if (range && file.size) {

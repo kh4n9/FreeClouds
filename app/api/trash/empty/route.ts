@@ -26,6 +26,14 @@ export async function POST(request: NextRequest) {
 
     let deleted = 0;
     for (const file of trashedFiles) {
+      // Delete cached blob if exists
+      if ((file as any).blobCacheUrl) {
+        try {
+          const { del } = await import("@vercel/blob");
+          await del((file as any).blobCacheUrl);
+        } catch {}
+      }
+
       if ((file as any).chunkedId && (file as any).totalChunks > 1) {
         await File.deleteMany({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
       }

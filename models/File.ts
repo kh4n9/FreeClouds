@@ -20,6 +20,9 @@ export interface IFile extends Document {
   // Trash support (auto-delete after 30 days)
   trashExpiresAt?: Date | null;
 
+  // Vercel Blob cache for assembled chunked files
+  blobCacheUrl?: string | null;
+
   // Instance methods (typed) so TypeScript recognizes document methods
   softDelete(): Promise<IFile>;
   restore(): Promise<IFile>;
@@ -146,6 +149,10 @@ const fileSchema = new Schema<IFile>({
   },
   totalChunks: {
     type: Number,
+    default: null,
+  },
+  blobCacheUrl: {
+    type: String,
     default: null,
   },
 });
