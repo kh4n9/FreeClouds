@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import { requireAuth, AuthError, createAuthResponse, validateOrigin, createCsrfError } from "@/lib/auth";
-import { telegramAPI } from "@/lib/telegram";
+import { telegramAPI, TelegramError } from "@/lib/telegram";
 
 export async function handleChunk(request: NextRequest) {
   try {
     if (!validateOrigin(request)) return createCsrfError();
     const user = await requireAuth(request);
     await connectToDatabase();
+
+    const startTime = Date.now();
 
     const formData = await request.formData();
     const chunkData = formData.get("chunk") as File | null;
@@ -37,9 +39,16 @@ export async function handleChunk(request: NextRequest) {
       telegramResponse = await telegramAPI.sendDocument(buffer, chunkFileName, originalMime || "application/octet-stream");
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
+      const isRateLimit = error instanceof TelegramError && (error as any).errorCode === 429;
       console.error(`Chunk ${chunkIndex + 1}/${totalChunks} Telegram upload failed:`, msg);
-      return NextResponse.json({ error: `Chunk upload failed: ${msg}` }, { status: 500 });
+      return NextResponse.json({
+        error: `Chunk upload failed: ${msg}`,
+        retryable: isRateLimit,
+      }, { status: isRateLimit ? 429 : 500 });
     }
+
+    const elapsed = Date.now() - startTime;
+    console.log(`Chunk ${chunkIndex + 1}/${totalChunks} uploaded in ${elapsed}ms (${buffer.length} bytes)`);
 
     const folderId = folderIdParam && folderIdParam !== "null" ? folderIdParam : null;
 
@@ -60,6 +69,7 @@ export async function handleChunk(request: NextRequest) {
       chunkIndex,
       chunkedId,
       success: true,
+      elapsed,
     }, { status: 201 });
   } catch (error) {
     console.error("Chunk upload error:", error);
