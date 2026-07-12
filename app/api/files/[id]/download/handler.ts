@@ -10,17 +10,18 @@ import {
 import { telegramAPI, TelegramError } from "@/lib/telegram";
 
 async function* chunkStreamGenerator(chunks: IFile[]) {
-  const pending = chunks.map(async (c) => {
-    const cachedPath = (c as any).telegramFilePath;
-    const result = await telegramAPI.getFileStream(c.fileId, cachedPath || undefined);
-    if (!cachedPath && result.filePath) {
-      (File as any).updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
-    }
-    return result;
-  });
-  for (let i = 0; i < chunks.length; i++) {
-    const result = await pending[i]!;
-    const reader = result.stream.getReader();
+  const results = await Promise.all(
+    chunks.map(async (c) => {
+      const cachedPath = (c as any).telegramFilePath;
+      const result = await telegramAPI.getFileStream(c.fileId, cachedPath || undefined);
+      if (!cachedPath && result.filePath) {
+        (File as any).updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
+      }
+      return result;
+    }),
+  );
+  for (const s of results) {
+    const reader = s.stream.getReader();
     try {
       while (true) {
         const { done, value } = await reader.read();
