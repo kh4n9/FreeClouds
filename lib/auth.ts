@@ -28,7 +28,7 @@ export async function getUserFromRequest(
     await connectToDatabase();
     const user = await User.findById(payload.userId).select("-passwordHash");
 
-    if (!user) {
+    if (!user || !user.isActive) {
       return null;
     }
 
@@ -210,51 +210,29 @@ export function getClientIp(request: NextRequest): string {
 
 // Admin-specific authentication functions
 export async function requireAdmin(request: NextRequest): Promise<AuthUser> {
-  console.log("requireAdmin: Starting admin check...");
   const user = await requireAuth(request);
-  console.log("requireAdmin: User from requireAuth:", user);
 
-  // Check if user is admin
   await connectToDatabase();
-  console.log("requireAdmin: Connected to database, checking user role...");
   const userDoc = await User.findById(user.id);
-  console.log(
-    "requireAdmin: User document:",
-    userDoc
-      ? { id: userDoc._id, role: userDoc.role, isActive: userDoc.isActive }
-      : null,
-  );
 
-  if (!userDoc || userDoc.role !== "admin") {
-    console.log("requireAdmin: Access denied - not admin");
+  if (!userDoc || userDoc.role !== "admin" || !userDoc.isActive) {
     throw new AuthError("Admin access required", 403);
   }
 
-  console.log("requireAdmin: Admin access granted");
   return user;
 }
 
 export async function isAdmin(request: NextRequest): Promise<boolean> {
   try {
-    console.log("isAdmin: Checking if user is admin...");
     const user = await getUserFromRequest(request);
     if (!user) {
-      console.log("isAdmin: No user found");
       return false;
     }
 
     await connectToDatabase();
     const userDoc = await User.findById(user.id);
-    console.log(
-      "isAdmin: User document:",
-      userDoc
-        ? { id: userDoc._id, role: userDoc.role, isActive: userDoc.isActive }
-        : null,
-    );
 
-    const result = userDoc?.role === "admin" && userDoc?.isActive === true;
-    console.log("isAdmin: Result:", result);
-    return result;
+    return userDoc?.role === "admin" && userDoc?.isActive === true;
   } catch (error) {
     console.error("isAdmin: Error:", error);
     return false;

@@ -63,6 +63,7 @@ export async function handleChunk(request: NextRequest) {
         size: buffer.length,
         mime: originalMime || "application/octet-stream",
         fileId: telegramResponse.document.file_id,
+        telegramMessageId: telegramResponse.message_id,
         owner: user.id,
         folder: folderId,
         chunkedId,

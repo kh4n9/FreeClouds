@@ -233,6 +233,23 @@ class TelegramAPI {
       return false;
     }
   }
+
+  /**
+   * Best-effort deletion of a bot-sent message. Bots can delete their own
+   * messages at any time. Returns false if the message could not be deleted.
+   */
+  async deleteMessage(messageId: string, chatId?: string): Promise<boolean> {
+    try {
+      const response = await this.makeRequest("deleteMessage", {
+        chat_id: chatId || this.chatId,
+        message_id: messageId,
+      });
+      return response.ok;
+    } catch (error) {
+      console.error("Failed to delete Telegram message:", error);
+      return false;
+    }
+  }
 }
 
 // Export singleton instance

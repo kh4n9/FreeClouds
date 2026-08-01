@@ -219,12 +219,16 @@ userSchema.methods.syncStatistics = async function () {
     const File = mongoose.model("File");
     const Folder = mongoose.model("Folder");
 
-    // Get actual file statistics
+    // Get actual file statistics (exclude chunk records — they are counted via their parent)
     const fileStats = await File.aggregate([
       {
         $match: {
           owner: this._id,
           deletedAt: null,
+          $or: [
+            { chunkedId: null },
+            { chunkIndex: -1 },
+          ],
         },
       },
       {

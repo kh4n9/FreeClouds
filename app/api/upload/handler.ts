@@ -22,7 +22,6 @@ import {
   isAllowedFileType,
   validateFileName,
   sanitizeFileName,
-  TELEGRAM_FILE_SIZE_LIMIT,
 } from "@/lib/telegram";
 
 const CHUNK_SIZE = 15 * 1024 * 1024;
@@ -118,6 +117,7 @@ export async function handleUpload(request: NextRequest) {
         mime: mimeType,
         fileId: telegramResponse.document.file_id,
         telegramFilePath,
+        telegramMessageId: telegramResponse.message_id,
         owner: user.id,
         folder: folderId,
         ...(originalExt ? { originalExt } : {}),
@@ -182,6 +182,7 @@ export async function handleUpload(request: NextRequest) {
       mime: mimeType,
       fileId: result.document.file_id,
       telegramFilePath: filePaths[i],
+      telegramMessageId: result.message_id,
       owner: user.id,
       folder: folderId,
       chunkedId,

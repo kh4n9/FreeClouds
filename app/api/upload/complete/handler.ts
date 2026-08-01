@@ -13,16 +13,47 @@ export async function handleComplete(request: NextRequest) {
     await connectToDatabase();
 
     const body = await request.json();
-    const { chunkedId, originalName, originalMime, totalSize, folderId: rawFolderId } = body;
+    const { chunkedId, originalName, originalMime, totalSize, folderId: rawFolderId, totalChunks: clientTotalChunks } = body;
 
     if (!chunkedId || !originalName || !totalSize) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const totalChunks = Number(clientTotalChunks);
+    if (!Number.isInteger(totalChunks) || totalChunks <= 0) {
+      return NextResponse.json({ error: "Invalid totalChunks" }, { status: 400 });
+    }
+
     // Verify chunks exist + cache file_paths for faster downloads
-    const chunks = await (File as any).find({ chunkedId, chunkIndex: { $gte: 0 } }).sort({ chunkIndex: 1 });
+    const chunks = await (File as any)
+      .find({ chunkedId, chunkIndex: { $gte: 0 }, owner: user.id })
+      .sort({ chunkIndex: 1 });
     if (chunks.length === 0) {
       return NextResponse.json({ error: "No chunks found" }, { status: 404 });
+    }
+
+    // Verify all chunks present and contiguous (0..n-1)
+    if (chunks.length !== totalChunks) {
+      return NextResponse.json(
+        { error: `Incomplete chunks: expected ${totalChunks}, found ${chunks.length}. Vui lòng tải lại file.` },
+        { status: 400 },
+      );
+    }
+    const contiguous = chunks.every((chunk: any, i: number) => chunk.chunkIndex === i);
+    if (!contiguous) {
+      const missing = Array.from({ length: totalChunks }, (_, i) => i)
+        .filter((i) => !chunks.some((c: any) => c.chunkIndex === i));
+      return NextResponse.json(
+        { error: `Missing chunks: [${missing.join(", ")}]. Vui lòng tải lại file.` },
+        { status: 400 },
+      );
+    }
+    const chunkSum = chunks.reduce((sum: number, c: any) => sum + (c.size || 0), 0);
+    if (chunkSum !== Number(totalSize)) {
+      return NextResponse.json(
+        { error: "Chunk size mismatch. Vui lòng tải lại file." },
+        { status: 400 },
+      );
     }
 
     // Fetch and cache Telegram file_paths (skip getFile on future downloads)

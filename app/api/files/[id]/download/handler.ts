@@ -8,23 +8,8 @@ import {
   verifyOwnership,
 } from "@/lib/auth";
 import { telegramAPI, TelegramError } from "@/lib/telegram";
+import { bufferToStream } from "@/lib/download-utils";
 import { put as blobPut } from "@vercel/blob";
-
-function bufferToStream(buf: Buffer): ReadableStream<Uint8Array> {
-  let offset = 0;
-  const CHUNK_SIZE = 65536;
-  return new ReadableStream<Uint8Array>({
-    pull(controller) {
-      if (offset >= buf.length) {
-        controller.close();
-        return;
-      }
-      const end = Math.min(offset + CHUNK_SIZE, buf.length);
-      controller.enqueue(new Uint8Array(buf.subarray(offset, end)));
-      offset = end;
-    },
-  });
-}
 
 export async function handleDownload(request: NextRequest, paramsPromise: Promise<{ id: string }>) {
   try {
@@ -118,8 +103,17 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
       return NextResponse.json({ error: "File chunks not found" }, { status: 404 });
     }
 
-    // Already cached in Blob — redirect immediately
-    if ((file as any).blobCacheUrl) {
+    // Reject non-contiguous chunks instead of silently producing a corrupted file
+    const contiguous = chunks.every((c: any, i: number) => c.chunkIndex === i);
+    if (!contiguous) {
+      const missing = Array.from({ length: file.totalChunks }, (_, i) => i)
+        .filter((i) => !chunks.some((c: any) => c.chunkIndex === i));
+      console.error(`[download] Non-contiguous chunks: missing=[${missing.join(",")}]`);
+      return NextResponse.json({ error: "File chunks are incomplete" }, { status: 404 });
+    }
+
+    // Already cached in Blob — redirect immediately (non-range requests only)
+    if ((file as any).blobCacheUrl && !request.headers.get("range")) {
       const redirectHeaders = new Headers();
       redirectHeaders.set("Location", (file as any).blobCacheUrl);
       redirectHeaders.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
@@ -168,6 +162,30 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
       return NextResponse.json({ error: "File temporarily unavailable" }, { status: 503 });
     }
 
+    // Support range requests on the assembled buffer (video seek, etc.)
+    const range = request.headers.get("range");
+    if (range && assembled.length > 0) {
+      const match = range.match(/bytes=(\d+)-(\d*)/);
+      if (match) {
+        const [, startStr, endStr] = match;
+        const start = parseInt(startStr!, 10);
+        const end = endStr ? parseInt(endStr, 10) : assembled.length - 1;
+        if (start < assembled.length && end < assembled.length && start <= end) {
+          const sliced = Buffer.from(assembled.subarray(start, end + 1));
+          const rangeHeaders = new Headers();
+          rangeHeaders.set("Content-Type", file.mime || "application/octet-stream");
+          rangeHeaders.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
+          rangeHeaders.set("Content-Range", `bytes ${start}-${end}/${assembled.length}`);
+          rangeHeaders.set("Content-Length", sliced.length.toString());
+          rangeHeaders.set("Accept-Ranges", "bytes");
+          rangeHeaders.set("Cache-Control", "private, max-age=3600");
+          rangeHeaders.set("X-Content-Type-Options", "nosniff");
+          rangeHeaders.set("X-Frame-Options", "DENY");
+          return new Response(bufferToStream(sliced), { status: 206, headers: rangeHeaders });
+        }
+      }
+    }
+
     // Try to cache in Vercel Blob (must complete within function timeout)
     const blobBudget = Math.max(1000, 9500 - elapsed);
     let blobUrl: string | null = null;
@@ -208,6 +226,8 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
     const headers = new Headers();
     headers.set("Content-Type", file.mime || "application/octet-stream");
     headers.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
+    headers.set("Content-Length", assembled.length.toString());
+    headers.set("Accept-Ranges", "bytes");
     headers.set("Cache-Control", "private, max-age=3600");
     headers.set("X-Content-Type-Options", "nosniff");
     headers.set("X-Frame-Options", "DENY");

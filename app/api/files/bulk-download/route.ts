@@ -7,7 +7,7 @@ import {
   createAuthResponse,
   verifyOwnership,
 } from "@/lib/auth";
-import { telegramAPI, TelegramError } from "@/lib/telegram";
+import { getFileDownloadStream } from "@/lib/download-utils";
 
 import stream from "stream";
 
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     let body: any;
     try {
       body = await request.json();
-    } catch (err) {
+    } catch {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
@@ -148,14 +148,12 @@ export async function POST(request: NextRequest) {
     headers.set("Cache-Control", "private, max-age=3600");
 
     // Kick off an async task to append streams to the archive.
-    // archiver works with Node streams, while telegramAPI.getFileStream returns a web ReadableStream.
+    // archiver works with Node streams, while getFileDownloadStream returns a web ReadableStream.
     (async () => {
       try {
         for (const f of orderedFiles) {
           try {
-            const result = await telegramAPI.getFileStream(f.fileId);
-            const webStream = result.stream as ReadableStream<Uint8Array>;
-            const size = result.size;
+            const { stream: webStream, size } = await getFileDownloadStream(f);
 
             // Convert web ReadableStream to Node Readable (Node >= 17 provides fromWeb)
             let nodeStream: stream.Readable;
@@ -206,7 +204,7 @@ export async function POST(request: NextRequest) {
         console.error("Error while creating archive:", err);
         try {
           archive.emit("error", err);
-        } catch (_) {
+        } catch {
           // ignore
         }
       }

@@ -9,10 +9,19 @@ import {
   createCsrfError,
 } from "@/lib/auth";
 
+// Guard so expired-trash cleanup (incl. Telegram message deletion) runs at most once per hour per instance
+let lastCleanupRun = 0;
+
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request);
     await connectToDatabase();
+
+    // Opportunistic cleanup of expired trash + Telegram messages
+    if (Date.now() - lastCleanupRun > 60 * 60 * 1000) {
+      lastCleanupRun = Date.now();
+      (File as any).cleanupExpiredTrash().catch(() => {});
+    }
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1", 10);

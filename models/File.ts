@@ -6,6 +6,7 @@ export interface IFile extends Document {
   mime: string;
   fileId: string; // Telegram file_id (for chunks, each chunk has its own fileId)
   telegramFilePath?: string; // cached Telegram file_path (skip getFile call on download)
+  telegramMessageId?: string; // Telegram message_id of the uploaded document (for deleteMessage)
   owner: Types.ObjectId;
   folder: Types.ObjectId | null;
   deletedAt: Date | null;
@@ -105,6 +106,10 @@ const fileSchema = new Schema<IFile>({
     index: true,
   },
   telegramFilePath: {
+    type: String,
+    default: null,
+  },
+  telegramMessageId: {
     type: String,
     default: null,
   },
@@ -462,11 +467,21 @@ fileSchema.statics.findTrashByOwnerWithCount = async function (ownerId: string, 
 };
 
 fileSchema.statics.cleanupExpiredTrash = async function () {
+  const { telegramAPI } = await import("@/lib/telegram");
   const now = new Date();
   const expired = await this.find({ trashExpiresAt: { $lte: now }, deletedAt: { $ne: null } });
   let count = 0;
   for (const file of expired) {
+    if ((file as any).telegramMessageId) {
+      await telegramAPI.deleteMessage((file as any).telegramMessageId).catch(() => {});
+    }
     if ((file as any).chunkedId && (file as any).totalChunks > 1) {
+      const chunkDocs = await this.find({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } });
+      for (const c of chunkDocs) {
+        if ((c as any).telegramMessageId) {
+          await telegramAPI.deleteMessage((c as any).telegramMessageId).catch(() => {});
+        }
+      }
       await this.deleteMany({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
     }
     await this.findByIdAndDelete(file._id).catch(() => {});

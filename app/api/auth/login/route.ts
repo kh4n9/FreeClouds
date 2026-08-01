@@ -69,6 +69,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!user.isActive) {
+      return NextResponse.json(
+        { error: "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên." },
+        { status: 403 },
+      );
+    }
+
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {

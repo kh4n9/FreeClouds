@@ -186,6 +186,7 @@ export default function UploadDropzone({
           originalName: file.name,
           originalMime: file.type,
           totalSize,
+          totalChunks,
           folderId: folderId || null,
         }),
       });

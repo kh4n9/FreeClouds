@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
+import { telegramAPI } from "@/lib/telegram";
 import {
   requireAuth,
   AuthError,
@@ -34,7 +35,18 @@ export async function POST(request: NextRequest) {
         } catch {}
       }
 
+      // Delete the actual file from Telegram (best-effort)
+      if ((file as any).telegramMessageId) {
+        await telegramAPI.deleteMessage((file as any).telegramMessageId).catch(() => {});
+      }
+
       if ((file as any).chunkedId && (file as any).totalChunks > 1) {
+        const chunkDocs = await File.find({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } });
+        for (const c of chunkDocs) {
+          if ((c as any).telegramMessageId) {
+            await telegramAPI.deleteMessage((c as any).telegramMessageId).catch(() => {});
+          }
+        }
         await File.deleteMany({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
       }
       await File.findByIdAndDelete(file._id).catch(() => {});
