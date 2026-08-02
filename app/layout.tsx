@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import "@fontsource-variable/inter";
 import {
   generateMetadata as generateSEOMetadata,
   generateWebApplicationStructuredData,
@@ -68,11 +69,19 @@ export default function RootLayout({
         <link rel="alternate" href="https://free-clouds.vercel.app/" hrefLang="x-default" />
         <link rel="alternate" href="https://free-clouds.vercel.app/en" hrefLang="en" />
         <link rel="alternate" href="https://free-clouds.vercel.app/vi" hrefLang="vi" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet" />
         <link rel="dns-prefetch" href="//api.telegram.org" />
         <link rel="dns-prefetch" href="//mongodb.com" />
+        <Script
+          id="sw-register"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `if ("serviceWorker" in navigator) {
+              window.addEventListener("load", function () {
+                navigator.serviceWorker.register("/sw.js").catch(function () {});
+              });
+            }`,
+          }}
+        />
         <Script
           id="webapp-structured-data"
           type="application/ld+json"

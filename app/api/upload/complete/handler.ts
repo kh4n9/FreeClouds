@@ -71,6 +71,15 @@ export async function handleComplete(request: NextRequest) {
     const userStats = await File.getStorageUsage(user.id);
     const settings = await getSystemSettings();
     if ((userStats.totalSize || 0) + totalSize > settings.storageLimit) {
+      // Clean up orphaned chunks so they don't count against the user
+      Promise.all(
+        chunks.map((chunk) => {
+          if (chunk.telegramMessageId) {
+            telegramAPI.deleteMessage(chunk.telegramMessageId).catch(() => {});
+          }
+          return File.deleteOne({ _id: chunk._id }).catch(() => {});
+        }),
+      ).catch(() => {});
       return NextResponse.json({ error: "Storage limit exceeded" }, { status: 413 });
     }
 

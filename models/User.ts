@@ -7,6 +7,8 @@ export interface IUser extends Document {
   passwordHash: string;
   role: "user" | "admin";
   isActive: boolean;
+  emailVerified: boolean;
+  avatar?: string;
   lastLoginAt?: Date;
   totalFilesUploaded: number;
   totalStorageUsed: number;
@@ -75,6 +77,14 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: true,
       required: true,
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    avatar: {
+      type: String,
+      default: null,
     },
     lastLoginAt: {
       type: Date,

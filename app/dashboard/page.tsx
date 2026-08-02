@@ -5,13 +5,15 @@ import { useRouter } from "next/navigation";
 import {
   FolderPlus, Upload, RefreshCw, AlertCircle, X, Cloud, Search,
   HardDrive, FileIcon, FolderIcon, LogOut, Settings, Grid3X3,
-  List, ChevronLeft, ChevronRight, Sidebar, Trash2, FileText,
+  List, ChevronLeft, ChevronRight, ChevronDown, Sidebar, Trash2, FileText,
   RotateCcw, Clock, type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 const DynamicFileGrid = dynamic(() => import("@/components/FileGrid"), { ssr: false });
 const DynamicUploadDropzone = dynamic(() => import("@/components/UploadDropzone"), { ssr: false });
 const DynamicUserProfile = dynamic(() => import("@/components/UserProfile"), { ssr: false });
+const DynamicShareModal = dynamic(() => import("@/components/ShareModal"), { ssr: false });
+const DynamicMoveModal = dynamic(() => import("@/components/MoveModal"), { ssr: false });
 import Navbar from "@/components/Navbar";
 import PlainFolderTree from "@/components/PlainFolderTree";
 import ContextMenu from "@/components/ContextMenu";
@@ -195,6 +197,7 @@ export default function DashboardPage() {
   const [showUpload, setShowUpload] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [shareFile, setShareFile] = useState<FileData | null>(null);
   const [createFolderParent, setCreateFolderParent] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -231,6 +234,11 @@ export default function DashboardPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const PAGE_SIZE = 50;
+  const [filesPage, setFilesPage] = useState(1);
+  const [filesTotalPages, setFilesTotalPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const loadFiles = useCallback(async (folderId: string | null, search: string, useCache = true) => {
     const cacheKey = `${folderId || ""}|${search}`;
     if (useCache && fileCache.current.has(cacheKey)) {
@@ -245,16 +253,40 @@ export default function DashboardPage() {
       const params = new URLSearchParams();
       if (folderId) params.set("folderId", folderId);
       if (search) params.set("q", search);
+      params.set("page", "1");
+      params.set("limit", String(PAGE_SIZE));
       const res = await fetch(`/api/files?${params}`);
       if (res.ok) {
         const data = await res.json();
         const result = data.files;
         fileCache.current.set(cacheKey, result);
         setFiles(result);
+        setFilesPage(1);
+        setFilesTotalPages(data.totalPages || 1);
       }
     } catch { setError("Failed to load files"); }
     finally { setFilesLoading(false); }
   }, []);
+
+  const loadMoreFiles = useCallback(async () => {
+    if (loadingMore || filesPage >= filesTotalPages) return;
+    setLoadingMore(true);
+    try {
+      const params = new URLSearchParams();
+      if (selectedFolderId) params.set("folderId", selectedFolderId);
+      if (debouncedSearch) params.set("q", debouncedSearch);
+      params.set("page", String(filesPage + 1));
+      params.set("limit", String(PAGE_SIZE));
+      const res = await fetch(`/api/files?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setFiles((prev) => [...prev, ...data.files]);
+        setFilesPage(data.page || filesPage + 1);
+        setFilesTotalPages(data.totalPages || 1);
+      }
+    } catch { /* ignore */ }
+    finally { setLoadingMore(false); }
+  }, [loadingMore, filesPage, filesTotalPages, selectedFolderId, debouncedSearch]);
 
   const refreshFolders = useCallback(async () => {
     setFoldersLoading(true);
@@ -388,6 +420,16 @@ export default function DashboardPage() {
     a.click();
     document.body.removeChild(a);
   };
+
+  const handleShare = useCallback((file: FileData) => {
+    setShareFile(file);
+  }, []);
+
+  const [moveFile, setMoveFile] = useState<FileData | null>(null);
+
+  const handleMove = useCallback((file: FileData) => {
+    setMoveFile(file);
+  }, []);
 
   const loadTrashFiles = useCallback(async () => {
     setTrashLoading(true);
@@ -789,7 +831,18 @@ export default function DashboardPage() {
                       )}
                       <DynamicFileGrid files={files} loading={filesLoading}
                         onDownload={handleDownload} onDelete={handleDeleteFile}
+                        onShare={handleShare} onMove={handleMove}
                         viewMode={viewMode} onViewModeChange={setViewMode} />
+
+                      {files.length > 0 && filesPage < filesTotalPages && (
+                        <div className="mt-6 flex justify-center pb-6">
+                          <button onClick={loadMoreFiles} disabled={loadingMore}
+                            className="btn-secondary px-5 py-2.5 rounded-xl text-sm flex items-center gap-2 disabled:opacity-50">
+                            {loadingMore ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
+                            {loadingMore ? "Loading..." : `Load More (${files.length} of ${filesTotalPages * PAGE_SIZE}+)`}
+                          </button>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -827,6 +880,21 @@ export default function DashboardPage() {
           <DynamicUserProfile isOpen={showUserProfile} onClose={() => setShowUserProfile(false)} user={user!} onUserUpdate={handleUserUpdate} />
         </Suspense>
       </Modal>
+
+      {shareFile && (
+        <DynamicShareModal fileId={shareFile.id} fileName={shareFile.displayName || shareFile.name}
+          onClose={() => setShareFile(null)}
+          onToast={(type, message) => { setToast({ type, message }); setTimeout(() => setToast(null), 3000); }} />
+      )}
+
+      {moveFile && (
+        <DynamicMoveModal isOpen={!!moveFile}
+          onClose={() => setMoveFile(null)}
+          file={{ id: moveFile.id, name: moveFile.displayName || moveFile.name }}
+          folders={folders}
+          currentFolderId={selectedFolderId}
+          onMoved={() => { fileCache.current.clear(); loadFiles(selectedFolderId, debouncedSearch, false); setToast({ type: "success", message: "File moved" }); setTimeout(() => setToast(null), 3000); }} />
+      )}
 
       <CreateFolderModal show={showCreateFolder} loading={creatingFolder} onClose={() => { setShowCreateFolder(false); setNewFolderName(""); }} onConfirm={confirmCreateFolder} />
 

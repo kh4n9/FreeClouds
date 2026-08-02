@@ -95,6 +95,10 @@ export const RATE_LIMITS = {
     maxRequests: 100,
     windowMs: 5 * 60 * 1000, // 5 minutes
   },
+  DOWNLOAD: {
+    maxRequests: 20,
+    windowMs: 5 * 60 * 1000, // 5 minutes
+  },
 } as const;
 
 export function checkRateLimit(

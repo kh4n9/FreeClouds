@@ -187,6 +187,32 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ id: file._id.toString(), restored: true }, { status: 200 });
     }
 
+    if (action === "move") {
+      const targetFolderId = body.folderId === null ? null : String(body.folderId || "");
+      if (body.folderId !== null && targetFolderId && targetFolderId.length !== 24) {
+        return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
+      }
+      const file = await File.findById(fileId);
+      if (!file || file.deletedAt) return NextResponse.json({ error: "File not found" }, { status: 404 });
+      if (!(await verifyOwnership(user.id, file))) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+
+      if (targetFolderId) {
+        const { Folder } = await import("@/models/Folder");
+        const targetFolder = await Folder.findOne({
+          _id: targetFolderId,
+          owner: user.id,
+        });
+        if (!targetFolder) {
+          return NextResponse.json({ error: "Target folder not found" }, { status: 404 });
+        }
+        file.folder = targetFolder._id;
+      } else {
+        file.folder = null;
+      }
+      await file.save();
+      return NextResponse.json({ id: file._id.toString(), folderId: targetFolderId }, { status: 200 });
+    }
+
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (error) {
     console.error("Patch file error:", error);

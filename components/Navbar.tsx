@@ -11,6 +11,7 @@ interface NavbarProps {
     email: string;
     name: string;
     role?: string;
+    avatar?: string | null;
   } | null;
   onLogout?: () => void;
   onOpenUserProfile?: () => void;
@@ -85,8 +86,13 @@ export default function Navbar({
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-2 px-2 py-2 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all min-h-[44px]"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-full flex items-center justify-center shrink-0">
-                  <User className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-400">
+                  {user.avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-4 h-4 text-white" />
+                  )}
                 </div>
                 <div className="hidden md:block text-left">
                   <div className="font-medium text-white">{user.name}</div>

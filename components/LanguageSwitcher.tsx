@@ -410,6 +410,26 @@ export const commonTranslations = {
     en: "Verification code sent to your email",
     vi: "Mã xác nhận đã được gửi đến email của bạn",
   },
+  emailVerified: { en: "Email verified", vi: "Email đã xác thực" },
+  emailNotVerified: {
+    en: "Email not verified",
+    vi: "Email chưa xác thực",
+  },
+  verifyEmailPrompt: {
+    en: "Verify your email to secure your account and unlock all features.",
+    vi: "Xác thực email để bảo mật tài khoản và mở khóa mọi tính năng.",
+  },
+  verifyNow: { en: "Verify now", vi: "Xác thực ngay" },
+  verifyEmail: { en: "Verify Email", vi: "Xác thực Email" },
+  enterVerificationCode: {
+    en: "Enter the 6-digit code sent to your email",
+    vi: "Nhập mã 6 chữ số được gửi đến email của bạn",
+  },
+  emailVerifiedSuccess: {
+    en: "Email verified successfully!",
+    vi: "Xác thực email thành công!",
+  },
+  resendCode: { en: "Resend code", vi: "Gửi lại mã" },
   enter6DigitCode: {
     en: "Please enter the 6-digit verification code",
     vi: "Vui lòng nhập mã xác minh 6 chữ số",
@@ -418,7 +438,6 @@ export const commonTranslations = {
     en: "New verification code sent!",
     vi: "Đã gửi mã xác minh mới!",
   },
-  resendCode: { en: "Resend code", vi: "Gửi lại mã" },
   confirmDeletion: {
     en: "Confirm account deletion",
     vi: "Xác nhận xóa tài khoản",

@@ -28,6 +28,8 @@ import {
   Settings,
   Lock,
   GitBranch,
+  Link2,
+  Folder,
 } from "lucide-react";
 import {
   getFileTypeInfo,
@@ -61,6 +63,8 @@ interface FileGridProps {
   loading?: boolean;
   onDownload: (fileId: string, fileName: string) => void;
   onDelete: (fileId: string) => void;
+  onShare?: (file: FileData) => void;
+  onMove?: (file: FileData) => void;
   onSearch?: (query: string) => void;
   searchQuery?: string;
   viewMode?: "grid" | "list";
@@ -72,6 +76,8 @@ interface FileItemProps {
   viewMode: "grid" | "list";
   onDownload: (fileId: string, fileName: string) => void;
   onDelete: (fileId: string) => void;
+  onShare: ((file: FileData) => void) | undefined;
+  onMove: ((file: FileData) => void) | undefined;
   onPreview: (file: FileData) => void;
   // New props for bulk selection support
   selected?: boolean;
@@ -134,6 +140,8 @@ function FileItem({
   viewMode,
   onDownload,
   onDelete,
+  onShare,
+  onMove,
   onPreview,
   selected = false,
   onToggleSelect,
@@ -155,6 +163,16 @@ function FileItem({
   const handleDelete = () => {
     // Delegate confirmation to parent (in-app modal). Parent will show a nicer confirmation UI.
     onDelete(file.id);
+    setIsMenuOpen(false);
+  };
+
+  const handleShare = () => {
+    onShare?.(file);
+    setIsMenuOpen(false);
+  };
+
+  const handleMove = () => {
+    onMove?.(file);
     setIsMenuOpen(false);
   };
 
@@ -219,6 +237,8 @@ function FileItem({
   const contextMenuItems: ContextMenuAction[] = [
     { label: "Preview", icon: <Eye className="w-4 h-4" />, onClick: handlePreview },
     { label: "Download", icon: <Download className="w-4 h-4" />, onClick: handleDownload },
+    { label: "Share", icon: <Link2 className="w-4 h-4" />, onClick: handleShare },
+    { label: "Move", icon: <Folder className="w-4 h-4" />, onClick: handleMove },
     { divider: true },
     {
       label: "Copy Name", icon: <FileText className="w-4 h-4" />, onClick: () => {
@@ -393,6 +413,8 @@ export default function FileGrid({
   loading = false,
   onDownload,
   onDelete,
+  onShare,
+  onMove,
   onSearch,
   searchQuery = "",
   viewMode = "grid",
@@ -873,6 +895,8 @@ export default function FileGrid({
                     viewMode={viewMode}
                     onDownload={onDownload}
                     onDelete={onDelete}
+                    onShare={onShare}
+                    onMove={onMove}
                     onPreview={handleFilePreview}
                     selected={selectedFiles.includes(file.id)}
                     onToggleSelect={handleSelectFile}
@@ -888,6 +912,8 @@ export default function FileGrid({
                     viewMode={viewMode}
                     onDownload={onDownload}
                     onDelete={onDelete}
+                    onShare={onShare}
+                    onMove={onMove}
                     onPreview={handleFilePreview}
                     selected={selectedFiles.includes(file.id)}
                     onToggleSelect={handleSelectFile}

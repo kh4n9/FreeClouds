@@ -8,11 +8,16 @@ import mongoose, {
   Types,
 } from "mongoose";
 
+export type VerificationType =
+  | "password_reset"
+  | "account_deletion"
+  | "email_verification";
+
 export interface IVerificationCode extends Document {
   _id: Types.ObjectId;
   email: string;
   code: string;
-  type: "password_reset" | "account_deletion";
+  type: VerificationType;
   expiresAt: Date;
   used: boolean;
   createdAt: Date;
@@ -25,11 +30,11 @@ export interface IVerificationCodeModel extends Model<IVerificationCode> {
   findValidCode(
     email: string,
     code: string,
-    type: "password_reset" | "account_deletion",
+    type: VerificationType,
   ): Promise<IVerificationCode | null>;
   invalidateUserCodes(
     email: string,
-    type?: "password_reset" | "account_deletion",
+    type?: VerificationType,
   ): Promise<UpdateWriteOpResult>;
   cleanupExpired(): Promise<DeleteResult>;
 }
@@ -51,7 +56,7 @@ const VerificationCodeSchema = new Schema<IVerificationCode>(
     type: {
       type: String,
       required: [true, "Verification type is required"],
-      enum: ["password_reset", "account_deletion"],
+      enum: ["password_reset", "account_deletion", "email_verification"],
     },
     expiresAt: {
       type: Date,
@@ -87,7 +92,7 @@ VerificationCodeSchema.methods.isValid = function (): boolean {
 VerificationCodeSchema.statics.findValidCode = function (
   email: string,
   code: string,
-  type: "password_reset" | "account_deletion",
+  type: VerificationType,
 ) {
   return this.findOne({
     email: email.toLowerCase(),
@@ -101,7 +106,7 @@ VerificationCodeSchema.statics.findValidCode = function (
 // Static method to invalidate all codes for user
 VerificationCodeSchema.statics.invalidateUserCodes = function (
   email: string,
-  type?: "password_reset" | "account_deletion",
+  type?: VerificationType,
 ) {
   const query: FilterQuery<IVerificationCode> = {
     email: email.toLowerCase(),

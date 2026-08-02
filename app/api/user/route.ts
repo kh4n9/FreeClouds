@@ -29,6 +29,17 @@ const changePasswordSchema = z
     path: ["confirmPassword"],
   });
 
+const updateAvatarSchema = z.object({
+  avatar: z
+    .string()
+    .min(1, "Avatar is required")
+    .max(5 * 1024 * 1024, "Avatar too large")
+    .refine(
+      (v) => /^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(v),
+      "Invalid avatar data",
+    ),
+});
+
 export async function GET(request: NextRequest) {
   try {
     // Authentication required
@@ -53,6 +64,8 @@ export async function GET(request: NextRequest) {
         id: userDoc._id.toString(),
         name: userDoc.name,
         email: userDoc.email,
+        emailVerified: Boolean(userDoc.emailVerified),
+        avatar: userDoc.avatar || null,
         createdAt: userDoc.createdAt,
         updatedAt: userDoc.updatedAt,
         stats: {
@@ -126,9 +139,10 @@ export async function PATCH(request: NextRequest) {
       }
 
       // Update user profile
+      // Changing the email resets verification status until re-verified
       const updatedUser = await User.findByIdAndUpdate(
         user.id,
-        { name, email },
+        { name, email, emailVerified: false },
         { new: true, runValidators: true },
       ).select("-password");
 
@@ -143,9 +157,55 @@ export async function PATCH(request: NextRequest) {
             id: updatedUser._id.toString(),
             name: updatedUser.name,
             email: updatedUser.email,
+            emailVerified: Boolean(updatedUser.emailVerified),
+            avatar: updatedUser.avatar || null,
             createdAt: updatedUser.createdAt,
             updatedAt: updatedUser.updatedAt,
           },
+        },
+        { status: 200 },
+      );
+    } else if (action === "update-avatar") {
+      const validation = updateAvatarSchema.safeParse(body);
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: "Invalid avatar image" },
+          { status: 400 },
+        );
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+        user.id,
+        { avatar: validation.data.avatar },
+        { new: true, runValidators: true },
+      );
+
+      if (!updatedUser) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      return NextResponse.json(
+        {
+          message: "Avatar updated successfully",
+          avatar: updatedUser.avatar || null,
+        },
+        { status: 200 },
+      );
+    } else if (action === "remove-avatar") {
+      const updatedUser = await User.findByIdAndUpdate(
+        user.id,
+        { avatar: null },
+        { new: true },
+      );
+
+      if (!updatedUser) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      return NextResponse.json(
+        {
+          message: "Avatar removed",
+          avatar: null,
         },
         { status: 200 },
       );
@@ -174,7 +234,7 @@ export async function PATCH(request: NextRequest) {
       }
 
       // Verify current password
-      const passwordHash = (userDoc as { password?: string }).password;
+      const passwordHash = (userDoc as { passwordHash?: string }).passwordHash;
       if (!passwordHash) {
         return NextResponse.json(
           { error: "Password not set for this account" },
@@ -198,7 +258,7 @@ export async function PATCH(request: NextRequest) {
 
       // Update password
       await User.findByIdAndUpdate(user.id, {
-        password: hashedNewPassword,
+        passwordHash: hashedNewPassword,
       });
 
       return NextResponse.json(

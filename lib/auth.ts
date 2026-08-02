@@ -9,6 +9,8 @@ export interface AuthUser {
   email: string;
   name: string;
   role: string;
+  emailVerified: boolean;
+  avatar?: string | null;
 }
 
 export async function getUserFromRequest(
@@ -37,6 +39,8 @@ export async function getUserFromRequest(
       email: user.email,
       name: user.name,
       role: user.role,
+      emailVerified: Boolean(user.emailVerified),
+      avatar: user.avatar || null,
     };
   } catch (error) {
     console.error("Error getting user from request:", error);

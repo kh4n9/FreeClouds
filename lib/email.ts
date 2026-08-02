@@ -10,7 +10,7 @@ interface EmailOptions {
 interface VerificationCodeData {
   email: string;
   code: string;
-  type: "password_reset" | "account_deletion";
+  type: "password_reset" | "account_deletion" | "email_verification";
   expiresAt: Date;
 }
 
@@ -205,6 +205,158 @@ export async function sendPasswordResetEmail(
     Không chia sẻ mã này với bất kỳ ai.
 
     Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.
+
+    ---
+    Free Clouds
+    By Hoàng Minh Khang
+  `;
+
+  return await sendEmail({
+    to: email,
+    subject,
+    html,
+    text,
+  });
+}
+
+// Send email verification email
+export async function sendVerificationEmail(
+  email: string,
+  code: string,
+): Promise<boolean> {
+  const subject = "Xác thực email Free Clouds";
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Xác thực email</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        .container {
+          background: #ffffff;
+          border-radius: 12px;
+          padding: 40px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .logo {
+          background: #3B82F6;
+          color: white;
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          font-weight: bold;
+          margin-bottom: 20px;
+        }
+        .title {
+          color: #1F2937;
+          font-size: 24px;
+          font-weight: 600;
+          margin: 0;
+        }
+        .code-container {
+          background: #F3F4F6;
+          border: 2px dashed #D1D5DB;
+          border-radius: 8px;
+          padding: 20px;
+          text-align: center;
+          margin: 30px 0;
+        }
+        .code {
+          font-size: 32px;
+          font-weight: bold;
+          font-family: 'Courier New', monospace;
+          color: #3B82F6;
+          letter-spacing: 4px;
+        }
+        .warning {
+          background: #FEF3C7;
+          border: 1px solid #F59E0B;
+          border-radius: 6px;
+          padding: 16px;
+          margin: 20px 0;
+        }
+        .warning-title {
+          color: #92400E;
+          font-weight: 600;
+          margin: 0 0 8px 0;
+        }
+        .warning-text {
+          color: #92400E;
+          margin: 0;
+          font-size: 14px;
+        }
+        .footer {
+          text-align: center;
+          margin-top: 30px;
+          padding-top: 20px;
+          border-top: 1px solid #E5E7EB;
+          color: #6B7280;
+          font-size: 14px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">FC</div>
+          <h1 class="title">Xác thực email</h1>
+        </div>
+
+        <p>Xin chào,</p>
+        <p>Bạn đã yêu cầu xác thực địa chỉ email cho tài khoản Free Clouds của mình. Sử dụng mã xác thực dưới đây:</p>
+
+        <div class="code-container">
+          <div class="code">${code}</div>
+        </div>
+
+        <div class="warning">
+          <p class="warning-title">⚠️ Lưu ý bảo mật</p>
+          <p class="warning-text">
+            • Mã này có hiệu lực trong 15 phút<br>
+            • Không chia sẻ mã này với bất kỳ ai<br>
+            • Nếu bạn không yêu cầu xác thực email, vui lòng bỏ qua email này
+          </p>
+        </div>
+
+        <div class="footer">
+          <p>Email này được gửi từ <strong>Free Clouds</strong></p>
+          <p>By Hoàng Minh Khang</p>
+          <p style="margin-top: 10px; font-size: 12px;">
+            Đây là email tự động, vui lòng không trả lời email này.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const text = `
+    Xác thực email Free Clouds
+
+    Mã xác thực của bạn là: ${code}
+
+    Mã này có hiệu lực trong 15 phút.
+    Không chia sẻ mã này với bất kỳ ai.
+
+    Nếu bạn không yêu cầu xác thực email, vui lòng bỏ qua email này.
 
     ---
     Free Clouds

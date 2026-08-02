@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   X,
   User,
@@ -14,6 +14,10 @@ import {
   Trash2,
   AlertTriangle,
   Shield,
+  BadgeCheck,
+  Clock,
+  Camera,
+  Trash,
 } from "lucide-react";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 
@@ -21,6 +25,8 @@ interface UserData {
   id: string;
   name: string;
   email: string;
+  emailVerified?: boolean;
+  avatar?: string | null;
   createdAt: string;
   updatedAt: string;
   stats?: {
@@ -76,6 +82,17 @@ export default function UserProfile({
   const [showDeletionModal, setShowDeletionModal] = useState(false);
   const [deletionCountdown, setDeletionCountdown] = useState(0);
 
+  // Email verification state
+  const [verifyStep, setVerifyStep] = useState<"idle" | "code">("idle");
+  const [verifyCode, setVerifyCode] = useState("");
+  const [verifyCountdown, setVerifyCountdown] = useState(0);
+  const [verifying, setVerifying] = useState(false);
+
+  // Avatar state
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarSaving, setAvatarSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const loadUserStats = async () => {
     try {
       const response = await fetch("/api/user");
@@ -108,6 +125,10 @@ export default function UserProfile({
       setDeletionCode("");
       setDeletionCountdown(0);
       setShowPasswords({ current: false, new: false, confirm: false });
+      setVerifyStep("idle");
+      setVerifyCode("");
+      setVerifyCountdown(0);
+      setAvatarPreview(null);
     }
   }, [isOpen]);
 
@@ -118,6 +139,14 @@ export default function UserProfile({
     }
     return () => clearTimeout(timer);
   }, [deletionCountdown]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (verifyCountdown > 0) {
+      timer = setTimeout(() => setVerifyCountdown(verifyCountdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [verifyCountdown]);
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,6 +278,149 @@ export default function UserProfile({
     setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
+  const handleSendVerification = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const response = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "send" }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setVerifyStep("code");
+        setVerifyCountdown(60);
+        setSuccess(t("verificationCodeSent", commonTranslations.verificationCodeSent));
+      } else {
+        setError(data.error || t("error", commonTranslations.error));
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    if (!verifyCode || verifyCode.length !== 6) {
+      setError(t("enter6DigitCode", commonTranslations.enter6DigitCode));
+      return;
+    }
+    setVerifying(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const response = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verify", code: verifyCode }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSuccess(t("emailVerifiedSuccess", commonTranslations.emailVerifiedSuccess));
+        setVerifyStep("idle");
+        setVerifyCode("");
+        loadUserStats();
+        onUserUpdate({ ...user!, emailVerified: true });
+      } else {
+        setError(data.error || t("error", commonTranslations.error));
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be under 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 256;
+        const canvas = document.createElement("canvas");
+        const ratio = Math.min(size / img.width, size / img.height, 1);
+        canvas.width = Math.max(1, Math.round(img.width * ratio));
+        canvas.height = Math.max(1, Math.round(img.height * ratio));
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          setAvatarPreview(reader.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setAvatarPreview(canvas.toDataURL("image/jpeg", 0.8));
+      };
+      img.onerror = () => setError("Could not read image");
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveAvatar = async () => {
+    if (!avatarPreview) return;
+    setAvatarSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const response = await fetch("/api/user", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update-avatar", avatar: avatarPreview }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSuccess("Avatar updated");
+        setAvatarPreview(null);
+        loadUserStats();
+        onUserUpdate({ ...user!, avatar: data.avatar });
+      } else {
+        setError(data.error || "Failed to update avatar");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setAvatarSaving(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setAvatarSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const response = await fetch("/api/user", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "remove-avatar" }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSuccess("Avatar removed");
+        setAvatarPreview(null);
+        loadUserStats();
+        onUserUpdate({ ...user!, avatar: null });
+      } else {
+        setError(data.error || "Failed to remove avatar");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setAvatarSaving(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -302,7 +474,122 @@ export default function UserProfile({
 
           {/* Profile Tab */}
           {activeTab === "profile" && (
-            <form onSubmit={handleProfileSubmit} className="space-y-5">
+            <>
+              {/* Email verification card */}
+              <div className={`mb-5 rounded-xl border p-4 ${userStats?.emailVerified ? "bg-emerald-500/5 border-emerald-500/20" : "bg-amber-500/5 border-amber-500/20"}`}>
+                <div className="flex items-start gap-3">
+                  {userStats?.emailVerified ? (
+                    <div className="w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                      <BadgeCheck className="w-5 h-5 text-emerald-400" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 shrink-0 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-amber-400" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${userStats?.emailVerified ? "text-emerald-300" : "text-amber-300"}`}>
+                      {userStats?.emailVerified
+                        ? t("emailVerified", commonTranslations.emailVerified)
+                        : t("emailNotVerified", commonTranslations.emailNotVerified)}
+                    </p>
+                    {userStats?.emailVerified ? (
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {userStats.email}
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          {t("verifyEmailPrompt", commonTranslations.verifyEmailPrompt)}
+                        </p>
+                        {verifyStep === "code" ? (
+                          <div className="mt-3 space-y-2">
+                            <input
+                              type="text"
+                              maxLength={6}
+                              value={verifyCode}
+                              onChange={(e) => { setVerifyCode(e.target.value.replace(/\D/g, "")); setError(null); }}
+                              className="input-modern w-full px-4 py-2 rounded-xl text-center text-lg font-mono tracking-widest"
+                              placeholder="000000"
+                              disabled={verifying}
+                            />
+                            <div className="flex items-center justify-between">
+                              <button onClick={handleSendVerification}
+                                disabled={verifyCountdown > 0 || loading}
+                                className="text-sky-400 hover:text-sky-300 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                {verifyCountdown > 0 ? `Resend in ${verifyCountdown}s` : t("resendCode", commonTranslations.resendCode)}
+                              </button>
+                              <button onClick={handleVerifyEmail}
+                                disabled={verifying || verifyCode.length !== 6}
+                                className="px-4 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-blue-500 to-cyan-400 text-white disabled:opacity-50 transition-all">
+                                {verifying ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : t("verifyEmail", commonTranslations.verifyEmail)}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button onClick={handleSendVerification} disabled={loading}
+                            className="mt-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all">
+                            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : t("verifyNow", commonTranslations.verifyNow)}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Avatar card */}
+              <div className="mb-5 rounded-xl border border-slate-700/50 bg-slate-800/40 p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shrink-0">
+                    {avatarPreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
+                    ) : userStats?.avatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={userStats.avatar} alt={userStats.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-8 h-8 text-white" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white">Profile picture</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {avatarPreview ? "Preview of your new photo" : "PNG, JPG or WebP up to 5MB"}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleAvatarFile} className="hidden" />
+                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={avatarSaving}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-blue-500/10 border border-blue-500/30 text-sky-300 hover:bg-blue-500/20 transition-all disabled:opacity-50">
+                    <Camera className="w-3.5 h-3.5" />
+                    Choose photo
+                  </button>
+                  {avatarPreview && (
+                    <>
+                      <button type="button" onClick={handleSaveAvatar} disabled={avatarSaving}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium btn-primary disabled:opacity-50">
+                        {avatarSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                        Save
+                      </button>
+                      <button type="button" onClick={() => { setAvatarPreview(null); setError(null); }} disabled={avatarSaving}
+                        className="px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all disabled:opacity-50">
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                  {!avatarPreview && userStats?.avatar && (
+                    <button type="button" onClick={handleRemoveAvatar} disabled={avatarSaving}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50">
+                      {avatarSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash className="w-3.5 h-3.5" />}
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <form onSubmit={handleProfileSubmit} className="space-y-5">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
                   {t("fullName", commonTranslations.fullName)}
@@ -376,6 +663,7 @@ export default function UserProfile({
                 {loading ? "Updating..." : "Update Profile"}
               </button>
             </form>
+            </>
           )}
 
           {/* Password Tab */}
