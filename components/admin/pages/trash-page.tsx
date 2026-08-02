@@ -192,7 +192,7 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
         <div className="bg-blue-500/10 border border-blue-200 rounded-lg p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-indigo-400 mr-2" />
+              <CheckCircle className="h-5 w-5 text-sky-400 mr-2" />
               <span className="text-sm font-medium text-blue-200">
                 {t.trash.filesSelected.replace(
                   "{n}",
@@ -232,7 +232,7 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
                       type="checkbox"
                       checked={selectedFiles.length === files.length && files.length > 0}
                       onChange={handleSelectAll}
-                      className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                      className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
                     />
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
@@ -268,7 +268,7 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
                           type="checkbox"
                           checked={selectedFiles.includes(file.id)}
                           onChange={() => handleSelectFile(file.id)}
-                          className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                          className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

@@ -99,7 +99,7 @@ export function PerformanceBadge({ className = "" }: { className?: string }) {
 // PWA badge
 export function PWABadge({ className = "" }: { className?: string }) {
   return (
-    <div className={`inline-flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 text-gray-700 border border-purple-200 rounded-full px-3 py-1.5 text-xs font-medium ${className}`}>
+    <div className={`inline-flex items-center gap-2 bg-gradient-to-r from-cyan-50 to-pink-50 text-gray-700 border border-cyan-200 rounded-full px-3 py-1.5 text-xs font-medium ${className}`}>
       <span role="img" aria-label="Mobile phone">📱</span>
       <span>PWA Ready</span>
     </div>

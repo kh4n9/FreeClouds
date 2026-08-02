@@ -209,9 +209,9 @@ export default function AdminUserDetailPage({
     "bg-green-500",
     "bg-yellow-500",
     "bg-red-500",
-    "bg-purple-500",
+    "bg-cyan-500",
     "bg-pink-500",
-    "bg-indigo-500",
+    "bg-sky-500",
     "bg-gray-500",
     "bg-orange-500",
     "bg-teal-500",
@@ -316,7 +316,7 @@ export default function AdminUserDetailPage({
                 {user.role === "admin" ? (
                   <Shield className="h-10 w-10 text-red-400" />
                 ) : (
-                  <User className="h-10 w-10 text-indigo-400" />
+                  <User className="h-10 w-10 text-sky-400" />
                 )}
               </div>
             </div>
@@ -387,7 +387,7 @@ export default function AdminUserDetailPage({
               <button
                 onClick={handleToggleRole}
                 disabled={actionLoading}
-                className="inline-flex items-center px-3 py-2 border border-indigo-500/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-indigo-300 bg-slate-800/50 hover:bg-blue-500/10 disabled:opacity-50"
+                className="inline-flex items-center px-3 py-2 border border-cyan-500/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-blue-300 bg-slate-800/50 hover:bg-blue-500/10 disabled:opacity-50"
               >
                 <Shield className="mr-2 h-4 w-4" />
                 {user.role === "admin"
@@ -445,7 +445,7 @@ export default function AdminUserDetailPage({
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <HardDrive className="h-8 w-8 text-purple-500" />
+                <HardDrive className="h-8 w-8 text-cyan-500" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
@@ -580,7 +580,7 @@ export default function AdminUserDetailPage({
             <div className="px-6 py-3 border-t border-slate-700/50">
               <Link
                 href={`${base}/files?user=${userId}`}
-                className="text-sm text-indigo-400 hover:text-blue-500 font-medium"
+                className="text-sm text-sky-400 hover:text-blue-500 font-medium"
               >
                 {t.userDetail.viewAllUserFiles}
               </Link>

@@ -312,7 +312,7 @@ function PieChart({
     "#f59e0b",
     "#10b981",
     "#3b82f6",
-    "#8b5cf6",
+    "#06b6d4",
     "#ec4899",
     "#06b6d4",
   ];
@@ -586,7 +586,7 @@ export default function AnalyticsCharts({ lang = "en" }: { lang?: Lang }) {
                                 "#f59e0b",
                                 "#10b981",
                                 "#3b82f6",
-                                "#8b5cf6",
+                                "#06b6d4",
                                 "#ec4899",
                                 "#06b6d4",
                               ][

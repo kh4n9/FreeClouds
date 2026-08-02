@@ -307,7 +307,7 @@ export function Pagination({
                   onClick={() => onPageChange(pageNum)}
                   className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                     pageNum === currentPage
-                      ? "z-10 bg-blue-500/10 border-blue-500 text-indigo-400"
+                      ? "z-10 bg-blue-500/10 border-blue-500 text-sky-400"
                       : "bg-slate-800/50 border-slate-600/50 text-slate-400 hover:bg-slate-800/30"
                   }`}
                 >

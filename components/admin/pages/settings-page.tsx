@@ -161,7 +161,7 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-slate-800/50 shadow rounded-lg">
             <div className="px-6 py-4 border-b border-slate-700/50 flex items-center">
-              <Globe className="h-5 w-5 text-indigo-400 mr-2" />
+              <Globe className="h-5 w-5 text-sky-400 mr-2" />
               <h3 className="text-lg font-medium text-white">
                 {t.settings.sectionGeneral}
               </h3>
@@ -199,7 +199,7 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
                   type="checkbox"
                   checked={allowRegistration}
                   onChange={(e) => setAllowRegistration(e.target.checked)}
-                  className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                  className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
                 />
                 <span className="ml-3 text-sm text-slate-200">
                   {t.settings.allowRegistration}
@@ -210,7 +210,7 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
 
           <div className="bg-slate-800/50 shadow rounded-lg">
             <div className="px-6 py-4 border-b border-slate-700/50 flex items-center">
-              <HardDrive className="h-5 w-5 text-purple-400 mr-2" />
+              <HardDrive className="h-5 w-5 text-cyan-400 mr-2" />
               <h3 className="text-lg font-medium text-white">
                 {t.settings.sectionStorage}
               </h3>
@@ -248,7 +248,7 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
         <div className="lg:col-span-1">
           <div className="bg-slate-800/50 shadow rounded-lg p-6 sticky top-6">
             <div className="flex items-center mb-4">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
                 <SettingsIcon className="h-5 w-5 text-white" />
               </div>
               <div className="ml-3">

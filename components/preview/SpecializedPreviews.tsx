@@ -70,7 +70,7 @@ export function ArchivePreview({ file, onDownload }: SpecializedPreviewProps) {
     "application/gzip": {
       name: "GZIP Archive",
       icon: Archive,
-      color: "text-purple-600",
+      color: "text-cyan-500",
     },
   };
 
@@ -124,7 +124,7 @@ export function Model3DPreview({ file, onDownload }: SpecializedPreviewProps) {
   const modelTypes = {
     "model/obj": { name: "OBJ 3D Model", color: "text-blue-600" },
     "model/stl": { name: "STL 3D Model", color: "text-green-600" },
-    "model/gltf+json": { name: "GLTF 3D Model", color: "text-purple-600" },
+    "model/gltf+json": { name: "GLTF 3D Model", color: "text-cyan-500" },
     "application/octet-stream": { name: "3D Model", color: "text-gray-600" },
   };
 
@@ -358,7 +358,7 @@ export function FontPreview({ file, onDownload }: SpecializedPreviewProps) {
   return (
     <div className="flex items-center justify-center h-full">
       <div className="text-center max-w-lg p-8">
-        <div className="text-indigo-600 mb-4">
+        <div className="text-sky-600 mb-4">
           <Palette className="w-24 h-24 mx-auto" />
         </div>
         <h3 className="text-xl font-semibold text-gray-900 mb-2">{fontType}</h3>

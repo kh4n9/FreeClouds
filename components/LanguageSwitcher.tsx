@@ -89,7 +89,7 @@ export default function LanguageSwitcher({
 
   const getButtonClasses = () => {
     const baseClasses =
-      "flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-md";
+      "flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-md";
 
     switch (variant) {
       case "compact":
@@ -141,7 +141,7 @@ export default function LanguageSwitcher({
                 onClick={() => handleLanguageChange(language)}
                 className={`w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-slate-700/50 transition-colors ${
                   currentLanguage.code === language.code
-                    ? "bg-indigo-500/10 text-indigo-400 font-medium"
+                    ? "bg-blue-500/10 text-sky-400 font-medium"
                     : "text-slate-300"
                 }`}
                 aria-label={`Switch to ${language.nativeName}`}
@@ -155,7 +155,7 @@ export default function LanguageSwitcher({
                 </span>
                 <span>{language.nativeName}</span>
                 {currentLanguage.code === language.code && (
-                  <span className="ml-auto text-indigo-400">✓</span>
+                  <span className="ml-auto text-sky-400">✓</span>
                 )}
               </button>
             ))}
@@ -212,7 +212,7 @@ export default function LanguageSwitcher({
               onClick={() => handleLanguageChange(language)}
               className={`w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-slate-700/50 transition-colors ${
                 currentLanguage.code === language.code
-                  ? "bg-indigo-500/10 text-indigo-400 font-medium"
+                  ? "bg-blue-500/10 text-sky-400 font-medium"
                   : "text-slate-300"
               }`}
               aria-label={`Switch to ${language.nativeName}`}
@@ -229,7 +229,7 @@ export default function LanguageSwitcher({
                 <span className="text-xs text-slate-500">{language.name}</span>
               </div>
               {currentLanguage.code === language.code && (
-                <span className="ml-auto text-indigo-400 font-medium">✓</span>
+                <span className="ml-auto text-sky-400 font-medium">✓</span>
               )}
             </button>
           ))}

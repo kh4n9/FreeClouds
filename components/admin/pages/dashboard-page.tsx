@@ -190,7 +190,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
         stats.folders.total - stats.folders.thisMonth,
       ),
       icon: FolderOpen,
-      color: "bg-purple-500",
+      color: "bg-cyan-500",
       href: `${base}/folders`,
     },
     {
@@ -302,7 +302,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <FolderOpen className="h-5 w-5 text-purple-500 mr-2" />
+                <FolderOpen className="h-5 w-5 text-cyan-500 mr-2" />
                 <span className="text-sm text-slate-300">
                   {t.dashboard.newFolders}
                 </span>
@@ -333,7 +333,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
               <div className="text-sm text-slate-300">
                 {t.dashboard.avgPerUser}
               </div>
-              <div className="text-lg font-semibold text-indigo-400">
+              <div className="text-lg font-semibold text-sky-400">
                 {formatFileSize(stats.users.storage.averageStorage)}
               </div>
             </div>
@@ -372,7 +372,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                         "bg-green-500",
                         "bg-yellow-500",
                         "bg-red-500",
-                        "bg-purple-500",
+                        "bg-cyan-500",
                       ][index % 5]
                     }`}
                   ></div>
@@ -463,7 +463,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                   <div className="flex items-center flex-1">
                     <div className="flex-shrink-0 mr-3">
                       <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-indigo-400">
+                        <span className="text-sm font-medium text-sky-400">
                           {index + 1}
                         </span>
                       </div>
@@ -537,7 +537,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                             className={`w-4 h-4 ${
                               user.role === "admin"
                                 ? "text-red-400"
-                                : "text-indigo-400"
+                                : "text-sky-400"
                             }`}
                           />
                         </div>
@@ -559,7 +559,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                         className={`text-xs ${
                           user.role === "admin"
                             ? "text-red-400"
-                            : "text-indigo-400"
+                            : "text-sky-400"
                         }`}
                       >
                         {user.role === "admin"
@@ -574,7 +574,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
             <div className="px-6 py-3 border-t border-slate-700/50">
               <Link
                 href={`${base}/users`}
-                className="text-sm text-indigo-400 hover:text-blue-500 font-medium"
+                className="text-sm text-sky-400 hover:text-blue-500 font-medium"
               >
                 {t.dashboard.viewAllUsers}
               </Link>
@@ -625,7 +625,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
             <div className="px-6 py-3 border-t border-slate-700/50">
               <Link
                 href={`${base}/files`}
-                className="text-sm text-indigo-400 hover:text-blue-500 font-medium"
+                className="text-sm text-sky-400 hover:text-blue-500 font-medium"
               >
                 {t.dashboard.viewAllFiles}
               </Link>
@@ -673,7 +673,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-8 w-8">
                         <div className="h-8 w-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-indigo-400">
+                          <span className="text-sm font-medium text-sky-400">
                             {user.name.charAt(0).toUpperCase()}
                           </span>
                         </div>

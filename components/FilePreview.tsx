@@ -668,7 +668,7 @@ export default function FilePreview({
             <div className="flex items-center justify-center h-full p-4">
               <div className="bg-white rounded-lg p-8 shadow-lg max-w-md w-full">
                 <div className="text-center mb-6">
-                  <Music className="w-16 h-16 text-purple-600 mx-auto mb-4" />
+                  <Music className="w-16 h-16 text-cyan-500 mx-auto mb-4" />
                   <h4
                     className="text-lg font-medium text-gray-900 truncate"
                     title={file.name}

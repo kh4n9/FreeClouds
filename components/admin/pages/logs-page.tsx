@@ -46,11 +46,11 @@ const ACTION_COLORS: Record<string, string> = {
   "register.blocked": "bg-red-100 text-red-800",
   "file.upload": "bg-green-100 text-green-800",
   "trash.empty": "bg-gray-100 text-gray-800",
-  "admin.user.create": "bg-indigo-100 text-indigo-800",
-  "admin.user.update": "bg-indigo-100 text-indigo-800",
+  "admin.user.create": "bg-sky-100 text-sky-800",
+  "admin.user.update": "bg-sky-100 text-sky-800",
   "admin.user.delete": "bg-red-100 text-red-800",
   "admin.file.restore": "bg-green-100 text-green-800",
-  "admin.folder.delete": "bg-purple-100 text-purple-800",
+  "admin.folder.delete": "bg-cyan-100 text-cyan-800",
   "admin.trash.restore": "bg-green-100 text-green-800",
   "admin.trash.delete": "bg-red-100 text-red-800",
   "admin.settings.update": "bg-amber-100 text-amber-800",
@@ -282,7 +282,7 @@ export default function AdminLogsPage({ lang }: { lang: Lang }) {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => setSelectedLog(log)}
-                          className="inline-flex items-center text-indigo-400 hover:text-blue-600"
+                          className="inline-flex items-center text-sky-400 hover:text-blue-600"
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           {t.logs.details}

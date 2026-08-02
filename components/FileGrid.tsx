@@ -233,7 +233,7 @@ function FileItem({
     return (
       <ContextMenu items={contextMenuItems}>
         <div data-context-menu="true"
-          className={`group relative bg-white/5 border border-white/10 rounded-xl p-4 hover:border-indigo-500/30 hover:bg-white/[0.07] transition-all cursor-pointer ${selected ? "ring-2 ring-indigo-500/50 border-indigo-500/30" : ""}`}
+          className={`group relative bg-white/5 border border-white/10 rounded-xl p-4 hover:border-blue-500/30 hover:bg-white/[0.07] transition-all cursor-pointer ${selected ? "ring-2 ring-blue-500/50 border-blue-500/30" : ""}`}
           onClick={handlePreview}
         >
           {/* Selection checkbox (top-left) */}
@@ -243,7 +243,7 @@ function FileItem({
               checked={!!selected}
               onClick={handleCheckboxClick}
               onChange={() => {}}
-              className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500/50"
+              className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-blue-500/50"
               aria-label={`Select ${file.displayName || file.name}`}
             />
           </div>
@@ -257,9 +257,9 @@ function FileItem({
             ) : isImage ? (
               <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
                 {imageLoading ? (
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-indigo-400 border-t-transparent" />
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-sky-400 border-t-transparent" />
                 ) : (
-                  <Image className="w-8 h-8 text-indigo-400" />
+                  <Image className="w-8 h-8 text-sky-400" />
                 )}
               </div>
             ) : (
@@ -320,7 +320,7 @@ function FileItem({
   return (
     <ContextMenu items={contextMenuItems}>
       <div
-        className={`group flex items-center gap-3 p-3 border-b border-white/5 hover:bg-white/[0.03] transition-colors cursor-pointer ${selected ? "bg-indigo-500/5" : ""}`}
+        className={`group flex items-center gap-3 p-3 border-b border-white/5 hover:bg-white/[0.03] transition-colors cursor-pointer ${selected ? "bg-blue-500/5" : ""}`}
         onClick={handlePreview}
       >
         {/* Selection checkbox */}
@@ -330,7 +330,7 @@ function FileItem({
             checked={!!selected}
             onClick={(e) => { e.stopPropagation(); handleCheckboxClick(e); }}
             onChange={() => {}}
-            className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500/50"
+            className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-blue-500/50"
             aria-label={`Select ${file.displayName || file.name}`}
           />
         </div>
@@ -344,9 +344,9 @@ function FileItem({
           ) : isImage ? (
             <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
               {imageLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-400 border-t-transparent" />
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-sky-400 border-t-transparent" />
               ) : (
-                <Image className="w-6 h-6 text-indigo-400" />
+                <Image className="w-6 h-6 text-sky-400" />
               )}
             </div>
           ) : (
@@ -364,14 +364,14 @@ function FileItem({
           <div className="flex items-center gap-4 text-xs text-slate-500 mt-0.5">
             <span>{formatFileSize(file.size)}</span>
             <span>{formatDate(file.createdAt)}</span>
-            {file.folderName && <span className="text-indigo-400">in {file.folderName}</span>}
+            {file.folderName && <span className="text-sky-400">in {file.folderName}</span>}
           </div>
         </div>
 
         {/* Hover action buttons */}
         <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           <button onClick={(e) => { e.stopPropagation(); handlePreview(); }}
-            className="p-2 text-slate-500 hover:text-indigo-400 hover:bg-slate-800/50 rounded-lg transition-all">
+            className="p-2 text-slate-500 hover:text-sky-400 hover:bg-slate-800/50 rounded-lg transition-all">
             <Eye className="w-4 h-4" />
           </button>
           <button onClick={(e) => { e.stopPropagation(); onDownload(file.id, file.name); }}

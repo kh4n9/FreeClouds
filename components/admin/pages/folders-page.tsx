@@ -221,7 +221,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
       value: folders
         .reduce((sum, f) => sum + f.subfolderCount, 0)
         .toLocaleString(),
-      icon: <Folder className="h-6 w-6 text-purple-400" />,
+      icon: <Folder className="h-6 w-6 text-cyan-400" />,
     },
   ];
 
@@ -314,7 +314,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
         <div className="bg-blue-500/10 border border-blue-200 rounded-lg p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-indigo-400 mr-2" />
+              <CheckCircle className="h-5 w-5 text-sky-400 mr-2" />
               <span className="text-sm font-medium text-blue-800">
                 {t.folders.foldersSelected.replace("{n}", selectedFolders.length.toString())}
               </span>
@@ -344,7 +344,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
                       type="checkbox"
                       checked={selectedFolders.length === folders.length && folders.length > 0}
                       onChange={handleSelectAll}
-                      className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                      className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
                     />
                   </th>
                   {[
@@ -387,7 +387,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
                           type="checkbox"
                           checked={selectedFolders.includes(folder.id)}
                           onChange={() => handleSelectFolder(folder.id)}
-                          className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                          className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -430,7 +430,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
                             </span>
                           </div>
                           <div className="flex items-center">
-                            <Folder className="h-4 w-4 text-purple-500 mr-1" />
+                            <Folder className="h-4 w-4 text-cyan-500 mr-1" />
                             <span>
                               {t.folders.foldersLabel.replace("{n}", folder.subfolderCount.toString())}
                             </span>
@@ -444,7 +444,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
                         <div className="flex items-center space-x-2">
                           <Link
                             href={`${base}/users/${folder.owner}`}
-                            className="text-indigo-400 hover:text-blue-900"
+                            className="text-sky-400 hover:text-blue-900"
                           >
                             <Eye className="h-4 w-4" />
                           </Link>

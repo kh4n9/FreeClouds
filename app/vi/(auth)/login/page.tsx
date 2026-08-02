@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, AlertCircle, Cloud } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Head from "next/head";
 import Script from "next/script";
-import Footer from "@/components/Footer";
-import { generateMetadata, generateBreadcrumbs } from "@/lib/seo/utils";
+import AuthShell from "@/components/AuthShell";
+import { generateBreadcrumbs } from "@/lib/seo/utils";
 import { BASE_URL } from "@/lib/seo/config";
 import {
   useAuth,
@@ -123,192 +122,101 @@ export default function VietnameseLoginPage() {
         }}
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="max-w-md w-full">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <div className="flex justify-center mb-4">
-                <div className="bg-white p-3 rounded-full shadow-lg">
-                  <Image
-                    src="/logo.svg"
-                    alt="Free Clouds Logo"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8"
-                  />
-                </div>
+      <AuthShell>
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Cloud className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Chào mừng trở lại
+          </h1>
+          <p className="text-slate-400">
+            Đăng nhập vào tài khoản Free Clouds của bạn
+          </p>
+        </div>
+
+        <div className="modal-content p-8">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && !error.field && (
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-300">{error.message}</p>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Chào mừng trở lại
-              </h1>
-              <p className="text-gray-600">
-                Đăng nhập vào tài khoản Free Clouds của bạn
-              </p>
-              <p className="text-sm text-gray-500 mt-1 italic">
-                Sign in to your Free Clouds account
-              </p>
+            )}
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+                Địa chỉ Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input id="email" name="email" type="email" autoComplete="email" required
+                  value={form.email} onChange={handleInputChange}
+                  className={`input-modern w-full pl-10 pr-4 py-3 rounded-xl ${
+                    error?.field === "email" ? "border-red-500/50 bg-red-500/5" : ""
+                  }`}
+                  placeholder="Nhập địa chỉ email của bạn" disabled={loading} />
+              </div>
+              {error?.field === "email" && (
+                <p className="mt-1 text-sm text-red-400">{error.message}</p>
+              )}
             </div>
 
-            {/* Login Form */}
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Global Error */}
-                {error && !error.field && (
-                  <div
-                    className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3"
-                    role="alert"
-                  >
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm text-red-700">{error.message}</p>
-                      <p className="text-xs text-red-600 mt-1 italic">
-                        Please check your login information
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Email Field */}
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Địa chỉ Email / Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      value={form.email}
-                      onChange={handleInputChange}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                        error?.field === "email"
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300 hover:border-gray-400"
-                      }`}
-                      placeholder="Nhập địa chỉ email của bạn"
-                      disabled={loading}
-                    />
-                  </div>
-                  {error?.field === "email" && (
-                    <p className="mt-1 text-sm text-red-600">{error.message}</p>
-                  )}
-                </div>
-
-                {/* Password Field */}
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Mật khẩu / Password
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      required
-                      value={form.password}
-                      onChange={handleInputChange}
-                      className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                        error?.field === "password"
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300 hover:border-gray-400"
-                      }`}
-                      placeholder="Nhập mật khẩu của bạn"
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      onClick={togglePasswordVisibility}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                      disabled={loading}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
-                        <Eye className="h-5 w-5" />
-                      )}
-                    </button>
-                  </div>
-                  {error?.field === "password" && (
-                    <p className="mt-1 text-sm text-red-600">{error.message}</p>
-                  )}
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                  aria-label="Đăng nhập vào tài khoản của bạn"
-                >
-                  {loading ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Đang đăng nhập...
-                    </div>
-                  ) : (
-                    "Đăng Nhập"
-                  )}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+                Mật khẩu
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input id="password" name="password" type={showPassword ? "text" : "password"}
+                  autoComplete="current-password" required value={form.password}
+                  onChange={handleInputChange}
+                  className={`input-modern w-full pl-10 pr-12 py-3 rounded-xl ${
+                    error?.field === "password" ? "border-red-500/50 bg-red-500/5" : ""
+                  }`}
+                  placeholder="Nhập mật khẩu của bạn" disabled={loading} />
+                <button type="button" onClick={togglePasswordVisibility}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
-              </form>
-
-              {/* Footer Links */}
-              <div className="mt-6 text-center space-y-3">
-                <div>
-                  <a
-                    href="/vi/forgot-password"
-                    className="text-sm text-blue-600 hover:text-blue-500 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1"
-                    aria-label="Đặt lại mật khẩu của bạn"
-                  >
-                    Quên mật khẩu?
-                  </a>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Chưa có tài khoản?{" "}
-                  <a
-                    href="/vi/register"
-                    className="text-blue-600 hover:text-blue-500 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1"
-                    aria-label="Tạo tài khoản mới"
-                  >
-                    Đăng ký ngay
-                  </a>
-                </p>
-                <p className="text-xs text-gray-500 mt-2 italic">
-                  Don&apos;t have an account? Create a free account now!
-                </p>
               </div>
+              {error?.field === "password" && (
+                <p className="mt-1 text-sm text-red-400">{error.message}</p>
+              )}
             </div>
 
-            {/* Back to Home */}
-            <div className="text-center mt-6">
-              <a
-                href="/vi"
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-3 py-2"
-                aria-label="Quay về trang chủ"
-              >
-                ← Về trang chủ
+            <button type="submit" disabled={loading}
+              className="btn-primary w-full py-3 rounded-xl font-medium disabled:opacity-50">
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Đang đăng nhập...
+                </span>
+              ) : "Đăng Nhập"}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center space-y-4">
+            <a href="/vi/forgot-password" className="text-sm text-sky-400 hover:text-sky-300 font-medium">
+              Quên mật khẩu?
+            </a>
+            <p className="text-sm text-slate-400">
+              Chưa có tài khoản?{" "}
+              <a href="/vi/register" className="text-sky-400 hover:text-sky-300 font-medium">
+                Đăng ký ngay
               </a>
-            </div>
+            </p>
           </div>
         </div>
 
-        <Footer />
-      </div>
+        <div className="text-center mt-6">
+          <a href="/vi" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
+            ← Về trang chủ
+          </a>
+        </div>
+      </AuthShell>
     </>
   );
 }

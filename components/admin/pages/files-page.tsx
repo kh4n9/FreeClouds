@@ -314,7 +314,7 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
                   setIncludeDeleted(e.target.checked);
                   setPagination((prev) => ({ ...prev, currentPage: 1 }));
                 }}
-                className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
               />
               <span className="ml-2 text-sm text-slate-200">
                 {t.files.includeDeleted}
@@ -361,7 +361,7 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
         <div className="bg-blue-500/10 border border-blue-200 rounded-lg p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-indigo-400 mr-2" />
+              <CheckCircle className="h-5 w-5 text-sky-400 mr-2" />
               <span className="text-sm font-medium text-blue-800">
                 {t.files.filesSelected.replace("{n}", selectedFiles.length.toString())}
               </span>
@@ -413,7 +413,7 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
                       type="checkbox"
                       checked={selectedFiles.length === files.length && files.length > 0}
                       onChange={handleSelectAll}
-                      className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                      className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
                     />
                   </th>
                   {[
@@ -457,7 +457,7 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
                           type="checkbox"
                           checked={selectedFiles.includes(file.id)}
                           onChange={() => handleSelectFile(file.id)}
-                          className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                          className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -508,7 +508,7 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
                         <div className="flex items-center space-x-2">
                           <Link
                             href={`${base}/users/${file.owner}`}
-                            className="text-indigo-400 hover:text-blue-900"
+                            className="text-sky-400 hover:text-blue-900"
                           >
                             <Eye className="h-4 w-4" />
                           </Link>

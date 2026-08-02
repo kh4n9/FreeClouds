@@ -28,12 +28,12 @@ export const FILE_TYPE_MAP: Record<string, FileTypeInfo> = {
   'mkv': { category: 'video', icon: 'Video', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200', description: 'Matroska Video' },
 
   // Audio
-  'mp3': { category: 'audio', icon: 'Music', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'MP3 Audio' },
-  'wav': { category: 'audio', icon: 'Music', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'WAV Audio' },
-  'flac': { category: 'audio', icon: 'Music', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'FLAC Audio' },
-  'ogg': { category: 'audio', icon: 'Music', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'OGG Audio' },
-  'aac': { category: 'audio', icon: 'Music', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'AAC Audio' },
-  'm4a': { category: 'audio', icon: 'Music', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'M4A Audio' },
+  'mp3': { category: 'audio', icon: 'Music', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'MP3 Audio' },
+  'wav': { category: 'audio', icon: 'Music', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'WAV Audio' },
+  'flac': { category: 'audio', icon: 'Music', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'FLAC Audio' },
+  'ogg': { category: 'audio', icon: 'Music', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'OGG Audio' },
+  'aac': { category: 'audio', icon: 'Music', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'AAC Audio' },
+  'm4a': { category: 'audio', icon: 'Music', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'M4A Audio' },
 
   // Documents
   'pdf': { category: 'document', icon: 'FileText', color: 'text-red-700', bgColor: 'bg-red-50', borderColor: 'border-red-200', description: 'PDF Document' },
@@ -56,18 +56,18 @@ export const FILE_TYPE_MAP: Record<string, FileTypeInfo> = {
   'css': { category: 'code', icon: 'Code', color: 'text-blue-500', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'CSS' },
   'scss': { category: 'code', icon: 'Code', color: 'text-pink-600', bgColor: 'bg-pink-50', borderColor: 'border-pink-200', description: 'SCSS' },
   'sass': { category: 'code', icon: 'Code', color: 'text-pink-600', bgColor: 'bg-pink-50', borderColor: 'border-pink-200', description: 'Sass' },
-  'php': { category: 'code', icon: 'Code', color: 'text-purple-700', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'PHP' },
+  'php': { category: 'code', icon: 'Code', color: 'text-sky-700', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'PHP' },
   'py': { category: 'code', icon: 'Code', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200', description: 'Python' },
   'java': { category: 'code', icon: 'Code', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200', description: 'Java' },
   'cpp': { category: 'code', icon: 'Code', color: 'text-blue-800', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'C++' },
   'c': { category: 'code', icon: 'Code', color: 'text-blue-800', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'C' },
   'h': { category: 'code', icon: 'Code', color: 'text-blue-800', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'C Header' },
-  'cs': { category: 'code', icon: 'Code', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'C#' },
+  'cs': { category: 'code', icon: 'Code', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'C#' },
   'rb': { category: 'code', icon: 'Code', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200', description: 'Ruby' },
   'go': { category: 'code', icon: 'Code', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'Go' },
   'rs': { category: 'code', icon: 'Code', color: 'text-orange-700', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', description: 'Rust' },
   'swift': { category: 'code', icon: 'Code', color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', description: 'Swift' },
-  'kt': { category: 'code', icon: 'Code', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'Kotlin' },
+  'kt': { category: 'code', icon: 'Code', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'Kotlin' },
   'dart': { category: 'code', icon: 'Code', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'Dart' },
   'vue': { category: 'code', icon: 'Code', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200', description: 'Vue.js' },
   'svelte': { category: 'code', icon: 'Code', color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', description: 'Svelte' },
@@ -86,27 +86,27 @@ export const FILE_TYPE_MAP: Record<string, FileTypeInfo> = {
   'scala': { category: 'code', icon: 'Code', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200', description: 'Scala' },
   'clj': { category: 'code', icon: 'Code', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200', description: 'Clojure' },
   'elm': { category: 'code', icon: 'Code', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'Elm' },
-  'haskell': { category: 'code', icon: 'Code', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'Haskell' },
-  'hs': { category: 'code', icon: 'Code', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'Haskell' },
+  'haskell': { category: 'code', icon: 'Code', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'Haskell' },
+  'hs': { category: 'code', icon: 'Code', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'Haskell' },
   'erl': { category: 'code', icon: 'Code', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200', description: 'Erlang' },
-  'ex': { category: 'code', icon: 'Code', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'Elixir' },
+  'ex': { category: 'code', icon: 'Code', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'Elixir' },
   'nim': { category: 'code', icon: 'Code', color: 'text-yellow-600', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200', description: 'Nim' },
   'zig': { category: 'code', icon: 'Code', color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', description: 'Zig' },
 
   // 3D and CAD Files
-  'obj': { category: '3d', icon: 'Box', color: 'text-violet-600', bgColor: 'bg-violet-50', borderColor: 'border-violet-200', description: '3D Object' },
-  'fbx': { category: '3d', icon: 'Box', color: 'text-violet-600', bgColor: 'bg-violet-50', borderColor: 'border-violet-200', description: '3D Model' },
-  'dae': { category: '3d', icon: 'Box', color: 'text-violet-600', bgColor: 'bg-violet-50', borderColor: 'border-violet-200', description: 'Collada 3D' },
+  'obj': { category: '3d', icon: 'Box', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: '3D Object' },
+  'fbx': { category: '3d', icon: 'Box', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: '3D Model' },
+  'dae': { category: '3d', icon: 'Box', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'Collada 3D' },
   'blend': { category: '3d', icon: 'Box', color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', description: 'Blender File' },
-  '3ds': { category: '3d', icon: 'Box', color: 'text-violet-600', bgColor: 'bg-violet-50', borderColor: 'border-violet-200', description: '3DS Model' },
+  '3ds': { category: '3d', icon: 'Box', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: '3DS Model' },
   'max': { category: '3d', icon: 'Box', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: '3ds Max' },
   'maya': { category: '3d', icon: 'Box', color: 'text-teal-600', bgColor: 'bg-teal-50', borderColor: 'border-teal-200', description: 'Maya Scene' },
   'mb': { category: '3d', icon: 'Box', color: 'text-teal-600', bgColor: 'bg-teal-50', borderColor: 'border-teal-200', description: 'Maya Binary' },
   'ma': { category: '3d', icon: 'Box', color: 'text-teal-600', bgColor: 'bg-teal-50', borderColor: 'border-teal-200', description: 'Maya ASCII' },
   'c4d': { category: '3d', icon: 'Box', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200', description: 'Cinema 4D' },
   'skp': { category: '3d', icon: 'Box', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200', description: 'SketchUp' },
-  'ply': { category: '3d', icon: 'Box', color: 'text-violet-600', bgColor: 'bg-violet-50', borderColor: 'border-violet-200', description: 'Polygon File' },
-  'stl': { category: '3d', icon: 'Box', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'Stereolithography' },
+  'ply': { category: '3d', icon: 'Box', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'Polygon File' },
+  'stl': { category: '3d', icon: 'Box', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'Stereolithography' },
   'gltf': { category: '3d', icon: 'Box', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200', description: 'glTF 3D' },
   'glb': { category: '3d', icon: 'Box', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200', description: 'glTF Binary' },
 
@@ -115,19 +115,19 @@ export const FILE_TYPE_MAP: Record<string, FileTypeInfo> = {
   'dxf': { category: '3d', icon: 'Ruler', color: 'text-blue-700', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'CAD Exchange' },
   'step': { category: '3d', icon: 'Ruler', color: 'text-green-700', bgColor: 'bg-green-50', borderColor: 'border-green-200', description: 'STEP CAD' },
   'stp': { category: '3d', icon: 'Ruler', color: 'text-green-700', bgColor: 'bg-green-50', borderColor: 'border-green-200', description: 'STEP CAD' },
-  'iges': { category: '3d', icon: 'Ruler', color: 'text-purple-700', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'IGES CAD' },
-  'igs': { category: '3d', icon: 'Ruler', color: 'text-purple-700', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'IGES CAD' },
+  'iges': { category: '3d', icon: 'Ruler', color: 'text-sky-700', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'IGES CAD' },
+  'igs': { category: '3d', icon: 'Ruler', color: 'text-sky-700', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'IGES CAD' },
 
   // Design Files
   'psd': { category: 'design', icon: 'Palette', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'Photoshop' },
   'ai': { category: 'design', icon: 'Palette', color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', description: 'Illustrator' },
   'indd': { category: 'design', icon: 'Palette', color: 'text-pink-600', bgColor: 'bg-pink-50', borderColor: 'border-pink-200', description: 'InDesign' },
   'sketch': { category: 'design', icon: 'Palette', color: 'text-yellow-600', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200', description: 'Sketch' },
-  'fig': { category: 'design', icon: 'Palette', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'Figma' },
-  'figma': { category: 'design', icon: 'Palette', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'Figma' },
+  'fig': { category: 'design', icon: 'Palette', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'Figma' },
+  'figma': { category: 'design', icon: 'Palette', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'Figma' },
   'xd': { category: 'design', icon: 'Palette', color: 'text-pink-600', bgColor: 'bg-pink-50', borderColor: 'border-pink-200', description: 'Adobe XD' },
   'afdesign': { category: 'design', icon: 'Palette', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', description: 'Affinity Designer' },
-  'afphoto': { category: 'design', icon: 'Palette', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'Affinity Photo' },
+  'afphoto': { category: 'design', icon: 'Palette', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'Affinity Photo' },
 
   // Font Files
   'ttf': { category: 'font', icon: 'Type', color: 'text-gray-700', bgColor: 'bg-gray-50', borderColor: 'border-gray-200', description: 'TrueType Font' },
@@ -140,7 +140,7 @@ export const FILE_TYPE_MAP: Record<string, FileTypeInfo> = {
   'json': { category: 'data', icon: 'Database', color: 'text-yellow-600', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200', description: 'JSON Data' },
   'xml': { category: 'data', icon: 'Database', color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', description: 'XML Data' },
   'tsv': { category: 'data', icon: 'Database', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200', description: 'TSV Data' },
-  'yaml': { category: 'data', icon: 'Database', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'YAML Data' },
+  'yaml': { category: 'data', icon: 'Database', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'YAML Data' },
   'toml': { category: 'data', icon: 'Database', color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', description: 'TOML Config' },
   'ini': { category: 'data', icon: 'Database', color: 'text-gray-600', bgColor: 'bg-gray-50', borderColor: 'border-gray-200', description: 'INI Config' },
   'conf': { category: 'data', icon: 'Database', color: 'text-gray-600', bgColor: 'bg-gray-50', borderColor: 'border-gray-200', description: 'Config File' },
@@ -203,7 +203,7 @@ export function getFileTypeInfo(fileName: string, mimeType?: string): FileTypeIn
       return { category: 'video', icon: 'Video', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200', description: 'Video File' };
     }
     if (mimeType.startsWith('audio/')) {
-      return { category: 'audio', icon: 'Music', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', description: 'Audio File' };
+      return { category: 'audio', icon: 'Music', color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', description: 'Audio File' };
     }
     if (mimeType.includes('text/') || mimeType.includes('document')) {
       return { category: 'document', icon: 'FileText', color: 'text-gray-600', bgColor: 'bg-gray-50', borderColor: 'border-gray-200', description: 'Text Document' };

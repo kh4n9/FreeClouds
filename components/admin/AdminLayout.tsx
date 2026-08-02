@@ -87,7 +87,7 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-4 animate-pulse">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mx-auto mb-4 animate-pulse">
           <Cloud className="w-7 h-7 text-white" />
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
         <div className="p-5 border-b border-slate-800">
           <div className="flex items-center justify-between">
             <Link href={base} className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center transition-transform group-hover:scale-110">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center transition-transform group-hover:scale-110">
                 <Shield className="w-5 h-5 text-white" />
               </div>
               <span className="text-lg font-bold text-white">
@@ -185,9 +185,9 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
               <button className="btn-ghost p-2 rounded-lg relative">
                 <Bell className="w-5 h-5" />
               </button>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                <Shield className="w-4 h-4 text-indigo-400" />
-                <span className="text-xs font-medium text-indigo-300">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <Shield className="w-4 h-4 text-sky-400" />
+                <span className="text-xs font-medium text-blue-300">
                   {t.nav.adminBadge}
                 </span>
               </div>

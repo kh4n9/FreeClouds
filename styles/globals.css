@@ -11,8 +11,8 @@
   --border: #475569;
   --border-hover: #64748b;
   --muted: #94a3b8;
-  --accent: #818cf8;
-  --accent-hover: #6366f1;
+  --accent: #38bdf8;
+  --accent-hover: #0ea5e9;
   --success: #34d399;
   --warning: #fbbf24;
   --error: #fb7185;
@@ -50,7 +50,7 @@ body {
 }
 
 ::selection {
-  background: rgba(129, 140, 248, 0.3);
+  background: rgba(56, 189, 248, 0.3);
   color: #fff;
 }
 
@@ -74,7 +74,7 @@ body {
 
   .card-gradient:hover {
     border-color: var(--accent);
-    box-shadow: 0 0 20px rgba(129, 140, 248, 0.1);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.12);
   }
 
   .input-modern {
@@ -86,7 +86,7 @@ body {
 
   .input-modern:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
     outline: none;
   }
 
@@ -95,7 +95,7 @@ body {
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: white;
     transition: all 0.2s ease;
   }
@@ -103,7 +103,7 @@ body {
   .btn-primary:hover {
     background: linear-gradient(135deg, #4f46e5, #4338ca);
     transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
   }
 
   .btn-secondary {
@@ -150,9 +150,9 @@ body {
   }
 
   .badge-primary {
-    background: rgba(99, 102, 241, 0.15);
-    color: #a5b4fc;
-    border: 1px solid rgba(99, 102, 241, 0.3);
+    background: rgba(59, 130, 246, 0.15);
+    color: #7dd3fc;
+    border: 1px solid rgba(59, 130, 246, 0.3);
   }
 
   .badge-success {
@@ -218,9 +218,9 @@ body {
   }
 
   .toast-info {
-    background: rgba(99, 102, 241, 0.2);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    color: #a5b4fc;
+    background: rgba(56, 189, 248, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #7dd3fc;
   }
 
   .file-grid {
@@ -262,8 +262,8 @@ body {
   }
 
   .folder-item.active {
-    background: rgba(99, 102, 241, 0.1);
-    color: #a5b4fc;
+    background: rgba(14, 165, 233, 0.12);
+    color: #7dd3fc;
   }
 
   .sidebar-link {
@@ -282,9 +282,9 @@ body {
   }
 
   .sidebar-link.active {
-    background: rgba(99, 102, 241, 0.1);
-    color: #a5b4fc;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(14, 165, 233, 0.12);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.2);
   }
 
   .stat-card {
@@ -296,7 +296,7 @@ body {
   }
 
   .stat-card:hover {
-    border-color: rgba(129, 140, 248, 0.3);
+    border-color: rgba(56, 189, 248, 0.3);
     transform: translateY(-2px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
   }
@@ -311,7 +311,7 @@ body {
     position: absolute;
     inset: -1px;
     border-radius: 13px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+    background: linear-gradient(135deg, #3b82f6, #22d3ee, #38bdf8);
     z-index: -1;
     opacity: 0.5;
     transition: opacity 0.3s ease;

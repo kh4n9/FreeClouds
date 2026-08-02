@@ -212,7 +212,7 @@ function FolderNode({
         onClick={handleSelect}
         className={`flex items-center gap-2 min-h-[44px] px-2 py-1.5 rounded-lg cursor-pointer select-none ${
           isSelected
-            ? "bg-indigo-500/20 text-indigo-300"
+            ? "bg-blue-500/20 text-blue-300"
             : "hover:bg-slate-700/50 text-slate-300"
         }`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
@@ -245,7 +245,7 @@ function FolderNode({
                 onChange={(e) => setName(e.target.value)}
                 onBlur={submitRename}
                 onKeyDown={(e) => { if (e.key === "Escape") { setName(node.name); setEditing(false); } }}
-                className="w-full px-2 py-1 text-sm bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-2 py-1 text-sm bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500"
               />
             </form>
           )}
@@ -357,7 +357,7 @@ export default function PlainFolderTree({
       <div
         className={`flex items-center gap-2 min-h-[44px] px-2 py-1.5 rounded-lg cursor-pointer select-none ${
           selectedFolderId === null
-            ? "bg-indigo-500/20 text-indigo-300"
+            ? "bg-blue-500/20 text-blue-300"
             : "hover:bg-slate-700/50 text-slate-300"
         }`}
         onClick={() => onFolderSelect(null)}

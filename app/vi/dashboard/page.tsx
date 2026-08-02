@@ -148,10 +148,10 @@ function StatsCard({ icon: Icon, label, value, sub, gradient }: { icon: LucideIc
 function SearchBar({ value, onChange, onClear }: { value: string; onChange: (v: string) => void; onClear: () => void }) {
   return (
     <div className="relative group">
-      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-400 transition-colors" />
+      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-sky-400 transition-colors" />
       <input ref={(el) => { if (el) el.onkeydown = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key === "k") e.preventDefault(); }; }} type="text" placeholder="Tìm kiếm files... (Ctrl+K)" value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="input-modern w-full pl-10 pr-10 py-2.5 rounded-xl text-sm bg-slate-800/50 border-slate-700/50 focus:border-indigo-500/50 focus:bg-slate-800/80 transition-all" />
+        className="input-modern w-full pl-10 pr-10 py-2.5 rounded-xl text-sm bg-slate-800/50 border-slate-700/50 focus:border-cyan-500/50 focus:bg-slate-800/80 transition-all" />
       {value && (
         <button onClick={onClear} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors">
           <X className="w-4 h-4" />
@@ -440,12 +440,12 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-500/20 animate-pulse">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-500/20 animate-pulse">
             <Cloud className="w-8 h-8 text-white" />
           </div>
           <div className="flex gap-1.5 justify-center">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="w-2.5 h-2.5 rounded-full bg-indigo-500/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+              <div key={i} className="w-2.5 h-2.5 rounded-full bg-blue-500/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
             ))}
           </div>
         </div>
@@ -478,7 +478,7 @@ export default function DashboardPage() {
             <div className="flex flex-col h-full min-w-72">
               <div className="p-4 border-b border-slate-800/50">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center flex-shrink-0 shadow-sm">
                     <span className="text-sm font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -494,7 +494,7 @@ export default function DashboardPage() {
               <div className="p-3 border-b border-slate-800/50">
                 <div className="grid grid-cols-2 gap-2">
                   <button onClick={() => { setShowUpload(true); setSidebarOpen(false); }}
-                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-indigo-300 hover:from-indigo-500/20 hover:to-purple-500/20 hover:border-indigo-500/30 transition-all text-sm font-medium min-h-[44px]">
+                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 text-blue-300 hover:from-sky-500/20 hover:to-cyan-500/20 hover:border-blue-500/30 transition-all text-sm font-medium min-h-[44px]">
                     <Upload className="w-4 h-4" /> Tải lên
                   </button>
                   <button onClick={() => { handleCreateFolder(selectedFolderId); setSidebarOpen(false); }}
@@ -528,7 +528,7 @@ export default function DashboardPage() {
               <div className="p-3 border-t border-slate-800/50">
                 <div className="flex flex-col gap-1">
                   <button onClick={() => { setShowTrash(!showTrash); loadTrashFiles(); setSidebarOpen(false); }}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${showTrash ? "text-indigo-400 bg-indigo-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${showTrash ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
                     <Trash2 className="w-4 h-4" /> Thùng rác
                   </button>
                   <button onClick={() => { setShowUserProfile(true); setSidebarOpen(false); }}
@@ -544,12 +544,12 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="hidden lg:flex flex-col items-center h-full py-4 gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center flex-shrink-0 shadow-sm">
                 <span className="text-sm font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
               </div>
               <div className="w-8 border-t border-slate-700/50" />
               <button onClick={() => setShowUpload(true)}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-indigo-300 hover:bg-slate-800/50 transition-all" title="Tải lên">
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-blue-300 hover:bg-slate-800/50 transition-all" title="Tải lên">
                 <Upload className="w-4 h-4" />
               </button>
               <button onClick={() => handleCreateFolder(selectedFolderId)}
@@ -558,7 +558,7 @@ export default function DashboardPage() {
               </button>
               <div className="flex-1" />
               <button onClick={() => { setShowTrash(!showTrash); loadTrashFiles(); }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${showTrash ? "text-indigo-400 bg-indigo-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`} title="Thùng rác">
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${showTrash ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`} title="Thùng rác">
                 <Trash2 className="w-4 h-4" />
               </button>
               <button onClick={() => setShowUserProfile(true)}
@@ -590,7 +590,7 @@ export default function DashboardPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
                     <h1 className="text-xl font-bold text-white truncate">{currentFolderName || "Tất cả files"}</h1>
-                    {debouncedSearch && <span className="text-sm text-indigo-400 hidden sm:inline">&mdash; &ldquo;{debouncedSearch}&rdquo;</span>}
+                    {debouncedSearch && <span className="text-sm text-sky-400 hidden sm:inline">&mdash; &ldquo;{debouncedSearch}&rdquo;</span>}
                   </div>
                   <p className="text-xs text-slate-400">
                     {selectedFolderId
@@ -640,7 +640,7 @@ export default function DashboardPage() {
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 px-6 pt-5 pb-2">
               <StatsCard icon={FileIcon} label="Files" value={totalFiles.toLocaleString()} gradient="bg-gradient-to-br from-blue-500 to-cyan-600" />
-              <StatsCard icon={FolderIcon} label="Thư mục" value={totalFolders.toLocaleString()} gradient="bg-gradient-to-br from-purple-500 to-pink-600" />
+              <StatsCard icon={FolderIcon} label="Thư mục" value={totalFolders.toLocaleString()} gradient="bg-gradient-to-br from-cyan-400 to-pink-600" />
               <StatsCard icon={HardDrive} label="Lưu trữ" value={formatSize(totalSize)} gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
             </div>
 
@@ -671,8 +671,11 @@ export default function DashboardPage() {
                   <SkeletonLoader />
                 ) : trashFiles.length === 0 ? (
                   <div className="text-center py-20">
-                    <div className="w-20 h-20 rounded-3xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center mx-auto mb-6">
-                      <Trash2 className="w-10 h-10 text-slate-500" />
+                    <div className="relative w-24 h-24 mx-auto mb-6">
+                      <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-red-500/25 to-rose-400/25 blur-lg animate-pulse-slow" />
+                      <div className="relative w-24 h-24 rounded-3xl bg-slate-800/50 border border-red-500/30 flex items-center justify-center">
+                        <Trash2 className="w-12 h-12 text-red-400" />
+                      </div>
                     </div>
                     <h3 className="text-xl font-semibold text-slate-300 mb-2">Thùng rác trống</h3>
                     <p className="text-sm text-slate-400">File đã xoá sẽ xuất hiện ở đây và tự động xoá sau 30 ngày.</p>
@@ -698,7 +701,7 @@ export default function DashboardPage() {
                             {daysLeft > 0 ? `Còn ${daysLeft} ngày` : "Hết hạn"}
                           </div>
                           <button onClick={() => handleRestoreFile(file.id)}
-                            className="px-3 py-2 rounded-lg text-sm text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all flex items-center gap-1.5 min-h-[44px]">
+                            className="px-3 py-2 rounded-lg text-sm text-sky-400 hover:text-sky-300 hover:bg-blue-500/10 transition-all flex items-center gap-1.5 min-h-[44px]">
                             <RotateCcw className="w-4 h-4" /> Khôi phục
                           </button>
                         </div>
@@ -713,7 +716,7 @@ export default function DashboardPage() {
                 {childFolders.length > 0 && !debouncedSearch && (
                   <div className="px-6 pt-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <FolderIcon className="w-4 h-4 text-purple-400" />
+                      <FolderIcon className="w-4 h-4 text-cyan-400" />
                       <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Thư mục con</h3>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
@@ -728,9 +731,9 @@ export default function DashboardPage() {
                             { label: "Xoá", icon: <Trash2 className="w-4 h-4" />, onClick: () => handleDeleteFolder(child.id), danger: true },
                           ]}>
                           <div data-context-menu="true" onClick={() => handleFolderSelect(child.id)}
-                            className="group relative flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-purple-500/30 hover:bg-slate-800/50 cursor-pointer transition-all">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
-                              <FolderIcon className="w-5 h-5 text-purple-400" />
+                            className="group relative flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-cyan-500/30 hover:bg-slate-800/50 cursor-pointer transition-all">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
+                              <FolderIcon className="w-5 h-5 text-cyan-400" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-slate-200 truncate">{child.name}</p>
@@ -749,8 +752,11 @@ export default function DashboardPage() {
                     <SkeletonLoader />
                   ) : files.length === 0 && childFolders.length === 0 ? (
                     <div className="text-center py-20">
-                      <div className="w-20 h-20 rounded-3xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center mx-auto mb-6">
-                        <Cloud className="w-10 h-10 text-slate-500" />
+                      <div className="relative w-24 h-24 mx-auto mb-6">
+                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/30 to-cyan-400/30 blur-lg animate-pulse-slow" />
+                        <div className="relative w-24 h-24 rounded-3xl bg-slate-800/50 border border-blue-500/30 flex items-center justify-center">
+                          <Cloud className="w-12 h-12 text-blue-400" />
+                        </div>
                       </div>
                       <h3 className="text-xl font-semibold text-slate-300 mb-2">
                         {debouncedSearch ? `Không có kết quả cho "${debouncedSearch}"` : selectedFolderId ? "Thư mục này trống" : "Chưa có file nào"}

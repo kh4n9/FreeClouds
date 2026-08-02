@@ -324,7 +324,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
   if (roleFilter !== "all") {
     activeChips.push({
       label: roleFilter === "admin" ? t.users.adminRole : t.users.regularUser,
-      className: "bg-purple-100 text-purple-800",
+      className: "bg-cyan-100 text-cyan-800",
     });
   }
   if (statusFilter !== "all") {
@@ -425,7 +425,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
               {(searchTerm ||
                 roleFilter !== "all" ||
                 statusFilter !== "all") && (
-                <span className="ml-2 text-indigo-400">{t.common.filtered}</span>
+                <span className="ml-2 text-sky-400">{t.common.filtered}</span>
               )}
             </div>
             <ResetFiltersButton lang={lang} onClick={resetFilters} disabled={!hasFilters} />
@@ -454,7 +454,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                       selectedUsers.length === users.length && users.length > 0
                     }
                     onChange={handleSelectAll}
-                    className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                    className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
                   />
                 </th>
                 <th
@@ -517,7 +517,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                         type="checkbox"
                         checked={selectedUsers.includes(user.id)}
                         onChange={() => handleSelectUser(user.id)}
-                        className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                        className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -533,7 +533,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                             {user.role === "admin" ? (
                               <Shield className="h-5 w-5 text-red-400" />
                             ) : (
-                              <Users className="h-5 w-5 text-indigo-400" />
+                              <Users className="h-5 w-5 text-sky-400" />
                             )}
                           </div>
                         </div>
@@ -580,7 +580,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                       <div className="flex items-center space-x-2">
                         <Link
                           href={`${base}/users/${user.id}`}
-                          className="text-indigo-400 hover:text-blue-900"
+                          className="text-sky-400 hover:text-blue-900"
                         >
                           <Eye className="h-4 w-4" />
                         </Link>

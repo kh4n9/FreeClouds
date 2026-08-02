@@ -315,7 +315,7 @@ export default function AdminUserEditPage({
                     {user.role === "admin" ? (
                       <Shield className="h-6 w-6 text-red-400" />
                     ) : (
-                      <User className="h-6 w-6 text-indigo-400" />
+                      <User className="h-6 w-6 text-sky-400" />
                     )}
                   </div>
                   <div className="ml-4">
@@ -490,7 +490,7 @@ export default function AdminUserEditPage({
                       type="checkbox"
                       checked={form.isActive}
                       onChange={handleInputChange}
-                      className="h-4 w-4 text-indigo-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                      className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
                     />
                     <label
                       htmlFor="isActive"

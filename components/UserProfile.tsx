@@ -257,7 +257,7 @@ export default function UserProfile({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
               <Settings className="w-4 h-4 text-white" />
             </div>
             <h2 className="text-xl font-semibold text-white">
@@ -275,7 +275,7 @@ export default function UserProfile({
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`flex-1 px-6 py-3 text-sm font-medium transition-all ${
                 activeTab === tab
-                  ? "text-indigo-400 border-b-2 border-indigo-500 bg-indigo-500/5"
+                  ? "text-sky-400 border-b-2 border-blue-500 bg-blue-500/5"
                   : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/30"
               }`}>
               {tab === "profile" ? t("profileTab", commonTranslations.profileTab)
@@ -351,7 +351,7 @@ export default function UserProfile({
                       <h5 className="font-medium text-slate-200 mb-3">Storage Usage</h5>
                       <div className="grid grid-cols-3 gap-4 text-center">
                         <div className="bg-slate-800/80 rounded-xl p-3">
-                          <p className="text-lg font-semibold text-indigo-400">{userStats.stats.totalFiles}</p>
+                          <p className="text-lg font-semibold text-sky-400">{userStats.stats.totalFiles}</p>
                           <p className="text-xs text-slate-500">Files</p>
                         </div>
                         <div className="bg-slate-800/80 rounded-xl p-3">
@@ -359,7 +359,7 @@ export default function UserProfile({
                           <p className="text-xs text-slate-500">Folders</p>
                         </div>
                         <div className="bg-slate-800/80 rounded-xl p-3">
-                          <p className="text-lg font-semibold text-purple-400">
+                          <p className="text-lg font-semibold text-cyan-400">
                             {(userStats.stats.totalSize / (1024 * 1024)).toFixed(1)} MB
                           </p>
                           <p className="text-xs text-slate-500">Used</p>
@@ -441,7 +441,7 @@ export default function UserProfile({
                       </span>
                     </div>
                     <div className="w-full bg-slate-700/50 rounded-full h-2 overflow-hidden">
-                      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full"
+                      <div className="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full"
                         style={{ width: `${Math.min((userStats.stats.totalSize / (100 * 1024 * 1024)) * 100, 100)}%` }} />
                     </div>
                     <p className="text-xs text-slate-500">
@@ -568,7 +568,7 @@ export default function UserProfile({
                   <p className="text-sm text-slate-400 mb-2">Didn&apos;t receive the code?</p>
                   <button onClick={handleResendDeletionCode}
                     disabled={deletionCountdown > 0 || loading}
-                    className="text-indigo-400 hover:text-indigo-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="text-sky-400 hover:text-sky-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                     {deletionCountdown > 0 ? `Resend in ${deletionCountdown}s` : "Resend Code"}
                   </button>
                 </div>

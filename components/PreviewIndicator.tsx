@@ -96,20 +96,20 @@ export default function PreviewIndicator({
       case "image":
         return "text-blue-500 bg-blue-50 border-blue-200";
       case "video":
-        return "text-purple-500 bg-purple-50 border-purple-200";
+        return "text-cyan-500 bg-cyan-50 border-cyan-200";
       case "audio":
         return "text-pink-500 bg-pink-50 border-pink-200";
       case "text":
       case "pdf":
         return "text-green-500 bg-green-50 border-green-200";
       case "data":
-        return "text-indigo-500 bg-indigo-50 border-indigo-200";
+        return "text-sky-500 bg-sky-50 border-sky-200";
       case "archive":
         return "text-yellow-500 bg-yellow-50 border-yellow-200";
       case "model3d":
         return "text-cyan-500 bg-cyan-50 border-cyan-200";
       case "font":
-        return "text-violet-500 bg-violet-50 border-violet-200";
+        return "text-blue-500 bg-blue-50 border-blue-200";
       case "calendar":
         return "text-emerald-500 bg-emerald-50 border-emerald-200";
       case "email":
@@ -243,14 +243,14 @@ export function PreviewStatusBadge({
 
   const typeColors: Record<PreviewType, string> = {
     image: "bg-blue-100 text-blue-800",
-    video: "bg-purple-100 text-purple-800",
+    video: "bg-cyan-100 text-cyan-800",
     audio: "bg-pink-100 text-pink-800",
     text: "bg-green-100 text-green-800",
     pdf: "bg-green-100 text-green-800",
-    data: "bg-indigo-100 text-indigo-800",
+    data: "bg-sky-100 text-sky-800",
     archive: "bg-yellow-100 text-yellow-800",
     model3d: "bg-cyan-100 text-cyan-800",
-    font: "bg-violet-100 text-violet-800",
+    font: "bg-blue-100 text-blue-800",
     calendar: "bg-emerald-100 text-emerald-800",
     email: "bg-blue-100 text-blue-800",
     spreadsheet: "bg-green-100 text-green-800",
