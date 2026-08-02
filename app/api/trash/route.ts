@@ -79,3 +79,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to process trash action" }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!validateOrigin(request)) return createCsrfError();
+    const user = await requireAuth(request);
+    await connectToDatabase();
+
+    const { searchParams } = new URL(request.url);
+    const fileId = searchParams.get("id");
+    if (!fileId || !/^[0-9a-fA-F]{24}$/.test(fileId)) {
+      return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
+    }
+
+    const file = await File.findOne({
+      _id: fileId,
+      owner: user.id,
+      deletedAt: { $ne: null },
+    });
+    if (!file) {
+      return NextResponse.json({ error: "File not found in trash" }, { status: 404 });
+    }
+
+    const result = await File.deletePermanently(file._id);
+
+    return NextResponse.json({ ok: result.ok, deleted: result.deleted }, { status: 200 });
+  } catch (error) {
+    console.error("Trash permanent delete error:", error);
+    if (error instanceof AuthError) return createAuthResponse(error);
+    return NextResponse.json({ error: "Failed to delete file permanently" }, { status: 500 });
+  }
+}

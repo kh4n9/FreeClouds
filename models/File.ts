@@ -82,6 +82,7 @@ export interface IFileModel extends mongoose.Model<IFile>, IFileStatics {
   findTrashByOwner(ownerId: string): Promise<IFile[]>;
   findTrashByOwnerWithCount(ownerId: string, page?: number, limit?: number): Promise<{ files: IFile[]; total: number; page: number; limit: number; totalPages: number }>;
   cleanupExpiredTrash(): Promise<number>;
+  deletePermanently(fileId: string | Types.ObjectId): Promise<{ ok: boolean; deleted: number }>;
 }
 
 const fileSchema = new Schema<IFile>({
@@ -501,6 +502,36 @@ fileSchema.statics.cleanupExpiredTrash = async function () {
     count++;
   }
   return count;
+};
+
+fileSchema.statics.deletePermanently = async function (
+  fileId: string | Types.ObjectId,
+): Promise<{ ok: boolean; deleted: number }> {
+  const { telegramAPI } = await import("@/lib/telegram");
+  const file = await this.findById(fileId);
+  if (!file) return { ok: false, deleted: 0 };
+
+  let deleted = 0;
+  const purge = async (doc: IFile) => {
+    if (doc.telegramMessageId) {
+      await telegramAPI.deleteMessage(doc.telegramMessageId).catch(() => {});
+    }
+  };
+
+  await purge(file);
+  deleted += 1;
+
+  if (file.chunkedId && file.totalChunks > 1) {
+    const chunkDocs = await this.find({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } });
+    for (const c of chunkDocs) {
+      await purge(c);
+      deleted += 1;
+    }
+    await this.deleteMany({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+  }
+
+  await this.findByIdAndDelete(file._id).catch(() => {});
+  return { ok: true, deleted };
 };
 
 export const File =

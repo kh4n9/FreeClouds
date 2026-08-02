@@ -641,6 +641,12 @@ export default function FileGrid({
     return () => clearTimeout(timer);
   }, [localSearchQuery, onSearch]);
 
+  // Sync local query when the prop changes externally (dashboard SearchBar)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLocalSearchQuery(searchQuery);
+  }, [searchQuery]);
+
   // Filter files by type
   const filteredFiles = files.filter((file) => {
     if (selectedFilter === "all") return true;
@@ -691,22 +697,11 @@ export default function FileGrid({
     setPreviewFile(null);
   }, []);
 
-  // Close all menus when clicking outside
-  useEffect(() => {
-    const handleClick = () => {
-      // This will trigger a re-render and close menus
-      // In a real implementation, you might want to use a more sophisticated state management
-    };
-
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
-  }, []);
-
   if (loading) {
     return (
       <div className="flex-1 p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded mb-4"></div>
+          <div className="h-8 bg-slate-700/50 rounded mb-4"></div>
           <div
             className={
               viewMode === "grid"
@@ -719,8 +714,8 @@ export default function FileGrid({
                 key={i}
                 className={
                   viewMode === "grid"
-                    ? "h-32 bg-gray-200 rounded-lg"
-                    : "h-16 bg-gray-200 rounded"
+                    ? "h-32 bg-slate-700/50 rounded-lg"
+                    : "h-16 bg-slate-700/50 rounded"
                 }
               ></div>
             ))}
@@ -733,17 +728,17 @@ export default function FileGrid({
   return (
     <div className="flex-1 flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-slate-700/50">
         <div className="flex items-center justify-between gap-4">
           {/* Search */}
           <div className="flex-1 max-w-md relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
               type="text"
               placeholder="Search files..."
               value={localSearchQuery}
               onChange={(e) => setLocalSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 bg-slate-800/70 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-200 placeholder-slate-500"
             />
           </div>
 
@@ -751,7 +746,7 @@ export default function FileGrid({
           <div className="relative">
             <button
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 border border-slate-700 bg-slate-800/70 rounded-lg hover:bg-slate-700/70 transition-colors text-slate-200"
             >
               <Filter className="w-4 h-4" />
               <span className="text-sm font-medium">
@@ -774,7 +769,7 @@ export default function FileGrid({
             </button>
 
             {showFilterDropdown && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+              <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10 py-1 backdrop-blur-xl">
                 {filterOptions.map((option) => (
                   <button
                     key={option.value}
@@ -782,14 +777,14 @@ export default function FileGrid({
                       setSelectedFilter(option.value);
                       setShowFilterDropdown(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                    className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-slate-700/50 first:rounded-t-lg last:rounded-b-lg ${
                       selectedFilter === option.value
-                        ? "bg-blue-50 text-blue-700"
-                        : "text-gray-700"
+                        ? "bg-blue-500/15 text-blue-300"
+                        : "text-slate-300"
                     }`}
                   >
                     <span>{option.label}</span>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                    <span className="text-xs text-slate-400 bg-slate-700/60 px-2 py-0.5 rounded-full">
                       {option.count}
                     </span>
                   </button>
@@ -801,13 +796,13 @@ export default function FileGrid({
           {/* View Mode Toggle + Bulk Download */}
           {onViewModeChange && (
             <div className="flex items-center gap-3">
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center bg-slate-800 rounded-lg p-1">
                 <button
                   onClick={() => onViewModeChange("grid")}
                   className={`p-2 rounded-md transition-colors ${
                     viewMode === "grid"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-blue-500/20 text-blue-300"
+                      : "text-slate-500 hover:text-slate-300"
                   }`}
                   title="Grid view"
                 >
@@ -817,8 +812,8 @@ export default function FileGrid({
                   onClick={() => onViewModeChange("list")}
                   className={`p-2 rounded-md transition-colors ${
                     viewMode === "list"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-blue-500/20 text-blue-300"
+                      : "text-slate-500 hover:text-slate-300"
                   }`}
                   title="List view"
                 >
@@ -833,7 +828,7 @@ export default function FileGrid({
                   className={`inline-flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
                     selectedFiles.length > 0
                       ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700"
                   }`}
                 >
                   <Download className="w-4 h-4" />
@@ -845,7 +840,7 @@ export default function FileGrid({
                   className={`inline-flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
                     selectedFiles.length > 0
                       ? "bg-red-600 text-white hover:bg-red-700"
-                      : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700"
                   }`}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -853,7 +848,7 @@ export default function FileGrid({
                 </button>
                 <button
                   onClick={handleSelectAll}
-                  className="px-2 py-1 rounded text-sm bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  className="px-2 py-1 rounded text-sm bg-slate-800 text-slate-300 hover:bg-slate-700/70 border border-slate-700"
                   title="Select all"
                 >
                   {selectedFiles.length === files.length && files.length > 0
@@ -871,11 +866,11 @@ export default function FileGrid({
         {filteredFiles.length === 0 ? (
           <div className="flex-1 flex items-center justify-center p-12">
             <div className="text-center">
-              <File className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <File className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-200 mb-2">
                 No files found
               </h3>
-              <p className="text-gray-500">
+              <p className="text-slate-500">
                 {localSearchQuery
                   ? `No files match "${localSearchQuery}"`
                   : selectedFilter !== "all"
@@ -904,7 +899,7 @@ export default function FileGrid({
                 ))}
               </div>
             ) : (
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-white/5 border border-slate-700/50 rounded-lg overflow-hidden">
                 {filteredFiles.map((file) => (
                   <FileItem
                     key={file.id}
@@ -936,12 +931,12 @@ export default function FileGrid({
 
       {/* Bulk download progress modal */}
       {progressVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-md p-6">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="modal-content rounded-2xl w-full max-w-md p-6">
             <div className="flex items-start gap-4">
               <div className="flex-0">
                 <svg
-                  className="animate-spin h-6 w-6 text-blue-600"
+                  className="animate-spin h-6 w-6 text-blue-500"
                   viewBox="0 0 24 24"
                 >
                   <circle
@@ -961,32 +956,32 @@ export default function FileGrid({
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-medium text-gray-900 mb-1">
+                <h3 className="text-lg font-medium text-white mb-1">
                   Preparing download
                 </h3>
-                <p className="text-sm text-gray-600 mb-3">{progressMessage}</p>
+                <p className="text-sm text-slate-400 mb-3">{progressMessage}</p>
 
-                <div className="w-full bg-gray-100 rounded h-3 overflow-hidden">
+                <div className="w-full bg-slate-700/50 rounded h-3 overflow-hidden">
                   {downloadProgress !== null ? (
                     <div
-                      className="h-3 bg-blue-600 transition-all"
+                      className="h-3 bg-gradient-to-r from-blue-500 to-cyan-400 transition-all"
                       style={{ width: `${downloadProgress}%` }}
                     />
                   ) : (
                     <div
-                      className="h-3 bg-blue-600 animate-pulse"
+                      className="h-3 bg-gradient-to-r from-blue-500 to-cyan-400 animate-pulse"
                       style={{ width: "40%" }}
                     />
                   )}
                 </div>
 
                 {downloadTotalBytes ? (
-                  <div className="text-xs text-gray-500 mt-2">
+                  <div className="text-xs text-slate-400 mt-2">
                     {(downloadedBytes / 1024 / 1024).toFixed(2)} MB /{" "}
                     {(downloadTotalBytes / 1024 / 1024).toFixed(2)} MB
                   </div>
                 ) : (
-                  <div className="text-xs text-gray-500 mt-2">
+                  <div className="text-xs text-slate-400 mt-2">
                     {(downloadedBytes / 1024 / 1024).toFixed(2)} MB received
                   </div>
                 )}
@@ -1000,7 +995,7 @@ export default function FileGrid({
                   // but keep the downloading state (they can re-open by re-initiating)
                   setProgressVisible(false);
                 }}
-                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+                className="px-4 py-2 bg-slate-800 rounded-xl hover:bg-slate-700 text-sm text-slate-200 border border-slate-700"
               >
                 Close
               </button>

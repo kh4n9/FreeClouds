@@ -43,6 +43,12 @@ import {
   CalendarPreview,
 } from "./preview/SpecializedPreviews";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
+import * as pdfjsLib from "pdfjs-dist";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString();
 
 interface FileData {
   id: string;
@@ -82,7 +88,8 @@ export default function FilePreview({
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const pdfViewerRef = useRef<HTMLIFrameElement>(null);
+  const pdfCanvasRef = useRef<HTMLCanvasElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const fname = file?.displayName || file?.name || "";
   const fileInfo = useMemo(
@@ -349,7 +356,12 @@ export default function FilePreview({
   }, []);
 
   const toggleFullscreen = useCallback(() => {
-    setIsFullscreen((prev) => !prev);
+    if (!modalRef.current) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      modalRef.current.requestFullscreen().catch(() => {});
+    }
   }, []);
 
   const togglePlayPause = useCallback(() => {
@@ -395,6 +407,94 @@ export default function FilePreview({
     [pdfPage, pdfTotalPages],
   );
 
+  // Load PDF document once and count real pages
+  useEffect(() => {
+    if (!isOpen || !file || !isPDF || !fileContent) {
+      return;
+    }
+    let cancelled = false;
+
+    const loadPdf = async () => {
+      try {
+        const response = await fetch(fileContent);
+        const arrayBuffer = await response.arrayBuffer();
+        const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        if (cancelled) return;
+        setPdfTotalPages(doc.numPages);
+        setPdfPage(1);
+      } catch (err) {
+        console.error("Failed to load PDF:", err);
+      }
+    };
+
+    loadPdf();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, file?.id, isPDF, fileContent]);
+
+  // Render current PDF page to canvas
+  useEffect(() => {
+    if (!isOpen || !file || !isPDF || !fileContent || !pdfCanvasRef.current) {
+      return;
+    }
+    let cancelled = false;
+
+    const renderPage = async () => {
+      try {
+        const response = await fetch(fileContent);
+        const arrayBuffer = await response.arrayBuffer();
+        const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        if (cancelled || pdfPage > doc.numPages) return;
+        const page = await doc.getPage(pdfPage);
+
+        const containerWidth =
+          pdfCanvasRef.current?.parentElement?.clientWidth || 800;
+        const baseScale = 1.5;
+        const viewport1 = page.getViewport({ scale: 1 });
+        const scale = Math.min(
+          baseScale,
+          containerWidth / Math.max(viewport1.width, 1),
+        );
+        const viewport = page.getViewport({ scale });
+
+        const canvas = pdfCanvasRef.current!;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(viewport.width * dpr);
+        canvas.height = Math.floor(viewport.height * dpr);
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+        const ctx = canvas.getContext("2d")!;
+        const renderTask = page.render({
+          canvas,
+          canvasContext: ctx,
+          viewport,
+          transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : undefined,
+        });
+        await renderTask.promise;
+        await doc.cleanup();
+      } catch (err) {
+        console.error("Failed to render PDF page:", err);
+      }
+    };
+
+    renderPage();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, file?.id, isPDF, fileContent, pdfPage]);
+
+  // Real fullscreen using the Fullscreen API
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
   const openInNewTab = useCallback(() => {
     if (file && fileContent) {
       window.open(fileContent, "_blank");
@@ -404,7 +504,7 @@ export default function FilePreview({
   if (!isOpen || !file) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+    <div ref={modalRef} className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div className="relative w-full h-full max-w-6xl max-h-full bg-white rounded-lg overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
@@ -698,13 +798,8 @@ export default function FilePreview({
           )}
 
           {!loading && !error && !securityWarning && fileContent && isPDF && (
-            <div className="h-full">
-              <iframe
-                ref={pdfViewerRef}
-                src={`${fileContent}#page=${pdfPage}&view=FitH`}
-                className="w-full h-full border-0"
-                title={`PDF Viewer - ${file.name}`}
-              />
+            <div className="h-full overflow-auto bg-slate-800/40 flex items-start justify-center p-4">
+              <canvas ref={pdfCanvasRef} className="shadow-2xl" />
             </div>
           )}
 

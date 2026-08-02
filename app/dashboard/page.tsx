@@ -473,6 +473,21 @@ export default function DashboardPage() {
     finally { setEmptyingTrash(false); setTimeout(() => setToast(null), 3000); }
   };
 
+  const handlePermanentDelete = async (fileId: string) => {
+    if (!window.confirm("Delete this file permanently? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/trash?id=${fileId}`, { method: "DELETE" });
+      if (res.ok) {
+        setToast({ type: "success", message: "File deleted permanently" });
+        setTrashFiles((prev) => prev.filter((f) => f.id !== fileId));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setToast({ type: "error", message: data.error || "Failed to delete file" });
+      }
+    } catch { setToast({ type: "error", message: "Failed to delete file" }); }
+    finally { setTimeout(() => setToast(null), 3000); }
+  };
+
   const handleLogout = async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/login"); };
 
   const totalSize = user?.stats?.totalSize ?? 0;
@@ -750,6 +765,11 @@ export default function DashboardPage() {
                             className="px-3 py-2 rounded-lg text-sm text-sky-400 hover:text-sky-300 hover:bg-blue-500/10 transition-all flex items-center gap-1.5 min-h-[44px]">
                             <RotateCcw className="w-4 h-4" /> Restore
                           </button>
+                          <button onClick={() => handlePermanentDelete(file.id)}
+                            className="px-3 py-2 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all flex items-center gap-1.5 min-h-[44px]"
+                            title="Delete permanently">
+                            <Trash2 className="w-4 h-4" /> Delete forever
+                          </button>
                         </div>
                       );
                     })}
@@ -832,6 +852,7 @@ export default function DashboardPage() {
                       <DynamicFileGrid files={files} loading={filesLoading}
                         onDownload={handleDownload} onDelete={handleDeleteFile}
                         onShare={handleShare} onMove={handleMove}
+                        onSearch={setSearchQuery} searchQuery={searchQuery}
                         viewMode={viewMode} onViewModeChange={setViewMode} />
 
                       {files.length > 0 && filesPage < filesTotalPages && (

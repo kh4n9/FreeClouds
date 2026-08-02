@@ -27,6 +27,7 @@ interface UserData {
   email: string;
   emailVerified?: boolean;
   avatar?: string | null;
+  storageLimit?: number;
   createdAt: string;
   updatedAt: string;
   stats?: {
@@ -53,6 +54,14 @@ export default function UserProfile({
   const [activeTab, setActiveTab] = useState<
     "profile" | "password" | "account"
   >("profile");
+
+  const formatBytes = (bytes: number): string => {
+    if (!bytes) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -730,10 +739,10 @@ export default function UserProfile({
                     </div>
                     <div className="w-full bg-slate-700/50 rounded-full h-2 overflow-hidden">
                       <div className="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full"
-                        style={{ width: `${Math.min((userStats.stats.totalSize / (100 * 1024 * 1024)) * 100, 100)}%` }} />
+                        style={{ width: `${Math.min((userStats.stats.totalSize / (userStats.storageLimit || 1)) * 100, 100)}%` }} />
                     </div>
                     <p className="text-xs text-slate-500">
-                      {(userStats.stats.totalSize / (1024 * 1024)).toFixed(2)} MB of 100 MB used
+                      {formatBytes(userStats.stats.totalSize)} of {formatBytes(userStats.storageLimit || 0)} used
                     </p>
                   </div>
                 </div>

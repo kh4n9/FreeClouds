@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, AuthError, createAuthResponse } from "@/lib/auth";
+import { getSystemSettings } from "@/lib/settings";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +14,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(user, { status: 200 });
+    const settings = await getSystemSettings();
+
+    return NextResponse.json(
+      { ...user, storageLimit: settings.storageLimit },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Get current user error:", error);
 

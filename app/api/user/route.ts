@@ -5,6 +5,7 @@ import { connectToDatabase } from "@/lib/db";
 import { User } from "@/models/User";
 import { File } from "@/models/File";
 import { Folder } from "@/models/Folder";
+import { getSystemSettings } from "@/lib/settings";
 import {
   requireAuth,
   AuthError,
@@ -73,6 +74,7 @@ export async function GET(request: NextRequest) {
           totalSize: storageStats.totalSize,
           totalFolders: folderCount,
         },
+        storageLimit: (await getSystemSettings()).storageLimit,
       },
       { status: 200 },
     );
