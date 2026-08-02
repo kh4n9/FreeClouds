@@ -592,12 +592,20 @@ export function CADPreview({ file, onDownload }: SpecializedPreviewProps) {
 }
 
 // Email Files Preview (EML, MSG, etc.)
+interface ParsedEmail {
+  from: string;
+  to: string;
+  subject: string;
+  date: string;
+  body: string;
+}
+
 export function EmailPreview({
   file,
   fileContent,
   onDownload,
 }: SpecializedPreviewProps) {
-  const [parsedEmail, setParsedEmail] = useState<any>(null);
+  const [parsedEmail, setParsedEmail] = useState<ParsedEmail | null>(null);
 
   const parseEMLContent = (content: string) => {
     const lines = content.split("\n");
@@ -638,6 +646,7 @@ export function EmailPreview({
         file.mime.includes("message"))
     ) {
       const parsed = parseEMLContent(fileContent);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setParsedEmail(parsed);
     }
   }, [fileContent, file]);
@@ -722,17 +731,26 @@ export function EmailPreview({
 }
 
 // Calendar Files Preview (ICS, VCS, etc.)
+interface CalendarEvent {
+  title?: string;
+  start?: string;
+  end?: string;
+  description?: string;
+  location?: string;
+  organizer?: string;
+}
+
 export function CalendarPreview({
   file,
   fileContent,
   onDownload,
 }: SpecializedPreviewProps) {
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
 
   const parseICSContent = (content: string) => {
     const lines = content.split("\n").map((line) => line.trim());
-    const events = [];
-    let currentEvent: any = null;
+    const events: CalendarEvent[] = [];
+    let currentEvent: CalendarEvent | null = null;
 
     for (const line of lines) {
       if (line === "BEGIN:VEVENT") {
@@ -796,6 +814,7 @@ export function CalendarPreview({
         file.name.toLowerCase().endsWith(".vcs"))
     ) {
       const parsedEvents = parseICSContent(fileContent);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEvents(parsedEvents);
     }
   }, [fileContent, file]);

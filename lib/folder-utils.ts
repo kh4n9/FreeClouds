@@ -348,7 +348,11 @@ export function exportFolderStructure(
 ): object {
   const tree = buildFolderTree(folders);
 
-  function addFilesToNode(node: FolderTreeNode): any {
+  interface ExportedFolderNode extends FolderTreeNode {
+    files: Array<{ id: string; name: string; size: number; uploadDate: Date }>;
+  }
+
+  function addFilesToNode(node: FolderTreeNode): ExportedFolderNode {
     const nodeFiles = files.filter(f =>
       f.folderId === node._id && !f.isDeleted
     );

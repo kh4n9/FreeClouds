@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
-import { File } from "@/models/File";
+import { File, type IFile } from "@/models/File";
 import { requireAuth, AuthError, createAuthResponse } from "@/lib/auth";
 import { logAction } from "@/lib/activity-log";
 import mongoose from "mongoose";
+import type { FilterQuery, PipelineStage } from "mongoose";
 
 const querySchema = z.object({
   page: z
@@ -74,10 +75,10 @@ export async function GET(request: NextRequest) {
     } = validation.data;
 
     // Build aggregation pipeline
-    const pipeline: any[] = [];
+    const pipeline: PipelineStage[] = [];
 
     // Match stage
-    const matchConditions: any[] = [
+    const matchConditions: FilterQuery<IFile>[] = [
       // Exclude internal chunk records
       { $or: [{ chunkedId: null }, { chunkIndex: -1 }] },
     ];
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest) {
       matchConditions.push({ name: { $regex: search, $options: "i" } });
     }
 
-    const matchStage: any = { $and: matchConditions };
+    const matchStage: FilterQuery<IFile> = { $and: matchConditions };
     pipeline.push({ $match: matchStage });
 
     // Add owner information
@@ -189,7 +190,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Sort stage
-    const sortStage: any = {};
+    const sortStage: Record<string, 1 | -1> = {};
     // Ensure sortBy is a string (zod allows null, so narrow the type here)
     const sortField =
       typeof sortBy === "string" && sortBy ? sortBy : "createdAt";
@@ -316,15 +317,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    let result: any;
+    let result: { deletedCount?: number; modifiedCount?: number };
     if (permanent) {
       // Permanent deletion
-      result = await (File as any).deleteMany({
+      result = await File.deleteMany({
         _id: { $in: validFileIds.map((id) => new mongoose.Types.ObjectId(id)) },
       });
     } else {
       // Soft deletion
-      result = await (File as any).updateMany(
+      result = await File.updateMany(
         {
           _id: {
             $in: validFileIds.map((id) => new mongoose.Types.ObjectId(id)),
@@ -408,10 +409,10 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    let result: any;
+    let result: { modifiedCount?: number; deletedCount?: number } = {};
     if (action === "restore") {
       // Restore files
-      result = await (File as any).updateMany(
+      result = await File.updateMany(
         {
           _id: {
             $in: validFileIds.map((id) => new mongoose.Types.ObjectId(id)),

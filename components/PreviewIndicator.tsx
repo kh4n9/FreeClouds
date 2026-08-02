@@ -1,5 +1,6 @@
 "use client";
 
+import { createElement } from "react";
 import {
   Eye,
   EyeOff,
@@ -172,7 +173,7 @@ export default function PreviewIndicator({
         className={`w-6 h-6 rounded-full border flex items-center justify-center ${colorClasses} transition-all duration-200 hover:scale-110`}
         title={showTooltip ? getTooltipContent() : undefined}
       >
-        <IconComponent className="w-3 h-3" />
+        {createElement(IconComponent, { className: "w-3 h-3" })}
       </div>
 
       {/* Enhanced preview indicator */}

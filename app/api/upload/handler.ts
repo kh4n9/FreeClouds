@@ -24,7 +24,6 @@ import {
   sanitizeFileName,
 } from "@/lib/telegram";
 import { getSystemSettings } from "@/lib/settings";
-import { logAction } from "@/lib/activity-log";
 
 const CHUNK_SIZE = 15 * 1024 * 1024;
 const uploadSchema = z.object({
@@ -55,14 +54,14 @@ export async function handleUpload(request: NextRequest) {
     }
 
     if (folderId) {
-      const folder = await (Folder as any).findById(folderId);
+      const folder = await Folder.findById(folderId);
       if (!folder || !(await verifyOwnership(user.id, folder)))
         return NextResponse.json({ error: "Folder not found or access denied" }, { status: 404 });
     }
 
     if (file.size === 0) return NextResponse.json({ error: "Empty file not allowed" }, { status: 400 });
 
-    const userStats = await (File as any).getStorageUsage(user.id);
+    const userStats = await File.getStorageUsage(user.id);
     const settings = await getSystemSettings();
     if ((userStats.totalSize || 0) + file.size > settings.storageLimit) {
       return NextResponse.json({ error: "Storage limit exceeded" }, { status: 413 });
@@ -85,7 +84,7 @@ export async function handleUpload(request: NextRequest) {
       }
     }
 
-    const existingFile = await (File as any).findOne({
+    const existingFile = await File.findOne({
       owner: user.id, folder: folderId, name: fileName, deletedAt: null,
     });
     if (existingFile) {
@@ -113,7 +112,7 @@ export async function handleUpload(request: NextRequest) {
         telegramFilePath = fileInfo.file_path || null;
       } catch {}
 
-      const fileRecord = new (File as any)({
+      const fileRecord = new File({
         name: fileName,
         size: totalSize,
         mime: mimeType,
@@ -194,7 +193,7 @@ export async function handleUpload(request: NextRequest) {
     }));
 
     try {
-      await (File as any).insertMany(chunkFileDocs);
+      await File.insertMany(chunkFileDocs);
     } catch (err) {
       console.error("Failed to save chunk records:", err);
       return NextResponse.json({ error: "Failed to save file chunks. Please try again." }, { status: 500 });
@@ -202,7 +201,7 @@ export async function handleUpload(request: NextRequest) {
 
     let parentFile;
     try {
-      parentFile = new (File as any)({
+      parentFile = new File({
         name: fileName,
         size: totalSize,
         mime: mimeType,
@@ -217,7 +216,7 @@ export async function handleUpload(request: NextRequest) {
       await parentFile.save();
     } catch (err) {
       console.error("Failed to save parent record, cleaning up chunks:", err);
-      await (File as any).deleteMany({ chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+      await File.deleteMany({ chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
       return NextResponse.json({ error: "Failed to finalize file upload. Please try again." }, { status: 500 });
     }
 

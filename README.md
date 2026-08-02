@@ -1,12 +1,12 @@
-# 🌟 Free Clouds - Next.js 14
+# 🌟 Free Clouds - Next.js 16
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4-38B2AC)](https://tailwindcss.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-8.5-green)](https://www.mongodb.com/)
 [![Telegram Bot API](https://img.shields.io/badge/Telegram%20Bot%20API-Latest-2CA5E0)](https://core.telegram.org/bots/api)
 
-A modern, secure cloud storage application built with Next.js 14, TypeScript, and Telegram Bot API. Store, organize, and access your files securely with enterprise-grade authentication, advanced folder management, and comprehensive user profile controls.
+A modern, secure cloud storage application built with Next.js 16, TypeScript, and Telegram Bot API. Store, organize, and access your files securely with enterprise-grade authentication, advanced folder management, and comprehensive user profile controls.
 
 ## ✨ Features
 
@@ -72,7 +72,7 @@ A modern, secure cloud storage application built with Next.js 14, TypeScript, an
 
 ### Technology Stack
 
-- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
+- **Frontend**: Next.js 16 (App Router), TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, Node.js runtime
 - **Database**: MongoDB with Mongoose ODM
 - **File Storage**: Telegram Bot API (50MB per file, unlimited storage)
@@ -84,7 +84,7 @@ A modern, secure cloud storage application built with Next.js 14, TypeScript, an
 
 ```
 free-clouds/
-├── app/                          # Next.js 14 App Router
+├── app/                          # Next.js 16 App Router
 │   ├── (auth)/                   # Auth route group
 │   │   ├── login/page.tsx        # Login page
 │   │   └── register/page.tsx     # Registration page
@@ -843,7 +843,7 @@ npm run format
 
 **Code Style Guidelines:**
 - Use TypeScript strict mode
-- Follow Next.js 14 conventions
+- Follow Next.js 16 conventions
 - Implement proper error handling
 - Add comprehensive logging
 - Write self-documenting code
@@ -1058,7 +1058,7 @@ curl http://localhost:3001/api/telegram-test
 **Documentation:**
 - [User Profile Guide](docs/USER_PROFILE.md)
 - [API Documentation](#-api-documentation)
-- [Next.js 14 Documentation](https://nextjs.org/docs)
+- [Next.js 16 Documentation](https://nextjs.org/docs)
 
 **Community Support:**
 - 💬 GitHub Discussions: Ask questions and share ideas
@@ -1072,7 +1072,7 @@ curl http://localhost:3001/api/telegram-test
 
 ---
 
-**Built with ❤️ using Next.js 14, TypeScript, and Modern Web Technologies**
+**Built with ❤️ using Next.js 16, TypeScript, and Modern Web Technologies**
 
 *Free Clouds - Your files, your control, unlimited possibilities.*
 

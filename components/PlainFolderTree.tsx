@@ -47,9 +47,9 @@ function buildTree(folders: FolderData[]): FolderData[] {
     }
   });
 
-  const sortRec = (arr: (FolderData & { children: FolderData[] })[]) => {
+  const sortRec = (arr: FolderData[]) => {
     arr.sort((a, b) => a.name.localeCompare(b.name));
-    arr.forEach((n) => sortRec(n.children as any));
+    arr.forEach((n) => sortRec(n.children ?? []));
   };
 
   sortRec(roots);
@@ -102,6 +102,7 @@ function FolderNode({
   // Sync expand state with globalExpandAll prop changes
   useEffect(() => {
     if (typeof globalExpandAll === "boolean") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpanded(globalExpandAll);
     }
   }, [globalExpandAll]);
@@ -109,12 +110,14 @@ function FolderNode({
   // Auto expand if this node contains currently selected folder
   useEffect(() => {
     if (selectedFolderId && containsId(node, selectedFolderId)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpanded(true);
     }
   }, [selectedFolderId, node]);
 
   // Update name if node prop changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setName(node.name);
   }, [node.name]);
 
@@ -326,6 +329,7 @@ export default function PlainFolderTree({
 
   useEffect(() => {
     if (typeof expandAll === "boolean") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRootExpanded(expandAll);
     }
   }, [expandAll]);

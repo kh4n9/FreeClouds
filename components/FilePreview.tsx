@@ -202,6 +202,7 @@ export default function FilePreview({
 
   useEffect(() => {
     if (!file || !isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFileContent(null);
       setError(null);
       setZoom(100);

@@ -33,7 +33,7 @@ export async function getUserFromRequest(
     }
 
     return {
-      id: (user._id as any).toString(),
+      id: String(user._id),
       email: user.email,
       name: user.name,
       role: user.role,
@@ -134,7 +134,7 @@ export function createCsrfError() {
 }
 
 // Helper to check if user owns a resource
-export async function verifyOwnership<T extends { owner: any }>(
+export async function verifyOwnership<T extends { owner: { toString(): string } }>(
   userId: string,
   resource: T | null,
 ): Promise<boolean> {
@@ -188,7 +188,7 @@ export function createRateLimitError() {
   );
 }
 
-export function getClientIp(request: NextRequest): string {
+export function getClientIp(request: Request): string {
   const xForwardedFor = request.headers.get("x-forwarded-for");
   const xRealIp = request.headers.get("x-real-ip");
   const cfConnectingIp = request.headers.get("cf-connecting-ip");

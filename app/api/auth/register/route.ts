@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     await user.save();
 
     await logAction("register", {
-      userId: (user._id as any).toString(),
+      userId: user._id.toString(),
       email: user.email,
       metadata: { name: user.name },
       request,
@@ -105,13 +105,13 @@ export async function POST(request: NextRequest) {
 
     // Generate JWT token
     const token = signJwt({
-      userId: (user._id as any).toString(),
+      userId: user._id.toString(),
       email: user.email,
     });
 
     // Create response with user data
     const userData = {
-      id: (user._id as any).toString(),
+      id: user._id.toString(),
       email: user.email,
       name: user.name,
     };

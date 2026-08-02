@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { requireAdmin, AuthError, createAuthResponse } from "@/lib/auth";
-import { User } from "@/models/User";
+import { User, type IUser } from "@/models/User";
 import { File } from "@/models/File";
 import { Folder } from "@/models/Folder";
 import { logAction } from "@/lib/activity-log";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+import type { FilterQuery } from "mongoose";
+
+interface UserStatsRow {
+  id: string;
+  totalFilesUploaded: number;
+  totalStorageUsed: number;
+  totalFolders: number;
+  [key: string]: unknown;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,7 +36,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get("sortOrder") || "desc";
 
     // Build query
-    const query: any = {};
+    const query: FilterQuery<IUser> = {};
 
     if (search) {
       query.$or = [
@@ -52,7 +61,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build sort object
-    const sort: any = {};
+    const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === "desc" ? -1 : 1;
 
     // Check if sorting by computed fields (totalFiles, totalStorageUsed, totalFolders)
@@ -63,7 +72,7 @@ export async function GET(request: NextRequest) {
     ].includes(sortBy);
 
     let users;
-    let usersWithStats;
+    let usersWithStats: UserStatsRow[];
 
     if (isComputedSort) {
       // For computed fields, get all users with stats and sort in memory
@@ -136,8 +145,8 @@ export async function GET(request: NextRequest) {
 
       // Sort by computed field
       usersWithStats.sort((a, b) => {
-        const aValue = (a as any)[sortBy] || 0;
-        const bValue = (b as any)[sortBy] || 0;
+        const aValue = (a[sortBy] as number) || 0;
+        const bValue = (b[sortBy] as number) || 0;
         return sortOrder === "desc" ? bValue - aValue : aValue - bValue;
       });
 
@@ -315,7 +324,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Return user without password hash
-    const userResponse = (newUser as any).toSafeObject();
+    const userResponse = newUser.toSafeObject();
 
     return NextResponse.json(
       {

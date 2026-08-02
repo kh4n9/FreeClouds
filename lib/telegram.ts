@@ -52,11 +52,35 @@ class TelegramAPI {
   private baseUrl: string;
   private botToken: string;
   private chatId: string;
+  private timeoutMs: number;
+  private maxRetries: number;
 
   constructor() {
     this.botToken = env.TELEGRAM_BOT_TOKEN;
     this.chatId = env.TELEGRAM_CHAT_ID;
     this.baseUrl = `${env.TELEGRAM_API_BASE}/bot${this.botToken}`;
+    this.timeoutMs = env.TELEGRAM_TIMEOUT_MS;
+    this.maxRetries = env.TELEGRAM_MAX_RETRIES;
+  }
+
+  private async fetchWithRetry(url: string, options?: RequestInit): Promise<Response> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+      try {
+        return await fetch(url, { ...options, signal: controller.signal });
+      } catch (error) {
+        lastError = error;
+        if (attempt < this.maxRetries) {
+          const delay = 500 * 2 ** attempt + Math.random() * 250;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    throw lastError;
   }
 
   private async makeRequest<T>(
@@ -81,7 +105,7 @@ class TelegramAPI {
             : null,
       };
 
-      const response = await fetch(url, options);
+      const response = await this.fetchWithRetry(url, options);
       const result = await response.json();
 
       if (!result.ok) {
@@ -162,7 +186,7 @@ class TelegramAPI {
     try {
       const url = `${env.TELEGRAM_API_BASE}/file/bot${this.botToken}/${filePath}`;
 
-      const response = await fetch(url);
+      const response = await this.fetchWithRetry(url);
 
       if (!response.ok) {
         throw new TelegramError(

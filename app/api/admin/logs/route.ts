@@ -5,7 +5,7 @@ import { ActivityLog } from "@/models/ActivityLog";
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAdmin(request);
+    await requireAdmin(request);
     await connectToDatabase();
 
     const { searchParams } = new URL(request.url);
@@ -14,9 +14,14 @@ export async function GET(request: NextRequest) {
     const action = searchParams.get("action") || undefined;
     const search = searchParams.get("search") || undefined;
 
-    const result = await (ActivityLog as any).listLogs({ page, limit, action, search });
+    const result = await ActivityLog.listLogs({
+      page,
+      limit,
+      ...(action !== undefined && { action }),
+      ...(search !== undefined && { search }),
+    });
 
-    const logs = result.logs.map((log: any) => ({
+    const logs = result.logs.map((log) => ({
       id: log._id.toString(),
       userId: log.userId,
       email: log.email,

@@ -26,12 +26,29 @@ interface SEOHeadProps {
   noIndex?: boolean;
   canonical?: string;
   breadcrumbs?: BreadcrumbItem[];
-  structuredData?: any;
+  structuredData?: Record<string, unknown>;
   additionalMetaTags?: Record<string, string>;
   hreflangLinks?: Array<{
     hrefLang: string;
     href: string;
   }>;
+}
+
+// Shape of the fields consumed from generateMetadata's return value.
+interface RenderedMetadata {
+  title: string;
+  description: string;
+  keywords: string[];
+  robots: string;
+  openGraph: {
+    title: string;
+    description: string;
+    siteName: string;
+  };
+  twitter: {
+    title: string;
+    description: string;
+  };
 }
 
 export default function SEOHead({
@@ -51,7 +68,7 @@ export default function SEOHead({
 }: SEOHeadProps) {
   const metadata = generateMetadata({
     language: language ?? "en",
-    page: (page ?? "home") as any,
+    ...(page ? { page } : {}),
     title: title ?? "",
     description: description ?? "",
     keywords: keywords ?? [],
@@ -59,7 +76,7 @@ export default function SEOHead({
     url: url ?? BASE_URL,
     noIndex: !!noIndex,
     canonical: canonical ?? url ?? BASE_URL,
-  });
+  }) as RenderedMetadata;
 
   const webAppStructuredData = generateWebApplicationStructuredData(language);
   const breadcrumbData =
@@ -95,7 +112,7 @@ export default function SEOHead({
     <>
       <Head>
         {/* Primary Meta Tags */}
-        <title>{metadata.title as any}</title>
+        <title>{metadata.title}</title>
         <meta name="title" content={metadata.title as string} />
         <meta name="description" content={metadata.description as string} />
         <meta

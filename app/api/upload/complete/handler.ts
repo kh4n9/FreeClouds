@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Types } from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import { requireAuth, AuthError, createAuthResponse, validateOrigin, createCsrfError } from "@/lib/auth";
@@ -25,8 +26,7 @@ export async function handleComplete(request: NextRequest) {
     }
 
     // Verify chunks exist + cache file_paths for faster downloads
-    const chunks = await (File as any)
-      .find({ chunkedId, chunkIndex: { $gte: 0 }, owner: user.id })
+    const chunks = await File.find({ chunkedId, chunkIndex: { $gte: 0 }, owner: user.id })
       .sort({ chunkIndex: 1 });
     if (chunks.length === 0) {
       return NextResponse.json({ error: "No chunks found" }, { status: 404 });
@@ -39,16 +39,16 @@ export async function handleComplete(request: NextRequest) {
         { status: 400 },
       );
     }
-    const contiguous = chunks.every((chunk: any, i: number) => chunk.chunkIndex === i);
+    const contiguous = chunks.every((chunk, i) => chunk.chunkIndex === i);
     if (!contiguous) {
       const missing = Array.from({ length: totalChunks }, (_, i) => i)
-        .filter((i) => !chunks.some((c: any) => c.chunkIndex === i));
+        .filter((i) => !chunks.some((c) => c.chunkIndex === i));
       return NextResponse.json(
         { error: `Missing chunks: [${missing.join(", ")}]. Vui lòng tải lại file.` },
         { status: 400 },
       );
     }
-    const chunkSum = chunks.reduce((sum: number, c: any) => sum + (c.size || 0), 0);
+    const chunkSum = chunks.reduce((sum: number, c) => sum + (c.size || 0), 0);
     if (chunkSum !== Number(totalSize)) {
       return NextResponse.json(
         { error: "Chunk size mismatch. Vui lòng tải lại file." },
@@ -57,18 +57,18 @@ export async function handleComplete(request: NextRequest) {
     }
 
     // Fetch and cache Telegram file_paths (skip getFile on future downloads)
-    await Promise.all(chunks.map(async (chunk: any) => {
+    await Promise.all(chunks.map(async (chunk) => {
       if (chunk.telegramFilePath) return;
       try {
         const info = await telegramAPI.getFile(chunk.fileId);
         if (info.file_path) {
-          await (File as any).updateOne({ _id: chunk._id }, { telegramFilePath: info.file_path });
+          await File.updateOne({ _id: chunk._id }, { telegramFilePath: info.file_path });
         }
       } catch {}
     }));
 
     // Check storage limit
-    const userStats = await (File as any).getStorageUsage(user.id);
+    const userStats = await File.getStorageUsage(user.id);
     const settings = await getSystemSettings();
     if ((userStats.totalSize || 0) + totalSize > settings.storageLimit) {
       return NextResponse.json({ error: "Storage limit exceeded" }, { status: 413 });
@@ -92,8 +92,11 @@ export async function handleComplete(request: NextRequest) {
     const folderId = rawFolderId && rawFolderId !== "null" && rawFolderId !== "" ? rawFolderId : null;
 
     // Handle duplicate name
-    const existingFile = await (File as any).findOne({
-      owner: user.id, folder: folderId, name: fileName, deletedAt: null,
+    const existingFile = await File.findOne({
+      owner: user.id as unknown as Types.ObjectId,
+      folder: folderId as unknown as Types.ObjectId | null,
+      name: fileName,
+      deletedAt: null,
     });
     if (existingFile) {
       const ext = fileName.includes(".") ? fileName.substring(fileName.lastIndexOf(".")) : "";
@@ -101,13 +104,13 @@ export async function handleComplete(request: NextRequest) {
       fileName = `${base}_${Date.now()}${ext}`;
     }
 
-    const parentFile = new (File as any)({
+    const parentFile = new File({
       name: fileName,
       size: totalSize,
       mime: originalMime || "application/octet-stream",
       fileId: `chunked_parent_${chunkedId}`,
-      owner: user.id,
-      folder: folderId,
+      owner: user.id as unknown as Types.ObjectId,
+      folder: folderId as unknown as Types.ObjectId | null,
       chunkedId,
       chunkIndex: -1,
       totalChunks: chunks.length,
@@ -119,13 +122,13 @@ export async function handleComplete(request: NextRequest) {
       userId: user.id,
       email: user.email,
       entityType: "file",
-      entityId: parentFile._id.toString(),
+      entityId: (parentFile._id as Types.ObjectId).toString(),
       metadata: { name: parentFile.name, size: parentFile.size, chunked: true },
       request,
     });
 
     return NextResponse.json({
-      id: parentFile._id.toString(),
+      id: (parentFile._id as Types.ObjectId).toString(),
       name: parentFile.name,
       size: parentFile.size,
       mime: parentFile.mime,

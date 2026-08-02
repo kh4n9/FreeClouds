@@ -49,6 +49,7 @@ export default function LanguageSwitcher({
     const pathLang = pathname.startsWith("/vi") ? "vi" : "en";
     const lang: Language =
       languages.find((l) => l.code === pathLang) || languages[0]!;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentLanguage(lang);
   }, [pathname]);
 
@@ -252,6 +253,7 @@ export function useCurrentLanguage() {
 
   useEffect(() => {
     const pathLang = pathname.startsWith("/vi") ? "vi" : "en";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentLang(pathLang);
   }, [pathname]);
 

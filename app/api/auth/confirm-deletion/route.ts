@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { rateLimit } from "@/lib/ratelimit";
 import { getUserFromRequest } from "@/lib/auth";
-import { User } from "@/models/User";
-import { File } from "@/models/File";
-import { Folder } from "@/models/Folder";
+import { User, type IUser } from "@/models/User";
+import { File, type IFile } from "@/models/File";
+import { Folder, type IFolder } from "@/models/Folder";
 import VerificationCode from "@/models/VerificationCode";
+import type { FilterQuery } from "mongoose";
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,44 +70,44 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user
-    const dbUser = await (User as any).findById(userId);
+    const dbUser = await User.findById(userId);
     if (!dbUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Start transaction for account deletion
-    const session = await (User as any).startSession();
+    const session = await User.startSession();
 
     try {
       await session.withTransaction(async () => {
         // Delete all user's files
-        const userFiles = await (File as any).find({ userId });
+        const userFiles = await File.find({ userId } as FilterQuery<IFile>);
         const fileCount = userFiles.length;
 
         if (fileCount > 0) {
           // In a real implementation, you would also delete the actual files from storage
           // For now, we'll just delete the database records
-          await (File as any).deleteMany({ userId }, { session });
+          await File.deleteMany({ userId } as FilterQuery<IFile>, { session });
           console.log(`Deleted ${fileCount} files for user ${userEmail}`);
         }
 
         // Delete all user's folders
-        const userFolders = await (Folder as any).find({ userId });
+        const userFolders = await Folder.find({ userId } as FilterQuery<IFolder>);
         const folderCount = userFolders.length;
 
         if (folderCount > 0) {
-          await (Folder as any).deleteMany({ userId }, { session });
+          await Folder.deleteMany({ userId } as FilterQuery<IFolder>, { session });
           console.log(`Deleted ${folderCount} folders for user ${userEmail}`);
         }
 
         // Delete all verification codes for this user
-        await (VerificationCode as any).deleteMany(
+        await VerificationCode.deleteMany(
           { email: userEmail.toLowerCase() },
           { session },
         );
 
         // Finally, delete the user account
-        await (User as any).findByIdAndDelete(userId, { session });
+        await User.findByIdAndDelete(userId, { session });
 
         console.log(`Account deletion completed for user: ${userEmail}`);
       });

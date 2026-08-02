@@ -76,13 +76,6 @@ export default function UserProfile({
   const [showDeletionModal, setShowDeletionModal] = useState(false);
   const [deletionCountdown, setDeletionCountdown] = useState(0);
 
-  useEffect(() => {
-    if (isOpen && user) {
-      setProfileForm({ name: user.name, email: user.email });
-      loadUserStats();
-    }
-  }, [isOpen, user]);
-
   const loadUserStats = async () => {
     try {
       const response = await fetch("/api/user");
@@ -96,7 +89,16 @@ export default function UserProfile({
   };
 
   useEffect(() => {
+    if (isOpen && user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setProfileForm({ name: user.name, email: user.email });
+      loadUserStats();
+    }
+  }, [isOpen, user]);
+
+  useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab("profile");
       setError(null);
       setSuccess(null);
@@ -563,7 +565,7 @@ export default function UserProfile({
                     placeholder="000000" disabled={loading} />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-slate-400 mb-2">Didn't receive the code?</p>
+                  <p className="text-sm text-slate-400 mb-2">Didn&apos;t receive the code?</p>
                   <button onClick={handleResendDeletionCode}
                     disabled={deletionCountdown > 0 || loading}
                     className="text-indigo-400 hover:text-indigo-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">

@@ -11,6 +11,29 @@ import { telegramAPI, TelegramError } from "@/lib/telegram";
 import { bufferToStream } from "@/lib/download-utils";
 import { put as blobPut } from "@vercel/blob";
 
+// Limit concurrent Telegram connections to avoid connect timeouts when
+// assembling chunked files (Telegram throttles many parallel downloads).
+const DOWNLOAD_CONCURRENCY = 8;
+
+async function downloadChunkWithLimit<T>(
+  items: T[],
+  worker: (item: T, index: number) => Promise<Buffer>,
+): Promise<Buffer[]> {
+  const results: Buffer[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function pump() {
+    while (nextIndex < items.length) {
+      const index = nextIndex++;
+      results[index] = await worker(items[index]!, index);
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(DOWNLOAD_CONCURRENCY, items.length) }, pump);
+  await Promise.all(workers);
+  return results;
+}
+
 export async function handleDownload(request: NextRequest, paramsPromise: Promise<{ id: string }>) {
   try {
     const user = await requireAuth(request);
@@ -40,10 +63,10 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
     if (!isChunked) {
       let fileStream: ReadableStream<Uint8Array>;
       try {
-        const cachedPath = (file as any).telegramFilePath;
+        const cachedPath = file.telegramFilePath;
         const result = await telegramAPI.getFileStream(file.fileId, cachedPath || undefined);
         if (!cachedPath && result.filePath) {
-          (File as any).updateOne({ _id: file._id }, { telegramFilePath: result.filePath }).catch(() => {});
+          File.updateOne({ _id: file._id }, { telegramFilePath: result.filePath }).catch(() => {});
         }
         fileStream = result.stream;
       } catch (error) {
@@ -58,28 +81,13 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
       headers.set("Content-Type", file.mime || "application/octet-stream");
       headers.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
       headers.set("Cache-Control", "private, max-age=3600");
-      headers.set("ETag", `"${(file._id as any).toString()}-${file.createdAt.getTime()}"`);
+      headers.set("ETag", `"${file._id.toString()}-${file.createdAt.getTime()}"`);
       headers.set("X-Content-Type-Options", "nosniff");
       headers.set("X-Frame-Options", "DENY");
+      headers.set("Accept-Ranges", "none");
 
       if (file.size && file.size <= 15 * 1024 * 1024) {
         headers.set("Content-Length", file.size.toString());
-      }
-
-      const range = request.headers.get("range");
-      if (range && file.size) {
-        const match = range.match(/bytes=(\d+)-(\d*)/);
-        if (match) {
-          const [, startStr, endStr] = match;
-          const start = parseInt(startStr!, 10);
-          const end = endStr ? parseInt(endStr, 10) : file.size - 1;
-          if (start < file.size && end < file.size && start <= end) {
-            headers.set("Content-Range", `bytes ${start}-${end}/${file.size}`);
-            headers.set("Content-Length", (end - start + 1).toString());
-            headers.set("Accept-Ranges", "bytes");
-            return new Response(fileStream, { status: 206, headers });
-          }
-        }
       }
 
       return new Response(fileStream, { status: 200, headers });
@@ -95,7 +103,7 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
       deletedAt: null,
     }).sort({ chunkIndex: 1 });
 
-    const foundIndices = chunks.map((c: any) => c.chunkIndex);
+    const foundIndices = chunks.map((c) => c.chunkIndex);
     console.log(`[download] Chunked file ${file.chunkedId}: totalChunks=${file.totalChunks}, found=${chunks.length}, indices=[${foundIndices.join(",")}]`);
 
     if (!chunks.length || chunks.length !== file.totalChunks) {
@@ -104,18 +112,18 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
     }
 
     // Reject non-contiguous chunks instead of silently producing a corrupted file
-    const contiguous = chunks.every((c: any, i: number) => c.chunkIndex === i);
+    const contiguous = chunks.every((c, i) => c.chunkIndex === i);
     if (!contiguous) {
       const missing = Array.from({ length: file.totalChunks }, (_, i) => i)
-        .filter((i) => !chunks.some((c: any) => c.chunkIndex === i));
+        .filter((i) => !chunks.some((c) => c.chunkIndex === i));
       console.error(`[download] Non-contiguous chunks: missing=[${missing.join(",")}]`);
       return NextResponse.json({ error: "File chunks are incomplete" }, { status: 404 });
     }
 
     // Already cached in Blob — redirect immediately (non-range requests only)
-    if ((file as any).blobCacheUrl && !request.headers.get("range")) {
+    if (file.blobCacheUrl && !request.headers.get("range")) {
       const redirectHeaders = new Headers();
-      redirectHeaders.set("Location", (file as any).blobCacheUrl);
+      redirectHeaders.set("Location", file.blobCacheUrl);
       redirectHeaders.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
       return new Response(null, { status: 302, headers: redirectHeaders });
     }
@@ -126,29 +134,27 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
     let fileSizeMB = "0";
     const chunkTimings: number[] = [];
     try {
-      const chunkBuffers: Buffer[] = await Promise.all(
-        chunks.map(async (c) => {
-          const t0 = Date.now();
-          const cachedPath = (c as any).telegramFilePath;
-          const result = await telegramAPI.getFileStream(c.fileId, cachedPath || undefined);
-          if (!cachedPath && result.filePath) {
-            (File as any).updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
-          }
-          const reader = result.stream.getReader();
-          const parts: Uint8Array[] = [];
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            parts.push(value);
-          }
-          reader.releaseLock();
-          const t1 = Date.now();
-          const mb = (c as any).size / 1024 / 1024 || 0;
-          chunkTimings.push(t1 - t0);
-          console.log(`[download] Chunk ${(c as any).chunkIndex + 1}/${chunks.length}: ${mb.toFixed(1)}MB in ${t1 - t0}ms`);
-          return Buffer.concat(parts);
-        }),
-      );
+      const chunkBuffers: Buffer[] = await downloadChunkWithLimit(chunks, async (c) => {
+        const t0 = Date.now();
+        const cachedPath = c.telegramFilePath;
+        const result = await telegramAPI.getFileStream(c.fileId, cachedPath || undefined);
+        if (!cachedPath && result.filePath) {
+          File.updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
+        }
+        const reader = result.stream.getReader();
+        const parts: Uint8Array[] = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          parts.push(value);
+        }
+        reader.releaseLock();
+        const t1 = Date.now();
+        const mb = c.size / 1024 / 1024 || 0;
+        chunkTimings.push(t1 - t0);
+        console.log(`[download] Chunk ${c.chunkIndex! + 1}/${chunks.length}: ${mb.toFixed(1)}MB in ${t1 - t0}ms`);
+        return Buffer.concat(parts);
+      });
       assembled = Buffer.concat(chunkBuffers);
 
       elapsed = Date.now() - startTime;
@@ -191,7 +197,7 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
     let blobUrl: string | null = null;
 
     try {
-      const token = (process as any).env?.BLOB_READ_WRITE_TOKEN;
+      const token = process.env?.BLOB_READ_WRITE_TOKEN;
       console.log(`[download] BLOB_READ_WRITE_TOKEN exists: ${!!token}, blob budget: ${blobBudget}ms`);
 
       if (!token) {
@@ -209,12 +215,13 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
       ]);
       blobUrl = result.url;
       console.log(`[download] Blob success: ${blobUrl}`);
-    } catch (err: any) {
-      console.error(`[download] Blob failed: ${err?.message || err}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[download] Blob failed: ${msg}`);
     }
 
     if (blobUrl) {
-      (File as any).updateOne({ _id: file._id }, { blobCacheUrl: blobUrl }).catch(() => {});
+      File.updateOne({ _id: file._id }, { blobCacheUrl: blobUrl }).catch(() => {});
       const redirectHeaders = new Headers();
       redirectHeaders.set("Location", blobUrl);
       redirectHeaders.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);

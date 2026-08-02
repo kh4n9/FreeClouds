@@ -1,6 +1,7 @@
-import mongoose, { Document, Schema, Model } from "mongoose";
+import mongoose, { Document, Schema, Model, Types } from "mongoose";
 
 export interface IUser extends Document {
+  _id: Types.ObjectId;
   email: string;
   name: string;
   passwordHash: string;
@@ -11,6 +12,8 @@ export interface IUser extends Document {
   totalStorageUsed: number;
   createdAt: Date;
   updatedAt: Date;
+
+  toSafeObject(): Record<string, unknown>;
 }
 
 export interface IUserStatics {
@@ -18,7 +21,21 @@ export interface IUserStatics {
   existsByEmail(email: string): Promise<IUser | null>;
   findActiveUsers(): Promise<IUser[]>;
   findAdmins(): Promise<IUser[]>;
-  getSystemStats(): Promise<any>;
+  getSystemStats(): Promise<{
+    users: {
+      total: number;
+      active: number;
+      admins: number;
+      today: number;
+      thisWeek: number;
+      thisMonth: number;
+    };
+    storage: {
+      totalStorage: number;
+      averageStorage: number;
+      maxStorage: number;
+    };
+  }>;
 }
 
 export interface IUserModel extends Model<IUser>, IUserStatics {}
@@ -96,17 +113,18 @@ userSchema.index({ totalStorageUsed: -1 });
 
 // Virtual for id
 userSchema.virtual("id").get(function () {
-  return (this._id as any).toHexString();
+  return (this._id as Types.ObjectId).toHexString();
 });
 
 // Ensure virtual fields are serialized
 userSchema.set("toJSON", {
   virtuals: true,
-  transform: function (doc: any, ret: any) {
-    delete ret._id;
-    delete ret.__v;
-    delete ret.passwordHash; // Never include password hash in JSON
-    return ret;
+  transform: function (doc, ret) {
+    const safeRet = ret as unknown as Record<string, unknown>;
+    delete safeRet._id;
+    delete safeRet.__v;
+    delete safeRet.passwordHash; // Never include password hash in JSON
+    return safeRet;
   },
 });
 
@@ -165,7 +183,9 @@ userSchema.statics.getSystemStats = async function () {
     },
   ]);
 
-  const storageResult = storageStats[0] as any;
+  const storageResult = storageStats[0] as
+    | { totalStorage: number; averageStorage: number; maxStorage: number }
+    | undefined;
 
   return {
     users: {
@@ -187,7 +207,7 @@ userSchema.statics.getSystemStats = async function () {
 // Instance methods
 userSchema.methods.toSafeObject = function () {
   const user = this.toObject();
-  const safeUser = user as any;
+  const safeUser = user as unknown as Record<string, unknown>;
   delete safeUser.passwordHash;
   delete safeUser._id;
   delete safeUser.__v;
@@ -215,7 +235,6 @@ userSchema.methods.updateStorageUsed = function (sizeChange: number) {
 
 userSchema.methods.syncStatistics = async function () {
   try {
-    const mongoose = require("mongoose");
     const File = mongoose.model("File");
     const Folder = mongoose.model("Folder");
 

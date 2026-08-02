@@ -1,6 +1,15 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, {
+  Schema,
+  Document,
+  Model,
+  FilterQuery,
+  UpdateWriteOpResult,
+  DeleteResult,
+  Types,
+} from "mongoose";
 
 export interface IVerificationCode extends Document {
+  _id: Types.ObjectId;
   email: string;
   code: string;
   type: "password_reset" | "account_deletion";
@@ -21,8 +30,8 @@ export interface IVerificationCodeModel extends Model<IVerificationCode> {
   invalidateUserCodes(
     email: string,
     type?: "password_reset" | "account_deletion",
-  ): Promise<any>;
-  cleanupExpired(): Promise<any>;
+  ): Promise<UpdateWriteOpResult>;
+  cleanupExpired(): Promise<DeleteResult>;
 }
 
 const VerificationCodeSchema = new Schema<IVerificationCode>(
@@ -94,7 +103,7 @@ VerificationCodeSchema.statics.invalidateUserCodes = function (
   email: string,
   type?: "password_reset" | "account_deletion",
 ) {
-  const query: any = {
+  const query: FilterQuery<IVerificationCode> = {
     email: email.toLowerCase(),
     used: false,
   };

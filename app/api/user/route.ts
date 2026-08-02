@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        id: (userDoc._id as any).toString(),
+        id: userDoc._id.toString(),
         name: userDoc.name,
         email: userDoc.email,
         createdAt: userDoc.createdAt,
@@ -140,7 +140,7 @@ export async function PATCH(request: NextRequest) {
         {
           message: "Profile updated successfully",
           user: {
-            id: (updatedUser._id as any).toString(),
+            id: updatedUser._id.toString(),
             name: updatedUser.name,
             email: updatedUser.email,
             createdAt: updatedUser.createdAt,
@@ -174,9 +174,16 @@ export async function PATCH(request: NextRequest) {
       }
 
       // Verify current password
+      const passwordHash = (userDoc as { password?: string }).password;
+      if (!passwordHash) {
+        return NextResponse.json(
+          { error: "Password not set for this account" },
+          { status: 400 },
+        );
+      }
       const isCurrentPasswordValid = await bcrypt.compare(
         currentPassword,
-        (userDoc as any).password,
+        passwordHash,
       );
       if (!isCurrentPasswordValid) {
         return NextResponse.json(

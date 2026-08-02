@@ -39,6 +39,7 @@ export default function SimpleFilePreview({ file, isOpen, onClose, onDownload }:
 
     if (!file || !isOpen) {
       console.log('Resetting state');
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFileContent(null);
       setError(null);
       setLoading(false);

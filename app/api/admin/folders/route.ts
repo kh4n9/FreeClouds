@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
-import { Folder } from "@/models/Folder";
+import { Folder, type IFolder } from "@/models/Folder";
 import { File } from "@/models/File";
 import { requireAuth, AuthError, createAuthResponse } from "@/lib/auth";
 import { logAction } from "@/lib/activity-log";
 import mongoose from "mongoose";
+import type { FilterQuery, PipelineStage } from "mongoose";
 
 const querySchema = z.object({
   page: z
@@ -68,10 +69,10 @@ export async function GET(request: NextRequest) {
     } = validation.data;
 
     // Build aggregation pipeline
-    const pipeline: any[] = [];
+    const pipeline: PipelineStage[] = [];
 
     // Match stage
-    const matchStage: any = {};
+    const matchStage: FilterQuery<IFolder> = {};
 
     // Filter by user if specified
     if (userId && mongoose.Types.ObjectId.isValid(userId)) {
@@ -191,7 +192,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Sort stage
-    const sortStage: any = {};
+    const sortStage: Record<string, 1 | -1> = {};
     // Ensure sortBy is a string (zod allows null, so narrow the type here)
     const sortField =
       typeof sortBy === "string" && sortBy ? sortBy : "createdAt";
@@ -320,7 +321,7 @@ export async function DELETE(request: NextRequest) {
 
     for (const folderId of validFolderIds) {
       try {
-        const folder = await (Folder as any).findById(folderId);
+        const folder = await Folder.findById(folderId);
         if (!folder) {
           errors.push(`Folder with ID ${folderId} not found`);
           continue;
@@ -350,7 +351,7 @@ export async function DELETE(request: NextRequest) {
           }
 
           // Delete empty folder
-          await (Folder as any).findByIdAndDelete(folderId);
+          await Folder.findByIdAndDelete(folderId);
           totalFoldersDeleted += 1;
         }
       } catch (error) {

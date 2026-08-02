@@ -1,10 +1,39 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
 
 export interface IFolder extends Document {
+  _id: Types.ObjectId;
   name: string;
   owner: Types.ObjectId;
   parent: Types.ObjectId | null;
   createdAt: Date;
+
+  // Instance methods (defined on schema)
+  getFullPath(): Promise<string>;
+  hasChild(childName: string): Promise<boolean>;
+  getChildren(): Promise<IFolder[]>;
+  canBeDeleted(): Promise<{ canDelete: boolean; reason?: string }>;
+  deleteRecursively(): Promise<{
+    foldersDeleted: number;
+    filesDeleted: number;
+    errors: string[];
+  }>;
+  countContents(): Promise<{ totalFolders: number; totalFiles: number }>;
+}
+
+export interface IFolderModel extends mongoose.Model<IFolder> {
+  findByOwner(ownerId: string, parentId?: string | null): Promise<IFolder[]>;
+  findByPath(ownerId: string, folderPath: string[]): Promise<IFolder | null>;
+  getFolderTree(ownerId: string): Promise<FolderTreeEntry[]>;
+  getFolderPath(folderId: string | Types.ObjectId): Promise<string[]>;
+}
+
+interface FolderTreeEntry {
+  _id: Types.ObjectId;
+  name: string;
+  owner: Types.ObjectId;
+  parent: Types.ObjectId | null;
+  createdAt: Date;
+  children: FolderTreeEntry[];
 }
 
 const folderSchema = new Schema<IFolder>({
@@ -48,19 +77,23 @@ folderSchema.index({ createdAt: -1 });
 
 // Virtual for id
 folderSchema.virtual("id").get(function () {
-  return (this._id as any).toHexString();
+  return (this._id as Types.ObjectId).toHexString();
 });
 
 // Ensure virtual fields are serialized
 folderSchema.set("toJSON", {
   virtuals: true,
   transform: function (doc, ret) {
-    const obj = ret as any;
+    const obj = ret as {
+      _id?: unknown;
+      __v?: unknown;
+      parent?: unknown;
+    };
     delete obj._id;
     delete obj.__v;
     // Convert parent ObjectId to string
     if (obj.parent) {
-      obj.parent = obj.parent.toString();
+      obj.parent = (obj.parent as { toString(): string }).toString();
     }
     return obj;
   },
@@ -78,7 +111,7 @@ folderSchema.pre("save", function (next) {
 folderSchema.pre("save", async function (next) {
   if (this.isModified("parent") && this.parent) {
     // Check if parent exists and belongs to the same owner
-    const parent = await (this.constructor as any).findOne({
+    const parent = await (this.constructor as unknown as IFolderModel).findOne({
       _id: this.parent,
       owner: this.owner,
     });
@@ -90,7 +123,7 @@ folderSchema.pre("save", async function (next) {
     // Check for circular reference
     let currentParent = parent.parent;
     const visited = new Set([
-      (this._id as any).toString(),
+      this._id.toString(),
       this.parent.toString(),
     ]);
 
@@ -101,7 +134,7 @@ folderSchema.pre("save", async function (next) {
 
       visited.add(currentParent.toString());
 
-      const nextParent = await (this.constructor as any)
+      const nextParent = await (this.constructor as unknown as IFolderModel)
         .findById(currentParent)
         .select("parent");
       if (!nextParent) break;
@@ -117,7 +150,10 @@ folderSchema.statics.findByOwner = function (
   ownerId: string,
   parentId?: string | null,
 ) {
-  const query: any = { owner: ownerId };
+  const query: {
+    owner: string;
+    parent?: string | null;
+  } = { owner: ownerId };
 
   // If parentId is provided, filter by parent
   if (parentId !== undefined) {
@@ -153,20 +189,21 @@ folderSchema.statics.findByPath = async function (
 folderSchema.statics.getFolderTree = async function (ownerId: string) {
   const folders = await this.find({ owner: ownerId }).sort({ name: 1 });
 
-  const folderMap = new Map();
-  const rootFolders: any[] = [];
+  const folderMap = new Map<string, FolderTreeEntry>();
+  const rootFolders: FolderTreeEntry[] = [];
 
   // Create folder map
-  folders.forEach((folder: any) => {
+  folders.forEach((folder: IFolder) => {
+    const data = folder.toJSON() as unknown as Record<string, unknown>;
     folderMap.set(folder._id.toString(), {
-      ...folder.toJSON(),
+      ...(data as unknown as FolderTreeEntry),
       children: [],
     });
   });
 
   // Build tree structure
-  folders.forEach((folder: any) => {
-    const folderData = folderMap.get(folder._id.toString());
+  folders.forEach((folder: IFolder) => {
+    const folderData = folderMap.get(folder._id.toString())!;
 
     if (folder.parent) {
       const parent = folderMap.get(folder.parent.toString());
@@ -201,14 +238,16 @@ folderSchema.statics.getFolderPath = async function (
 
 // Instance methods
 folderSchema.methods.getFullPath = async function (): Promise<string> {
-  const path = await (this.constructor as any).getFolderPath(this._id);
+  const path = await (this.constructor as unknown as IFolderModel).getFolderPath(
+    this._id,
+  );
   return "/" + path.join("/");
 };
 
 folderSchema.methods.hasChild = async function (
   childName: string,
 ): Promise<boolean> {
-  const child = await (this.constructor as any).findOne({
+  const child = await (this.constructor as unknown as IFolderModel).findOne({
     parent: this._id,
     name: childName,
     owner: this.owner,
@@ -217,7 +256,7 @@ folderSchema.methods.hasChild = async function (
 };
 
 folderSchema.methods.getChildren = function () {
-  return (this.constructor as any)
+  return (this.constructor as unknown as IFolderModel)
     .find({
       parent: this._id,
       owner: this.owner,
@@ -245,7 +284,7 @@ folderSchema.methods.deleteRecursively = async function (): Promise<{
   };
 
   // First, get all child folders
-  const childFolders = await (this.constructor as any).find({
+  const childFolders = await (this.constructor as unknown as IFolderModel).find({
     parent: this._id,
   });
 
@@ -283,7 +322,9 @@ folderSchema.methods.deleteRecursively = async function (): Promise<{
 
   // Finally, delete this folder
   try {
-    await (this.constructor as any).findByIdAndDelete(this._id);
+    await (this.constructor as unknown as IFolderModel).findByIdAndDelete(
+      this._id,
+    );
     stats.foldersDeleted += 1;
   } catch (error) {
     const errorMsg = `Could not delete folder ${this.name}: ${error instanceof Error ? error.message : "Unknown error"}`;
@@ -302,7 +343,7 @@ folderSchema.methods.countContents = async function (): Promise<{
   let totalFiles = 0;
 
   // Count child folders recursively
-  const childFolders = await (this.constructor as any).find({
+  const childFolders = await (this.constructor as unknown as IFolderModel).find({
     parent: this._id,
   });
 
@@ -331,4 +372,5 @@ folderSchema.methods.countContents = async function (): Promise<{
 };
 
 export const Folder =
-  mongoose.models.Folder || mongoose.model<IFolder>("Folder", folderSchema);
+  (mongoose.models.Folder as unknown as IFolderModel) ||
+  (mongoose.model<IFolder, IFolderModel>("Folder", folderSchema) as IFolderModel);

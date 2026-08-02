@@ -1,20 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { requireAdmin, AuthError, createAuthResponse, validateOrigin, createCsrfError } from "@/lib/auth";
-import { File } from "@/models/File";
+import { File, type IFile } from "@/models/File";
 import { telegramAPI } from "@/lib/telegram";
 import { logAction } from "@/lib/activity-log";
+import type { FilterQuery, Types } from "mongoose";
+
+interface TrashFileItem {
+  _id: Types.ObjectId;
+  name: string;
+  displayName?: string;
+  size: number;
+  mime: string;
+  chunkedId?: string | null;
+  totalChunks?: number | null;
+  deletedAt: Date | null;
+  trashExpiresAt?: Date | null;
+  owner?: {
+    _id?: Types.ObjectId;
+    name?: string;
+    email?: string;
+  } | null;
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAdmin(request);
+    await requireAdmin(request);
     await connectToDatabase();
 
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20", 10) || 20));
 
-    const query: any = {
+    const query: FilterQuery<IFile> = {
       deletedAt: { $ne: null },
       $or: [
         { chunkedId: null },
@@ -31,22 +49,28 @@ export async function GET(request: NextRequest) {
       File.countDocuments(query),
     ]);
 
-    const trashFiles = files.map((f: any) => ({
-      id: f._id.toString(),
-      name: f.name,
-      displayName: f.displayName,
-      size: f.size,
-      mime: f.mime,
-      chunked: !!(f.chunkedId && f.totalChunks && f.totalChunks > 1),
-      totalChunks: f.chunkedId && f.totalChunks > 1 ? f.totalChunks : 1,
-      deletedAt: f.deletedAt,
-      trashExpiresAt: f.trashExpiresAt,
-      owner: {
-        id: f.owner?._id?.toString() || null,
-        name: f.owner?.name || "Unknown",
-        email: f.owner?.email || null,
-      },
-    }));
+    const trashFiles = files.map((f) => {
+      const file = f as unknown as TrashFileItem;
+      return {
+        id: file._id.toString(),
+        name: file.name,
+        displayName: file.displayName,
+        size: file.size,
+        mime: file.mime,
+        chunked: !!(file.chunkedId && file.totalChunks && file.totalChunks > 1),
+        totalChunks:
+          file.chunkedId && (file.totalChunks ?? 0) > 1
+            ? file.totalChunks
+            : 1,
+        deletedAt: file.deletedAt,
+        trashExpiresAt: file.trashExpiresAt,
+        owner: {
+          id: file.owner?._id?.toString() || null,
+          name: file.owner?.name || "Unknown",
+          email: file.owner?.email || null,
+        },
+      };
+    });
 
     return NextResponse.json({
       files: trashFiles,
@@ -86,9 +110,9 @@ export async function POST(request: NextRequest) {
     if (action === "restore") {
       for (const file of files) {
         await file.restore();
-        if ((file as any).chunkedId && (file as any).totalChunks > 1) {
+        if (file.chunkedId && (file.totalChunks ?? 0) > 1) {
           await File.updateMany(
-            { chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 }, deletedAt: { $ne: null } },
+            { chunkedId: file.chunkedId, chunkIndex: { $gte: 0 }, deletedAt: { $ne: null } },
             { deletedAt: null, trashExpiresAt: null },
           );
         }
@@ -102,23 +126,23 @@ export async function POST(request: NextRequest) {
       });
     } else if (action === "delete") {
       for (const file of files) {
-        if ((file as any).blobCacheUrl) {
+        if (file.blobCacheUrl) {
           try {
             const { del } = await import("@vercel/blob");
-            await del((file as any).blobCacheUrl);
+            await del(file.blobCacheUrl);
           } catch {}
         }
-        if ((file as any).telegramMessageId) {
-          await telegramAPI.deleteMessage((file as any).telegramMessageId).catch(() => {});
+        if (file.telegramMessageId) {
+          await telegramAPI.deleteMessage(file.telegramMessageId).catch(() => {});
         }
-        if ((file as any).chunkedId && (file as any).totalChunks > 1) {
-          const chunkDocs = await File.find({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } });
+        if (file.chunkedId && (file.totalChunks ?? 0) > 1) {
+          const chunkDocs = await File.find({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } });
           for (const c of chunkDocs) {
-            if ((c as any).telegramMessageId) {
-              await telegramAPI.deleteMessage((c as any).telegramMessageId).catch(() => {});
+            if (c.telegramMessageId) {
+              await telegramAPI.deleteMessage(c.telegramMessageId).catch(() => {});
             }
           }
-          await File.deleteMany({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+          await File.deleteMany({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
         }
         await File.findByIdAndDelete(file._id).catch(() => {});
         count++;

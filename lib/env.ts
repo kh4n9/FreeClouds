@@ -14,6 +14,8 @@ const envSchema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().min(1, "Telegram bot token is required"),
   TELEGRAM_CHAT_ID: z.string().min(1, "Telegram chat ID is required"),
   TELEGRAM_API_BASE: z.string().url().default("https://api.telegram.org"),
+  TELEGRAM_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(30000),
+  TELEGRAM_MAX_RETRIES: z.coerce.number().int().min(0).max(5).default(3),
 
   // Security
   ALLOWED_ORIGIN: z.string().url().default("http://localhost:3000"),

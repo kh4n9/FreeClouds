@@ -29,26 +29,26 @@ export async function POST(request: NextRequest) {
     let deleted = 0;
     for (const file of trashedFiles) {
       // Delete cached blob if exists
-      if ((file as any).blobCacheUrl) {
+      if (file.blobCacheUrl) {
         try {
           const { del } = await import("@vercel/blob");
-          await del((file as any).blobCacheUrl);
+          await del(file.blobCacheUrl);
         } catch {}
       }
 
       // Delete the actual file from Telegram (best-effort)
-      if ((file as any).telegramMessageId) {
-        await telegramAPI.deleteMessage((file as any).telegramMessageId).catch(() => {});
+      if (file.telegramMessageId) {
+        await telegramAPI.deleteMessage(file.telegramMessageId).catch(() => {});
       }
 
-      if ((file as any).chunkedId && (file as any).totalChunks > 1) {
-        const chunkDocs = await File.find({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } });
+      if (file.chunkedId && file.totalChunks! > 1) {
+        const chunkDocs = await File.find({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } });
         for (const c of chunkDocs) {
-          if ((c as any).telegramMessageId) {
-            await telegramAPI.deleteMessage((c as any).telegramMessageId).catch(() => {});
+          if (c.telegramMessageId) {
+            await telegramAPI.deleteMessage(c.telegramMessageId).catch(() => {});
           }
         }
-        await File.deleteMany({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+        await File.deleteMany({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
       }
       await File.findByIdAndDelete(file._id).catch(() => {});
       deleted++;

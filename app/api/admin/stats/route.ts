@@ -3,6 +3,17 @@ import { connectToDatabase } from "@/lib/db";
 import { requireAdmin, AuthError, createAuthResponse } from "@/lib/auth";
 import mongoose from "mongoose";
 
+interface RecentFileItem {
+  _id: unknown;
+  name: string;
+  mime: string;
+  size: number;
+  createdAt: Date;
+  owner: unknown;
+  ownerName?: string;
+  ownerEmail?: string | null;
+}
+
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin(request);
@@ -288,7 +299,7 @@ export async function GET(request: NextRequest) {
       topUsers: topUsersResult || [],
       recentActivity: {
         users: recentUsersResult || [],
-        files: (recentFilesResult || []).map((file: any) => ({
+        files: ((recentFilesResult as RecentFileItem[]) || []).map((file) => ({
           _id: file._id,
           name: file.name,
           type: file.mime,

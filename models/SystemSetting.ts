@@ -1,6 +1,7 @@
-import mongoose, { Document, Schema, Model } from "mongoose";
+import mongoose, { Document, Schema, Model, Types } from "mongoose";
 
 export interface ISystemSetting extends Document {
+  _id: Types.ObjectId;
   key: string;
   value: string;
   updatedAt: Date;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
-import { File } from "@/models/File";
+import { File, type IFile } from "@/models/File";
 import {
   requireAuth,
   AuthError,
@@ -10,6 +10,7 @@ import {
 import { getFileDownloadStream } from "@/lib/download-utils";
 
 import stream from "stream";
+import type archiver from "archiver";
 
 /**
  * POST /api/files/bulk-download
@@ -40,14 +41,17 @@ export async function POST(request: NextRequest) {
     await connectToDatabase();
 
     // Parse body
-    let body: any;
+    let body: unknown;
     try {
       body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const fileIds = Array.isArray(body?.fileIds) ? body.fileIds : null;
+    const bodyRecord = body as { fileIds?: unknown } | null;
+    const fileIds = Array.isArray(bodyRecord?.fileIds)
+      ? bodyRecord.fileIds
+      : null;
 
     if (!fileIds || fileIds.length === 0) {
       return NextResponse.json(
@@ -66,7 +70,8 @@ export async function POST(request: NextRequest) {
 
     // Basic ID validation (24 hex chars for Mongo ObjectId)
     const invalidId = fileIds.find(
-      (id: any) => typeof id !== "string" || !/^[0-9a-fA-F]{24}$/.test(id),
+      (id: unknown) =>
+        typeof id !== "string" || !/^[0-9a-fA-F]{24}$/.test(id),
     );
     if (invalidId) {
       return NextResponse.json(
@@ -76,22 +81,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch files from DB
-    const files = await (File as any)
-      .find({
-        _id: { $in: fileIds },
-        deletedAt: null,
-      })
-      .lean();
+    const files = (await File.find({
+      _id: { $in: fileIds as string[] },
+      deletedAt: null,
+    }).lean()) as unknown as IFile[];
 
     // Map by id to preserve requested order (and to detect missing)
-    const filesById: Record<string, any> = {};
-    files.forEach((f: any) => {
+    const filesById: Record<string, IFile | undefined> = {};
+    files.forEach((f) => {
       filesById[f._id.toString()] = f;
     });
 
     const orderedFiles = fileIds
       .map((id: string) => filesById[id])
-      .filter(Boolean);
+      .filter((f): f is IFile => Boolean(f));
 
     if (orderedFiles.length === 0) {
       return NextResponse.json({ error: "No files found" }, { status: 404 });
@@ -106,13 +109,14 @@ export async function POST(request: NextRequest) {
 
     // Prepare the zip archive (archiver)
     // Load archiver dynamically to avoid missing-module diagnostics at build time
-    let archiverModule: any;
+    let archiverModule: typeof archiver | null = null;
     try {
       // dynamic import; prefer default export if present
       const mod = await import("archiver").catch((e) => {
         throw e;
       });
-      archiverModule = mod && (mod as any).default ? (mod as any).default : mod;
+      archiverModule =
+        mod.default ?? (mod as unknown as typeof archiver);
     } catch (err) {
       console.error("Archiver module not available:", err);
       // Gracefully return an error response indicating optional dependency missing
@@ -126,12 +130,12 @@ export async function POST(request: NextRequest) {
     }
     const archive = archiverModule("zip", { zlib: { level: 9 } });
 
-    archive.on("warning", (err: any) => {
+    archive.on("warning", (err) => {
       // Log and continue for non-critical warnings
       console.warn("Archiver warning:", err);
     });
 
-    archive.on("error", (err: any) => {
+    archive.on("error", (err) => {
       console.error("Archiver error:", err);
     });
 
@@ -158,10 +162,14 @@ export async function POST(request: NextRequest) {
             // Convert web ReadableStream to Node Readable (Node >= 17 provides fromWeb)
             let nodeStream: stream.Readable;
             if (
-              (stream as any).Readable &&
-              typeof (stream as any).Readable.fromWeb === "function"
+              stream.Readable &&
+              typeof stream.Readable.fromWeb === "function"
             ) {
-              nodeStream = (stream as any).Readable.fromWeb(webStream);
+              nodeStream = stream.Readable.fromWeb(
+                webStream as unknown as Parameters<
+                  typeof stream.Readable.fromWeb
+                >[0],
+              );
             } else {
               // Fallback: manually pipe chunks (should rarely be needed on supported Node versions)
               const reader = webStream.getReader();
@@ -211,23 +219,25 @@ export async function POST(request: NextRequest) {
     })();
 
     // archiver returns a Node Readable stream. Convert to web ReadableStream for Next Response.
-    const nodeStream = archive as unknown as stream.Readable;
+    const nodeStream = archive;
     let webReadable: ReadableStream<Uint8Array>;
 
     if (
-      (stream as any).Readable &&
-      typeof (stream as any).Readable.toWeb === "function"
+      stream.Readable &&
+      typeof stream.Readable.toWeb === "function"
     ) {
-      webReadable = (stream as any).Readable.toWeb(nodeStream);
-    } else if ((nodeStream as any).toWeb) {
-      webReadable = (nodeStream as any).toWeb();
+      webReadable = stream.Readable.toWeb(
+        nodeStream,
+      ) as unknown as ReadableStream<Uint8Array>;
+    } else if ((nodeStream as unknown as { toWeb?: () => ReadableStream<Uint8Array> }).toWeb) {
+      webReadable = (nodeStream as unknown as { toWeb: () => ReadableStream<Uint8Array> }).toWeb();
     } else {
       // As a last resort, create a simple passthrough that errors (very unlikely on supported runtimes)
       const pass = new stream.PassThrough();
       nodeStream.pipe(pass);
-      webReadable = (stream as any).Readable.toWeb
-        ? (stream as any).Readable.toWeb(pass)
-        : (pass as any).toWeb();
+      webReadable = stream.Readable.toWeb
+        ? (stream.Readable.toWeb(pass) as unknown as ReadableStream<Uint8Array>)
+        : (pass as unknown as { toWeb: () => ReadableStream<Uint8Array> }).toWeb();
     }
 
     return new Response(webReadable, { headers });

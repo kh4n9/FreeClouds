@@ -6,7 +6,7 @@ import {
   FolderPlus, Upload, RefreshCw, AlertCircle, X, Cloud, Search,
   HardDrive, FileIcon, FolderIcon, LogOut, Settings, Grid3X3,
   List, ChevronLeft, ChevronRight, Sidebar, Trash2, FileText,
-  RotateCcw, Clock,
+  RotateCcw, Clock, type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 const DynamicFileGrid = dynamic(() => import("@/components/FileGrid"), { ssr: false });
@@ -63,6 +63,7 @@ function CreateFolderModal({ show, onClose, onConfirm, loading }: { show: boolea
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (show) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName("");
       setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 50);
     }
@@ -126,7 +127,7 @@ function ConfirmModal({ show, title, message, warning, loading, onCancel, onConf
   );
 }
 
-function StatsCard({ icon: Icon, label, value, sub, gradient }: { icon: any; label: string; value: string; sub?: string; gradient: string }) {
+function StatsCard({ icon: Icon, label, value, sub, gradient }: { icon: LucideIcon; label: string; value: string; sub?: string; gradient: string }) {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-slate-800/50 border border-slate-700/50 p-5 group hover:border-slate-600/50 transition-all">
       <div className={`absolute inset-0 opacity-[0.03] ${gradient}`} />
@@ -148,7 +149,7 @@ function SearchBar({ value, onChange, onClear }: { value: string; onChange: (v: 
   return (
     <div className="relative group">
       <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-400 transition-colors" />
-      <input ref={(el) => { if (el) el.onkeydown = (e: any) => { if ((e.ctrlKey || e.metaKey) && e.key === "k") e.preventDefault(); }; }} type="text" placeholder="Search files... (Ctrl+K)" value={value}
+      <input ref={(el) => { if (el) el.onkeydown = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key === "k") e.preventDefault(); }; }} type="text" placeholder="Search files... (Ctrl+K)" value={value}
         onChange={(e) => onChange(e.target.value)}
         className="input-modern w-full pl-10 pr-10 py-2.5 rounded-xl text-sm bg-slate-800/50 border-slate-700/50 focus:border-indigo-500/50 focus:bg-slate-800/80 transition-all" />
       {value && (

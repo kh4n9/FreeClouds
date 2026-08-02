@@ -20,15 +20,15 @@ export async function GET(request: NextRequest) {
     // Opportunistic cleanup of expired trash + Telegram messages
     if (Date.now() - lastCleanupRun > 60 * 60 * 1000) {
       lastCleanupRun = Date.now();
-      (File as any).cleanupExpiredTrash().catch(() => {});
+      File.cleanupExpiredTrash().catch(() => {});
     }
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
 
-    const result = await (File as any).findTrashByOwnerWithCount(user.id, page, 50);
+    const result = await File.findTrashByOwnerWithCount(user.id, page, 50);
 
-    const files = result.files.map((f: any) => ({
+    const files = result.files.map((f) => ({
       id: f._id.toString(),
       name: f.name,
       displayName: f.displayName,
@@ -62,9 +62,9 @@ export async function POST(request: NextRequest) {
       });
       for (const file of files) {
         await file.restore();
-        if ((file as any).chunkedId && (file as any).totalChunks > 1) {
+        if (file.chunkedId && file.totalChunks! > 1) {
           await File.updateMany(
-            { chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 }, deletedAt: { $ne: null } },
+            { chunkedId: file.chunkedId, chunkIndex: { $gte: 0 }, deletedAt: { $ne: null } },
             { deletedAt: null, trashExpiresAt: null },
           );
         }

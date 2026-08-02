@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import { z } from "zod";
+import { Types } from "mongoose";
 import {
   requireAuth,
   AuthError,
@@ -15,6 +16,11 @@ interface RouteParams {
   params: Promise<{
     id: string;
   }>;
+}
+
+interface PopulatedFolder {
+  _id: Types.ObjectId;
+  name: string;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
@@ -44,16 +50,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Return file metadata
+    const populatedFolder = file.folder as unknown as PopulatedFolder | null;
     const response = {
-      id: (file._id as any).toString(),
+      id: file._id.toString(),
       name: file.name,
       size: file.size,
       mime: file.mime,
-      folderId:
-        file.folder && file.folder._id
-          ? (file.folder._id as any).toString()
-          : null,
-      folderName: (file.folder as any)?.name || null,
+      folderId: populatedFolder?._id ? populatedFolder._id.toString() : null,
+      folderName: populatedFolder?.name || null,
       createdAt: file.createdAt,
     };
 

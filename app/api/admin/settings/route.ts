@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, AuthError, createAuthResponse, validateOrigin, createCsrfError } from "@/lib/auth";
-import { getSystemSettings, updateSystemSettings } from "@/lib/settings";
+import { getSystemSettings, updateSystemSettings, type SystemSettings } from "@/lib/settings";
 import { logAction } from "@/lib/activity-log";
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAdmin(request);
+    await requireAdmin(request);
     const settings = await getSystemSettings();
     return NextResponse.json(settings, { status: 200 });
   } catch (error) {
@@ -20,14 +20,14 @@ export async function PUT(request: NextRequest) {
     if (!validateOrigin(request)) return createCsrfError();
     const user = await requireAdmin(request);
 
-    let body: any;
+    let body: Record<string, unknown>;
     try {
       body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const patch: any = {};
+    const patch: Partial<SystemSettings> = {};
     if (typeof body.allowRegistration === "boolean") {
       patch.allowRegistration = body.allowRegistration;
     }

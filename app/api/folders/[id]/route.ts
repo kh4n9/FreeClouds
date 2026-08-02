@@ -64,7 +64,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { name } = validation.data;
 
     // Find folder
-    const folder = await (Folder as any).findById(folderId);
+    const folder = await Folder.findById(folderId);
 
     if (!folder) {
       return NextResponse.json({ error: "Folder not found" }, { status: 404 });
@@ -76,7 +76,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check for duplicate folder name in the same parent
-    const existingFolder = await (Folder as any).findOne({
+    const existingFolder = await Folder.findOne({
       _id: { $ne: folderId },
       owner: user.id,
       parent: folder.parent,
@@ -159,7 +159,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Find folder
-    const folder = await (Folder as any).findById(folderId);
+    const folder = await Folder.findById(folderId);
 
     if (!folder) {
       return NextResponse.json({ error: "Folder not found" }, { status: 404 });

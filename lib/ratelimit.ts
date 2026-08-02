@@ -105,7 +105,7 @@ export function checkRateLimit(
   remaining: number;
   resetTime: number | null;
 } {
-  const ip = getClientIp(request as any);
+  const ip = getClientIp(request);
   const identifier = ip;
 
   const allowed = rateLimiter.check(

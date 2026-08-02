@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     if (!user.isActive) {
       await logAction("login.blocked", {
-        userId: (user._id as any).toString(),
+        userId: user._id.toString(),
         email: user.email,
         metadata: { reason: "account_disabled" },
         request,
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       await logAction("login.failed", {
-        userId: (user._id as any).toString(),
+        userId: user._id.toString(),
         email: user.email,
         metadata: { reason: "wrong_password" },
         request,
@@ -104,20 +104,20 @@ export async function POST(request: NextRequest) {
     }
 
     await logAction("login", {
-      userId: (user._id as any).toString(),
+      userId: user._id.toString(),
       email: user.email,
       request,
     });
 
     // Generate JWT token
     const token = signJwt({
-      userId: (user._id as any).toString(),
+      userId: user._id.toString(),
       email: user.email,
     });
 
     // Create response with user data
     const userData = {
-      id: (user._id as any).toString(),
+      id: user._id.toString(),
       email: user.email,
       name: user.name,
       role: user.role,

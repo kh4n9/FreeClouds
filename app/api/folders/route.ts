@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     // Verify parent folder ownership if parent is specified
     if (parent && parent !== "null") {
-      const parentFolder = await (Folder as any).findById(parent);
+      const parentFolder = await Folder.findById(parent);
       if (!parentFolder || !(await verifyOwnership(user.id, parentFolder))) {
         return NextResponse.json(
           { error: "Parent folder not found or access denied" },
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         : parent
       : undefined;
 
-    const folders = await (Folder as any).findByOwner(
+    const folders = await Folder.findByOwner(
       user.id,
       finalParentValue,
     );
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
 
     // Verify parent folder ownership if parent is specified
     if (parent) {
-      const parentFolder = await (Folder as any).findById(parent);
+      const parentFolder = await Folder.findById(parent);
       if (!parentFolder || !(await verifyOwnership(user.id, parentFolder))) {
         return NextResponse.json(
           { error: "Parent folder not found or access denied" },
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for duplicate folder name in the same parent
-    const existingFolder = await (Folder as any).findOne({
+    const existingFolder = await Folder.findOne({
       owner: user.id,
       parent: parent || null,
       name: name,

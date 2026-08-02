@@ -1,6 +1,7 @@
-import mongoose, { Document, Schema, Model } from "mongoose";
+import mongoose, { Document, Schema, Model, FilterQuery, Types } from "mongoose";
 
 export interface IActivityLog extends Document {
+  _id: Types.ObjectId;
   userId: string | null;
   email: string | null;
   action: string;
@@ -76,7 +77,7 @@ activityLogSchema.statics.listLogs = async function (
 ) {
   const { page = 1, limit = 30, action, search } = options;
 
-  const query: any = {};
+  const query: FilterQuery<IActivityLog> = {};
   if (action) query.action = action;
   if (search) {
     query.$or = [

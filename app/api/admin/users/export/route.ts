@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { requireAdmin, AuthError, createAuthResponse } from "@/lib/auth";
-import { User } from "@/models/User";
+import { User, type IUser } from "@/models/User";
 import { File } from "@/models/File";
 import mongoose from "mongoose";
+import type { FilterQuery } from "mongoose";
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const lang = searchParams.get("lang") === "vi" ? "vi" : "en";
 
     // Build query
-    const query: any = {};
+    const query: FilterQuery<IUser> = {};
 
     if (search) {
       query.$or = [

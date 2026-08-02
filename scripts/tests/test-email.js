@@ -20,7 +20,7 @@ console.log('🔐 Password Length:', EMAIL_PASS.length, 'characters');
 console.log('');
 
 // Tạo transporter
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: EMAIL_USER,

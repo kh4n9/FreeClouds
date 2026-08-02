@@ -82,6 +82,7 @@ function FolderItem({
   // Update expansion when selected folder changes or expandAll changes
   useEffect(() => {
     if (isPathToSelected()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsExpanded(true);
     } else if (expandAll !== undefined) {
       setIsExpanded(expandAll);

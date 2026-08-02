@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import Footer from "@/components/Footer";
 
@@ -36,23 +37,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<RegisterError | null>(null);
-  const [validation, setValidation] = useState<ValidationState>({
-    name: false,
-    email: false,
-    password: false,
-    confirmPassword: false,
-  });
   const router = useRouter();
-
-  useEffect(() => {
-    // Check if user is already logged in
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    // Update validation state when form changes
-    updateValidation();
-  }, [form]);
 
   const checkAuth = async () => {
     try {
@@ -65,14 +50,17 @@ export default function RegisterPage() {
     }
   };
 
-  const updateValidation = () => {
-    setValidation({
-      name: form.name.trim().length >= 2,
-      email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email),
-      password: form.password.length >= 6,
-      confirmPassword: form.password === form.confirmPassword && form.confirmPassword.length > 0,
-    });
+  const validation: ValidationState = {
+    name: form.name.trim().length >= 2,
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email),
+    password: form.password.length >= 6,
+    confirmPassword: form.password === form.confirmPassword && form.confirmPassword.length > 0,
   };
+
+  useEffect(() => {
+    // Check if user is already logged in
+    checkAuth();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -481,12 +469,12 @@ export default function RegisterPage() {
 
         {/* Back to Home */}
         <div className="text-center mt-6">
-          <a
+          <Link
             href="/"
             className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
             ← Back to Home
-          </a>
+          </Link>
         </div>
       </div>
       </div>

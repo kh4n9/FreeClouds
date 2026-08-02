@@ -172,7 +172,7 @@ export default function ForgotPasswordPage() {
                   {error?.field === "code" && <p className="mt-1 text-sm text-red-400">{error.message}</p>}
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-slate-400 mb-2">Didn't receive the code?</p>
+                  <p className="text-sm text-slate-400 mb-2">Didn&apos;t receive the code?</p>
                   <button type="button" onClick={handleCodeResend} disabled={countdown > 0 || loading}
                     className="text-indigo-400 hover:text-indigo-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                     {countdown > 0 ? `Resend in ${countdown}s` : "Resend Code"}

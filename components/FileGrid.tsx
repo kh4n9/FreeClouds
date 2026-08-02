@@ -328,7 +328,7 @@ function FileItem({
           <input
             type="checkbox"
             checked={!!selected}
-            onClick={(e) => { e.stopPropagation(); handleCheckboxClick(e as any); }}
+            onClick={(e) => { e.stopPropagation(); handleCheckboxClick(e); }}
             onChange={() => {}}
             className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500/50"
             aria-label={`Select ${file.displayName || file.name}`}

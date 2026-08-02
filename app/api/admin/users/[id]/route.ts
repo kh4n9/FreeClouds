@@ -8,6 +8,17 @@ import { logAction } from "@/lib/activity-log";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
+interface FileTypeAgg {
+  type: string;
+  size: number;
+}
+
+interface FileStatsAgg {
+  totalFiles: number;
+  totalSize: number;
+  fileTypes: FileTypeAgg[];
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -57,11 +68,10 @@ export async function GET(
     });
 
     // Get recent files
-    const recentFiles = await (File as any)
-      .find({
-        owner: user._id.toString(),
-        deletedAt: null,
-      })
+    const recentFiles = await File.find({
+      owner: user._id.toString(),
+      deletedAt: null,
+    })
       .select("name mime size createdAt")
       .sort({ createdAt: -1 })
       .limit(10)
@@ -70,8 +80,9 @@ export async function GET(
     // Calculate file type distribution
     const typeDistribution: { [key: string]: { count: number; size: number } } =
       {};
-    if (fileStats && fileStats.length > 0 && fileStats[0]?.fileTypes) {
-      fileStats[0].fileTypes.forEach((file: any) => {
+    const fileStatsResult = fileStats[0] as FileStatsAgg | undefined;
+    if (fileStats && fileStats.length > 0 && fileStatsResult?.fileTypes) {
+      fileStatsResult.fileTypes.forEach((file) => {
         const fileType = file.type || "unknown";
         if (!typeDistribution[fileType]) {
           typeDistribution[fileType] = { count: 0, size: 0 };
@@ -91,7 +102,7 @@ export async function GET(
         totalFolders: folderCount,
         typeDistribution,
       },
-      recentFiles: recentFiles.map((file: any) => ({
+      recentFiles: recentFiles.map((file) => ({
         ...file,
         id: file._id.toString(),
         type: file.mime,
@@ -124,6 +135,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
     const { name, email, role, isActive, password } = body;
+    const updatedFields = { name, email, role, isActive, password };
 
     // Find user
     const user = await User.findById(id);
@@ -133,7 +145,7 @@ export async function PUT(
     }
 
     // Prevent self-demotion from admin
-    if ((user._id as any).toString() === adminUser.id && role === "user") {
+    if (user._id.toString() === adminUser.id && role === "user") {
       return NextResponse.json(
         { error: "Cannot demote yourself from admin role" },
         { status: 400 },
@@ -141,7 +153,7 @@ export async function PUT(
     }
 
     // Prevent self-deactivation
-    if ((user._id as any).toString() === adminUser.id && isActive === false) {
+    if (user._id.toString() === adminUser.id && isActive === false) {
       return NextResponse.json(
         { error: "Cannot deactivate your own account" },
         { status: 400 },
@@ -172,7 +184,7 @@ export async function PUT(
       // Check if email is already taken by another user
       const existingUser = await User.findOne({
         email: emailLower,
-        _id: { $ne: user._id as any },
+        _id: { $ne: user._id },
       });
 
       if (existingUser) {
@@ -219,15 +231,15 @@ export async function PUT(
       entityType: "user",
       entityId: user._id.toString(),
       metadata: {
-        fields: Object.keys({ name, email, role, isActive, password }).filter(
-          (k) => ({ name, email, role, isActive, password } as any)[k] !== undefined,
+        fields: Object.keys(updatedFields).filter(
+          (k) => (updatedFields as Record<string, unknown>)[k] !== undefined,
         ),
       },
       request,
     });
 
     // Return updated user without password hash
-    const userResponse = (user as any).toSafeObject();
+    const userResponse = user.toSafeObject();
 
     return NextResponse.json(
       {
@@ -267,7 +279,7 @@ export async function DELETE(
     }
 
     // Prevent self-deletion
-    if ((user._id as any).toString() === adminUser.id) {
+    if (user._id.toString() === adminUser.id) {
       return NextResponse.json(
         { error: "Cannot delete your own account" },
         { status: 400 },
@@ -280,19 +292,19 @@ export async function DELETE(
     try {
       await session.withTransaction(async () => {
         // Delete all user's files
-        const userFiles = await (File as any).find({ owner: id });
+        const userFiles = await File.find({ owner: id });
         const fileCount = userFiles.length;
 
         if (fileCount > 0) {
-          await (File as any).deleteMany({ owner: id }, { session });
+          await File.deleteMany({ owner: id }, { session });
         }
 
         // Delete all user's folders
-        const userFolders = await (Folder as any).find({ owner: id });
+        const userFolders = await Folder.find({ owner: id });
         const folderCount = userFolders.length;
 
         if (folderCount > 0) {
-          await (Folder as any).deleteMany({ owner: id }, { session });
+          await Folder.deleteMany({ owner: id }, { session });
         }
 
         // Delete the user account
@@ -312,7 +324,7 @@ export async function DELETE(
       userId: adminUser.id,
       email: adminUser.email,
       entityType: "user",
-      entityId: (user._id as any).toString(),
+      entityId: user._id.toString(),
       metadata: { deletedEmail: user.email },
       request,
     });
@@ -321,7 +333,7 @@ export async function DELETE(
       {
         message: "User and all associated data deleted successfully",
         deletedUser: {
-          id: (user._id as any).toString(),
+          id: user._id.toString(),
           email: user.email,
           name: user.name,
         },

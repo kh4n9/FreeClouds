@@ -68,7 +68,12 @@ export async function GET(request: NextRequest) {
       : undefined;
 
     // Build options object conditionally to avoid passing `undefined` for exact optional property types
-    const options: any = { page, limit };
+    const options: {
+      page: number;
+      limit: number;
+      folderId?: string | null;
+      search?: string;
+    } = { page, limit };
     if (finalFolderId !== undefined) {
       options.folderId = finalFolderId;
     }

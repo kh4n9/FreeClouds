@@ -38,6 +38,17 @@ export default function ForgotPasswordPage() {
   const [countdown, setCountdown] = useState(0);
   const router = useRouter();
 
+  const checkAuth = async () => {
+    try {
+      const response = await fetch("/api/auth/me");
+      if (response.ok) {
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      // User not logged in, continue with forgot password page
+    }
+  };
+
   useEffect(() => {
     // Check if user is already logged in
     checkAuth();
@@ -51,17 +62,6 @@ export default function ForgotPasswordPage() {
     }
     return () => clearTimeout(timer);
   }, [countdown]);
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch("/api/auth/me");
-      if (response.ok) {
-        router.push("/dashboard");
-      }
-    } catch (error) {
-      // User not logged in, continue with forgot password page
-    }
-  };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmailForm({ email: e.target.value });
@@ -353,7 +353,7 @@ export default function ForgotPasswordPage() {
 
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-2">
-                    Didn't receive the code?
+                    Didn&apos;t receive the code?
                   </p>
                   <button
                     type="button"

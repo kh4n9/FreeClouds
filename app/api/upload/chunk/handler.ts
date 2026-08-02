@@ -42,7 +42,7 @@ export async function handleChunk(request: NextRequest) {
       telegramResponse = await telegramAPI.sendDocument(buffer, chunkFileName, originalMime || "application/octet-stream");
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      const isRateLimit = error instanceof TelegramError && (error as any).errorCode === 429;
+      const isRateLimit = error instanceof TelegramError && error.errorCode === 429;
       console.error(`Chunk ${chunkIndex + 1}/${totalChunks} Telegram upload failed:`, msg);
       return NextResponse.json({
         error: `Chunk upload failed: ${msg}`,
@@ -56,7 +56,7 @@ export async function handleChunk(request: NextRequest) {
     const folderId = folderIdParam && folderIdParam !== "null" ? folderIdParam : null;
 
     // Upsert — prevent duplicate chunk records from parallel uploads + retries
-    await (File as any).findOneAndUpdate(
+    await File.findOneAndUpdate(
       { chunkedId, chunkIndex, owner: user.id },
       {
         name: chunkFileName,

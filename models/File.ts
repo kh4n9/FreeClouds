@@ -1,6 +1,7 @@
-import mongoose, { Document, Schema, Types } from "mongoose";
+import mongoose, { Document, FilterQuery, Schema, Types } from "mongoose";
 
 export interface IFile extends Document {
+  _id: Types.ObjectId;
   name: string;
   size: number;
   mime: string;
@@ -23,6 +24,12 @@ export interface IFile extends Document {
 
   // Vercel Blob cache for assembled chunked files
   blobCacheUrl?: string | null;
+
+  // Virtuals (computed on the schema)
+  displayName: string;
+  formattedSize: string;
+  extension: string;
+  nameWithoutExtension: string;
 
   // Instance methods (typed) so TypeScript recognizes document methods
   softDelete(): Promise<IFile>;
@@ -62,7 +69,13 @@ export interface IFileStatics {
   getStorageUsage(
     ownerId: string,
   ): Promise<{ totalSize: number; totalFiles: number }>;
-  findDuplicates(ownerId: string): Promise<any[]>;
+  findDuplicates(ownerId: string): Promise<
+    Array<{
+      _id: { name: string; size: number };
+      files: IFile[];
+      count: number;
+    }>
+  >;
 }
 
 export interface IFileModel extends mongoose.Model<IFile>, IFileStatics {
@@ -203,11 +216,11 @@ fileSchema.virtual("displayName").get(function () {
 // Ensure virtual fields are serialized
 fileSchema.set("toJSON", {
   virtuals: true,
-  transform: function (doc: any, ret: any) {
-    // explicit any to satisfy TypeScript and allow safe deletions
-    delete (ret as any)._id;
-    delete (ret as any).__v;
-    return ret;
+  transform: function (_doc: unknown, ret) {
+    const json = ret as unknown as Record<string, unknown>;
+    delete json._id;
+    delete json.__v;
+    return json;
   },
 });
 
@@ -262,7 +275,7 @@ fileSchema.statics.findByOwner = function (
     limit = 50,
   } = options;
 
-  const query: any = { owner: ownerId };
+  const query: FilterQuery<IFile> = { owner: ownerId };
 
   // Filter by folder
   if (folderId !== undefined) {
@@ -312,7 +325,7 @@ fileSchema.statics.findByOwnerWithCount = async function (
     limit = 50,
   } = options;
 
-  const query: any = { owner: ownerId };
+  const query: FilterQuery<IFile> = { owner: ownerId };
 
   if (folderId !== undefined) {
     query.folder = folderId;
@@ -334,7 +347,7 @@ fileSchema.statics.findByOwnerWithCount = async function (
   ];
 
   const [files, total] = await Promise.all([
-    (this as any).findByOwner(ownerId, options),
+    (this as IFileModel).findByOwner(ownerId, options),
     this.countDocuments(countQuery),
   ]);
 
@@ -451,7 +464,7 @@ fileSchema.statics.findTrashByOwner = function (ownerId: string) {
 };
 
 fileSchema.statics.findTrashByOwnerWithCount = async function (ownerId: string, page = 1, limit = 50) {
-  const query: any = {
+  const query: FilterQuery<IFile> = {
     owner: ownerId,
     deletedAt: { $ne: null },
     $or: [
@@ -472,17 +485,17 @@ fileSchema.statics.cleanupExpiredTrash = async function () {
   const expired = await this.find({ trashExpiresAt: { $lte: now }, deletedAt: { $ne: null } });
   let count = 0;
   for (const file of expired) {
-    if ((file as any).telegramMessageId) {
-      await telegramAPI.deleteMessage((file as any).telegramMessageId).catch(() => {});
+    if (file.telegramMessageId) {
+      await telegramAPI.deleteMessage(file.telegramMessageId).catch(() => {});
     }
-    if ((file as any).chunkedId && (file as any).totalChunks > 1) {
-      const chunkDocs = await this.find({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } });
+    if (file.chunkedId && file.totalChunks > 1) {
+      const chunkDocs = await this.find({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } });
       for (const c of chunkDocs) {
-        if ((c as any).telegramMessageId) {
-          await telegramAPI.deleteMessage((c as any).telegramMessageId).catch(() => {});
+        if (c.telegramMessageId) {
+          await telegramAPI.deleteMessage(c.telegramMessageId).catch(() => {});
         }
       }
-      await this.deleteMany({ chunkedId: (file as any).chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+      await this.deleteMany({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
     }
     await this.findByIdAndDelete(file._id).catch(() => {});
     count++;

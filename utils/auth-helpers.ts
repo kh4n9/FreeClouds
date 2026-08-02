@@ -53,7 +53,7 @@ export function useAuth() {
         body: JSON.stringify(credentials),
       });
 
-      let data: any;
+      let data: { error?: string } | null = null;
       try {
         data = await response.json();
       } catch {

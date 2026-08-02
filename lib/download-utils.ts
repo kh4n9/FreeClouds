@@ -1,5 +1,5 @@
 import { telegramAPI } from "./telegram";
-import { File } from "@/models/File";
+import { File, type IFile } from "@/models/File";
 
 export function bufferToStream(buf: Buffer): ReadableStream<Uint8Array> {
   let offset = 0;
@@ -22,7 +22,7 @@ export function bufferToStream(buf: Buffer): ReadableStream<Uint8Array> {
  * Chunked parents are assembled from their Telegram chunk records.
  * Ownership must be verified by the caller.
  */
-export async function getFileDownloadStream(file: any): Promise<{
+export async function getFileDownloadStream(file: IFile): Promise<{
   stream: ReadableStream<Uint8Array>;
   size?: number;
 }> {
@@ -53,13 +53,13 @@ export async function getFileDownloadStream(file: any): Promise<{
     throw new Error(`File chunks not found (expected ${file.totalChunks}, found ${chunks.length})`);
   }
 
-  const contiguous = chunks.every((c: any, i: number) => c.chunkIndex === i);
+  const contiguous = chunks.every((c, i: number) => c.chunkIndex === i);
   if (!contiguous) {
     throw new Error("File chunks are incomplete");
   }
 
   const buffers: Buffer[] = await Promise.all(
-    chunks.map(async (c: any) => {
+    chunks.map(async (c) => {
       const result = await telegramAPI.getFileStream(c.fileId, c.telegramFilePath || undefined);
       if (!c.telegramFilePath && result.filePath) {
         File.updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
