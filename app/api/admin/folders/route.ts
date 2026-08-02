@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { Folder } from "@/models/Folder";
-import { User } from "@/models/User";
 import { File } from "@/models/File";
 import { requireAuth, AuthError, createAuthResponse } from "@/lib/auth";
+import { logAction } from "@/lib/activity-log";
 import mongoose from "mongoose";
 
 const querySchema = z.object({
@@ -203,6 +203,24 @@ export async function GET(request: NextRequest) {
     const [countResult] = await Folder.aggregate(countPipeline);
     const total = countResult?.total || 0;
 
+    // Compute totals for stat cards (respecting current filters)
+    const [totalsResult] = await Folder.aggregate([
+      ...pipeline,
+      {
+        $group: {
+          _id: null,
+          totalFolders: { $sum: 1 },
+          totalFiles: { $sum: "$fileCount" },
+          totalItems: { $sum: "$totalItems" },
+        },
+      },
+    ]);
+    const totals = {
+      totalFolders: totalsResult?.totalFolders || 0,
+      totalFiles: totalsResult?.totalFiles || 0,
+      totalItems: totalsResult?.totalItems || 0,
+    };
+
     // Add pagination
     const skip = (page - 1) * limit;
     pipeline.push({ $skip: skip });
@@ -243,6 +261,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       folders: transformedFolders,
       pagination,
+      totals,
     });
   } catch (error) {
     console.error("Admin folders API error:", error);
@@ -342,6 +361,19 @@ export async function DELETE(request: NextRequest) {
         errors.push(errorMsg);
       }
     }
+
+    await logAction("admin.folder.delete", {
+      userId: user.id,
+      email: user.email,
+      entityType: "folder",
+      metadata: {
+        folderIds: validFolderIds,
+        foldersDeleted: totalFoldersDeleted,
+        filesDeleted: totalFilesDeleted,
+        recursive,
+      },
+      request,
+    });
 
     return NextResponse.json({
       success: true,

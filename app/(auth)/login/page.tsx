@@ -23,7 +23,7 @@ export default function LoginPage() {
   useEffect(() => {
     const checkExistingAuth = async () => {
       const user = await checkAuth();
-      if (user) redirectToPage("/dashboard");
+      if (user) redirectToPage(user.role === "admin" ? "/admin" : "/dashboard");
     };
     checkExistingAuth();
   }, [checkAuth]);
@@ -35,7 +35,7 @@ export default function LoginPage() {
     const validationError = validateLoginForm(form);
     if (validationError) { setError(validationError); return; }
     const user = await login(form);
-    if (user) redirectToPage("/dashboard");
+    if (user) redirectToPage(user.role === "admin" ? "/admin" : "/dashboard");
   };
 
   return (

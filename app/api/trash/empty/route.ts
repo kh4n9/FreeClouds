@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import { telegramAPI } from "@/lib/telegram";
+import { logAction } from "@/lib/activity-log";
 import {
   requireAuth,
   AuthError,
@@ -52,6 +53,13 @@ export async function POST(request: NextRequest) {
       await File.findByIdAndDelete(file._id).catch(() => {});
       deleted++;
     }
+
+    await logAction("trash.empty", {
+      userId: user.id,
+      email: user.email,
+      metadata: { deleted },
+      request,
+    });
 
     return NextResponse.json({ deleted }, { status: 200 });
   } catch (error) {

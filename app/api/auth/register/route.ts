@@ -10,6 +10,8 @@ import {
   RATE_LIMITS,
 } from "@/lib/ratelimit";
 import { validateOrigin, createCsrfError } from "@/lib/auth";
+import { getSystemSettings } from "@/lib/settings";
+import { logAction } from "@/lib/activity-log";
 
 const registerSchema = z.object({
   email: z.string().email("Invalid email address").min(1, "Email is required"),
@@ -58,6 +60,20 @@ export async function POST(request: NextRequest) {
     // Connect to database
     await connectToDatabase();
 
+    // Check if registration is enabled by system settings
+    const settings = await getSystemSettings();
+    if (!settings.allowRegistration) {
+      await logAction("register.blocked", {
+        email: email.toLowerCase().trim(),
+        metadata: { reason: "registration_disabled" },
+        request,
+      });
+      return NextResponse.json(
+        { error: "Đăng ký hiện đang tạm khóa. Vui lòng liên hệ quản trị viên." },
+        { status: 403 },
+      );
+    }
+
     // Check if user already exists
     const existingUser = await User.findByEmail(email);
     if (existingUser) {
@@ -79,6 +95,13 @@ export async function POST(request: NextRequest) {
     });
 
     await user.save();
+
+    await logAction("register", {
+      userId: (user._id as any).toString(),
+      email: user.email,
+      metadata: { name: user.name },
+      request,
+    });
 
     // Generate JWT token
     const token = signJwt({

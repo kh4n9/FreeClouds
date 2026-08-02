@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { Lang, getDict } from "./admin/i18n";
+import { formatFileSize } from "./admin/ui";
 
 type TimePoint = {
   timestamp: string; // ISO date
@@ -25,6 +27,10 @@ type AnalyticsResponse = {
   totalUsers?: number;
   totalStorageBytes?: number;
 };
+
+const GRID_COLOR = "#334155";
+const LABEL_COLOR = "#94a3b8";
+const PIE_STROKE = "#0f172a";
 
 function formatDateShort(iso: string) {
   try {
@@ -53,8 +59,8 @@ function niceTicks(min: number, max: number, count = 4) {
 function LineChart({
   data,
   height = 160,
-  stroke = "#2563eb",
-  fill = "rgba(37,99,235,0.08)",
+  stroke = "#3b82f6",
+  fill = "rgba(59,130,246,0.12)",
 }: {
   data: TimePoint[];
   height?: number;
@@ -63,6 +69,7 @@ function LineChart({
 }) {
   const width = 580;
   const padding = { top: 12, right: 12, bottom: 24, left: 36 };
+  const { top: pt, right: pr, bottom: pb, left: pl } = padding;
 
   const points = useMemo(() => {
     if (!data || data.length === 0) return [];
@@ -70,28 +77,27 @@ function LineChart({
     const min = Math.min(...values, 0);
     const max = Math.max(...values, 1);
     const xStep =
-      (width - padding.left - padding.right) / Math.max(1, data.length - 1);
+      (width - pl - pr) / Math.max(1, data.length - 1);
 
     return data.map((d, i) => {
-      const x = padding.left + xStep * i;
+      const x = pl + xStep * i;
       const y =
-        padding.top +
+        pt +
         (1 - (d.value - min) / (max - min || 1)) *
-          (height - padding.top - padding.bottom);
+          (height - pt - pb);
       return { x, y, label: formatDateShort(d.timestamp), value: d.value };
     });
-  }, [data, width, height]);
+  }, [data, width, height, pt, pr, pb, pl]);
 
   if (points.length === 0) {
     return (
-      <div className="flex items-center justify-center h-40 text-sm text-gray-500">
+      <div className="flex items-center justify-center h-40 text-sm text-slate-500">
         No data
       </div>
     );
   }
 
   const polylinePoints = points.map((p) => `${p.x},${p.y}`).join(" ");
-  // Ensure first/last point are non-null (points.length > 0 is guaranteed above)
   const firstPoint = points[0]!;
   const lastPoint = points[points.length - 1]!;
   const areaPath =
@@ -125,14 +131,14 @@ function LineChart({
               x2={width - padding.right}
               y1={y}
               y2={y}
-              stroke="#e6e9ef"
+              stroke={GRID_COLOR}
               strokeWidth={1}
             />
             <text
               x={8}
               y={y + 4}
               fontSize={10}
-              fill="#6b7280"
+              fill={LABEL_COLOR}
               aria-hidden="true"
             >
               {String(t)}
@@ -170,7 +176,7 @@ function LineChart({
             x={p.x}
             y={height - 6}
             fontSize={10}
-            fill="#6b7280"
+            fill={LABEL_COLOR}
             textAnchor="middle"
           >
             {p.label}
@@ -187,7 +193,7 @@ function LineChart({
 function BarChart({
   data,
   height = 160,
-  color = "#059669",
+  color = "#10b981",
 }: {
   data: UploadsByDay[];
   height?: number;
@@ -195,22 +201,23 @@ function BarChart({
 }) {
   const width = 580;
   const padding = { top: 12, right: 12, bottom: 28, left: 36 };
+  const { top: pt, right: pr, bottom: pb, left: pl } = padding;
   const points = useMemo(() => {
     if (!data || data.length === 0) return [];
     const counts = data.map((d) => d.count);
     const max = Math.max(...counts, 1);
-    const w = (width - padding.left - padding.right) / data.length;
+    const w = (width - pl - pr) / data.length;
     return data.map((d, i) => {
-      const x = padding.left + i * w;
-      const h = (d.count / max) * (height - padding.top - padding.bottom) || 0;
-      const y = height - padding.bottom - h;
+      const x = pl + i * w;
+      const h = (d.count / max) * (height - pt - pb) || 0;
+      const y = height - pb - h;
       return { x, y, w: Math.max(4, w * 0.7), label: d.date, count: d.count };
     });
-  }, [data, width, height]);
+  }, [data, width, height, pt, pr, pb, pl]);
 
   if (points.length === 0) {
     return (
-      <div className="flex items-center justify-center h-40 text-sm text-gray-500">
+      <div className="flex items-center justify-center h-40 text-sm text-slate-500">
         No data
       </div>
     );
@@ -240,9 +247,9 @@ function BarChart({
               x2={width - padding.right}
               y1={y}
               y2={y}
-              stroke="#e6e9ef"
+              stroke={GRID_COLOR}
             />
-            <text x={8} y={y + 4} fontSize={10} fill="#6b7280">
+            <text x={8} y={y + 4} fontSize={10} fill={LABEL_COLOR}>
               {String(t)}
             </text>
           </g>
@@ -269,7 +276,7 @@ function BarChart({
               x={p.x + p.w / 2}
               y={height - 6}
               fontSize={10}
-              fill="#6b7280"
+              fill={LABEL_COLOR}
               textAnchor="middle"
             >
               {p.label.slice(5)}
@@ -298,7 +305,6 @@ function PieChart({
   const cy = height / 2;
   const radius = Math.min(cx, cy) - 8;
   const total = data.reduce((s, d) => s + d.bytes, 0);
-  let angleFrom = -Math.PI / 2;
 
   const colors = [
     "#ef4444",
@@ -311,9 +317,20 @@ function PieChart({
     "#06b6d4",
   ];
 
+  const slices = useMemo(() => {
+    if (total === 0) return [];
+    let angleFrom = -Math.PI / 2;
+    return data.map((d) => {
+      const portion = d.bytes / total;
+      const start = angleFrom;
+      angleFrom += portion * Math.PI * 2;
+      return { d, start, end: angleFrom, large: portion > 0.5 ? 1 : 0 };
+    });
+  }, [data, total]);
+
   if (total === 0) {
     return (
-      <div className="flex items-center justify-center h-40 text-sm text-gray-500">
+      <div className="flex items-center justify-center h-40 text-sm text-slate-500">
         No data
       </div>
     );
@@ -327,23 +344,18 @@ function PieChart({
       aria-label="Storage by type"
     >
       <g transform={`translate(${cx}, ${cy})`}>
-        {data.map((d, i) => {
-          const portion = d.bytes / total;
-          const angleTo = angleFrom + portion * Math.PI * 2;
-          const large = portion > 0.5 ? 1 : 0;
-
-          const x1 = Math.cos(angleFrom) * radius;
-          const y1 = Math.sin(angleFrom) * radius;
-          const x2 = Math.cos(angleTo) * radius;
-          const y2 = Math.sin(angleTo) * radius;
+        {slices.map(({ d, start, end, large }, i) => {
+          const x1 = Math.cos(start) * radius;
+          const y1 = Math.sin(start) * radius;
+          const x2 = Math.cos(end) * radius;
+          const y2 = Math.sin(end) * radius;
           const path = `M 0 0 L ${x1} ${y1} A ${radius} ${radius} 0 ${large} 1 ${x2} ${y2} Z`;
-          angleFrom = angleTo;
           return (
             <path
               key={d.type}
               d={path}
               fill={colors[i % colors.length]}
-              stroke="#fff"
+              stroke={PIE_STROKE}
               strokeWidth={1}
             />
           );
@@ -354,28 +366,15 @@ function PieChart({
 }
 
 /**
- * Utilities
- */
-function bytesToHuman(bytes: number) {
-  if (!bytes) return "0 B";
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  let i = 0;
-  let v = bytes;
-  while (v >= 1024 && i < units.length - 1) {
-    v /= 1024;
-    i++;
-  }
-  return `${Math.round(v * 10) / 10} ${units[i]}`;
-}
-
-/**
  * Main exported component
  */
-export default function AnalyticsCharts() {
+export default function AnalyticsCharts({ lang = "en" }: { lang?: Lang }) {
+  const t = getDict(lang);
   const [data, setData] = useState<AnalyticsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rangeDays, setRangeDays] = useState<number>(30);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -394,12 +393,18 @@ export default function AnalyticsCharts() {
         }
         const raw = await res.json();
 
+        type GrowthPoint = {
+          _id?: { year?: number; month?: number; day?: number };
+          count?: number;
+        };
+        type TypePoint = { _id?: string; mime?: string; totalSize?: number };
+
         // Map server response to the AnalyticsCharts component's expected shape.
         // The admin stats endpoint returns structured data (users, files, growth, etc.).
         // We derive: activeUsers (time series), uploadsByDay, storageByType and totals.
         const mapped: AnalyticsResponse = {
           activeUsers:
-            (raw.growth?.users || []).map((u: any) => {
+            (raw.growth?.users || []).map((u: GrowthPoint) => {
               const id = u._id || {};
               const year = id.year ?? new Date().getFullYear();
               const month = id.month ?? new Date().getMonth() + 1;
@@ -410,7 +415,7 @@ export default function AnalyticsCharts() {
               };
             }) || [],
           uploadsByDay:
-            (raw.growth?.files || []).map((f: any) => {
+            (raw.growth?.files || []).map((f: GrowthPoint) => {
               const id = f._id || {};
               const year = id.year ?? new Date().getFullYear();
               const month = id.month ?? new Date().getMonth() + 1;
@@ -421,7 +426,7 @@ export default function AnalyticsCharts() {
               };
             }) || [],
           storageByType:
-            (raw.files?.typeDistribution || []).map((t: any) => ({
+            (raw.files?.typeDistribution || []).map((t: TypePoint) => ({
               type: t._id || t.mime || "unknown",
               bytes: t.totalSize || 0,
             })) || [],
@@ -432,11 +437,12 @@ export default function AnalyticsCharts() {
         };
 
         if (mounted) setData(mapped);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Analytics fetch error", err);
         if (mounted) {
-          setError(err?.message || "Failed to load analytics");
-          // keep data null
+          setError(
+            err instanceof Error ? err.message : t.analytics.errorLoad,
+          );
         }
       } finally {
         if (mounted) setLoading(false);
@@ -448,7 +454,7 @@ export default function AnalyticsCharts() {
     return () => {
       mounted = false;
     };
-  }, [rangeDays]);
+  }, [rangeDays, refreshKey, t]);
 
   // Derived summary values
   const totals = useMemo(() => {
@@ -464,18 +470,18 @@ export default function AnalyticsCharts() {
   }, [data]);
 
   return (
-    <section className="bg-white border border-gray-200 rounded-lg p-4">
+    <section className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
       <header className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h3 className="text-lg font-semibold">System Analytics</h3>
-          <p className="text-sm text-gray-500">
-            Overview of key system metrics
-          </p>
+          <h3 className="text-lg font-semibold text-white">
+            {t.analytics.title}
+          </h3>
+          <p className="text-sm text-slate-400">{t.analytics.subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Range:</label>
+          <label className="text-sm text-slate-300">{t.analytics.range}</label>
           <select
-            className="px-2 py-1 border rounded bg-white text-sm"
+            className="px-2 py-1 border border-slate-600/50 rounded bg-slate-800 text-sm text-white"
             value={rangeDays}
             onChange={(e) => setRangeDays(Number(e.target.value))}
           >
@@ -486,25 +492,23 @@ export default function AnalyticsCharts() {
           </select>
 
           <button
-            onClick={() => {
-              // re-fetch by toggling state
-              setRangeDays((r) => r);
-              // simple UI feedback can be added
-            }}
-            className="px-3 py-1 bg-gray-100 border rounded text-sm"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            className="px-3 py-1 border border-slate-600/50 rounded text-sm text-slate-200 bg-slate-800/50 hover:bg-slate-700/50"
           >
-            Refresh
+            {t.analytics.refresh}
           </button>
         </div>
       </header>
 
       {loading && (
-        <div className="p-6 text-center text-gray-500">Loading analytics…</div>
+        <div className="p-6 text-center text-slate-400">
+          {t.common.loading}
+        </div>
       )}
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-100 text-red-700 rounded">
-          <strong>Error:</strong> {error}
+        <div className="p-4 bg-red-500/10 border border-red-500/50 text-red-300 rounded">
+          <strong>{t.analytics.errorLabel}:</strong> {error}
         </div>
       )}
 
@@ -512,51 +516,53 @@ export default function AnalyticsCharts() {
         <div className="space-y-6">
           {/* summary cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 border rounded flex flex-col">
-              <span className="text-sm text-gray-500">Total users</span>
-              <span className="text-2xl font-semibold">
+            <div className="p-4 border border-slate-700/50 rounded flex flex-col">
+              <span className="text-sm text-slate-400">
+                {t.analytics.totalUsers}
+              </span>
+              <span className="text-2xl font-semibold text-white">
                 {totals.totalUsers}
               </span>
-              <span className="text-xs text-gray-400 mt-1">
-                Active in range: {data.activeUsers?.length ?? 0}
-              </span>
             </div>
-            <div className="p-4 border rounded flex flex-col">
-              <span className="text-sm text-gray-500">Total files</span>
-              <span className="text-2xl font-semibold">
+            <div className="p-4 border border-slate-700/50 rounded flex flex-col">
+              <span className="text-sm text-slate-400">
+                {t.analytics.totalFiles}
+              </span>
+              <span className="text-2xl font-semibold text-white">
                 {totals.totalFiles}
               </span>
-              <span className="text-xs text-gray-400 mt-1">
-                Uploads in range:{" "}
-                {data.uploadsByDay?.reduce((s, x) => s + x.count, 0) ?? 0}
-              </span>
             </div>
-            <div className="p-4 border rounded flex flex-col">
-              <span className="text-sm text-gray-500">Storage used</span>
-              <span className="text-2xl font-semibold">
-                {bytesToHuman(totals.totalStorage)}
+            <div className="p-4 border border-slate-700/50 rounded flex flex-col">
+              <span className="text-sm text-slate-400">
+                {t.analytics.totalStorage}
               </span>
-              <span className="text-xs text-gray-400 mt-1">
-                Breakdown by type below
+              <span className="text-2xl font-semibold text-white">
+                {formatFileSize(totals.totalStorage)}
               </span>
             </div>
           </div>
 
           {/* charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="p-4 border rounded">
-              <h4 className="text-sm font-medium mb-2">Active Users</h4>
+            <div className="p-4 border border-slate-700/50 rounded">
+              <h4 className="text-sm font-medium text-white mb-2">
+                {t.analytics.activeUsersChart}
+              </h4>
               <LineChart data={data.activeUsers ?? []} />
             </div>
 
-            <div className="p-4 border rounded">
-              <h4 className="text-sm font-medium mb-2">Uploads per day</h4>
+            <div className="p-4 border border-slate-700/50 rounded">
+              <h4 className="text-sm font-medium text-white mb-2">
+                {t.analytics.uploadsPerDayChart}
+              </h4>
               <BarChart data={data.uploadsByDay ?? []} />
             </div>
           </div>
 
-          <div className="p-4 border rounded">
-            <h4 className="text-sm font-medium mb-2">Storage by type</h4>
+          <div className="p-4 border border-slate-700/50 rounded">
+            <h4 className="text-sm font-medium text-white mb-2">
+              {t.analytics.storageByTypeChart}
+            </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
               <div className="sm:col-span-1">
                 <PieChart data={data.storageByType ?? []} />
@@ -593,10 +599,12 @@ export default function AnalyticsCharts() {
                               ],
                           }}
                         />
-                        <span className="text-sm">{s.type}</span>
+                        <span className="text-sm text-slate-200">
+                          {s.type}
+                        </span>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {bytesToHuman(s.bytes)}
+                      <div className="text-sm text-slate-400">
+                        {formatFileSize(s.bytes)}
                       </div>
                     </li>
                   ))}
@@ -608,7 +616,9 @@ export default function AnalyticsCharts() {
       )}
 
       {!loading && !error && !data && (
-        <div className="p-4 text-sm text-gray-500">No analytics available.</div>
+        <div className="p-4 text-sm text-slate-400">
+          {t.common.noResults}
+        </div>
       )}
     </section>
   );

@@ -32,7 +32,7 @@ export default function VietnameseLoginPage() {
     const checkExistingAuth = async () => {
       const user = await checkAuth();
       if (user) {
-        redirectToPage("/dashboard");
+        redirectToPage(user.role === "admin" ? "/vi/admin" : "/dashboard");
       }
     };
     checkExistingAuth();
@@ -70,7 +70,7 @@ export default function VietnameseLoginPage() {
 
     const user = await login(form);
     if (user) {
-      redirectToPage("/dashboard");
+      redirectToPage(user.role === "admin" ? "/vi/admin" : "/dashboard");
     } else if (!error) {
       // Set Vietnamese error message if login failed but no specific error was set
       setError({
@@ -289,7 +289,7 @@ export default function VietnameseLoginPage() {
                   </a>
                 </p>
                 <p className="text-xs text-gray-500 mt-2 italic">
-                  Don't have an account? Create a free account now!
+                  Don&apos;t have an account? Create a free account now!
                 </p>
               </div>
             </div>

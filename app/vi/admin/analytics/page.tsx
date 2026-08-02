@@ -1,13 +1,5 @@
-"use client";
-
 import AnalyticsCharts from "@/components/AnalyticsCharts";
-import React from "react";
 
-export default function AdminAnalyticsViPage() {
-  return (
-    <section className="space-y-6 animate-fade-in">
-      {/* Analytics charts and summaries - AdminLayout provides top header and sidebar */}
-      <AnalyticsCharts />
-    </section>
-  );
+export default function Page() {
+  return <AnalyticsCharts lang="vi" />;
 }

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, AuthError, createAuthResponse } from "@/lib/auth";
 import { User } from "@/models/User";
 import { File } from "@/models/File";
 import { Folder } from "@/models/Folder";
+import { logAction } from "@/lib/activity-log";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
@@ -93,6 +94,7 @@ export async function GET(
       recentFiles: recentFiles.map((file: any) => ({
         ...file,
         id: file._id.toString(),
+        type: file.mime,
         _id: undefined,
       })),
     };
@@ -100,17 +102,7 @@ export async function GET(
     return NextResponse.json(userWithStats, { status: 200 });
   } catch (error) {
     console.error("Admin user GET error:", error);
-
-    if (
-      error instanceof Error &&
-      error.message.includes("Admin access required")
-    ) {
-      return NextResponse.json(
-        { error: "Admin access required" },
-        { status: 403 },
-      );
-    }
-
+    if (error instanceof AuthError) return createAuthResponse(error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -221,6 +213,19 @@ export async function PUT(
 
     await user.save();
 
+    await logAction("admin.user.update", {
+      userId: adminUser.id,
+      email: adminUser.email,
+      entityType: "user",
+      entityId: user._id.toString(),
+      metadata: {
+        fields: Object.keys({ name, email, role, isActive, password }).filter(
+          (k) => ({ name, email, role, isActive, password } as any)[k] !== undefined,
+        ),
+      },
+      request,
+    });
+
     // Return updated user without password hash
     const userResponse = (user as any).toSafeObject();
 
@@ -233,17 +238,7 @@ export async function PUT(
     );
   } catch (error) {
     console.error("Admin user PUT error:", error);
-
-    if (
-      error instanceof Error &&
-      error.message.includes("Admin access required")
-    ) {
-      return NextResponse.json(
-        { error: "Admin access required" },
-        { status: 403 },
-      );
-    }
-
+    if (error instanceof AuthError) return createAuthResponse(error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -290,7 +285,6 @@ export async function DELETE(
 
         if (fileCount > 0) {
           await (File as any).deleteMany({ owner: id }, { session });
-          console.log(`Deleted ${fileCount} files for user ${user.email}`);
         }
 
         // Delete all user's folders
@@ -299,13 +293,10 @@ export async function DELETE(
 
         if (folderCount > 0) {
           await (Folder as any).deleteMany({ owner: id }, { session });
-          console.log(`Deleted ${folderCount} folders for user ${user.email}`);
         }
 
         // Delete the user account
         await User.findByIdAndDelete(id, { session });
-
-        console.log(`Admin deletion completed for user: ${user.email}`);
       });
     } catch (transactionError) {
       console.error(
@@ -316,6 +307,15 @@ export async function DELETE(
     } finally {
       await session.endSession();
     }
+
+    await logAction("admin.user.delete", {
+      userId: adminUser.id,
+      email: adminUser.email,
+      entityType: "user",
+      entityId: (user._id as any).toString(),
+      metadata: { deletedEmail: user.email },
+      request,
+    });
 
     return NextResponse.json(
       {
@@ -330,17 +330,7 @@ export async function DELETE(
     );
   } catch (error) {
     console.error("Admin user DELETE error:", error);
-
-    if (
-      error instanceof Error &&
-      error.message.includes("Admin access required")
-    ) {
-      return NextResponse.json(
-        { error: "Admin access required" },
-        { status: 403 },
-      );
-    }
-
+    if (error instanceof AuthError) return createAuthResponse(error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

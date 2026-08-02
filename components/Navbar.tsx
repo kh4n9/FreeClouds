@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LogOut, User, Settings, Cloud } from "lucide-react";
+import { LogOut, User, Settings, Cloud, Shield } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 
@@ -10,6 +10,7 @@ interface NavbarProps {
     id: string;
     email: string;
     name: string;
+    role?: string;
   } | null;
   onLogout?: () => void;
   onOpenUserProfile?: () => void;
@@ -21,7 +22,8 @@ export default function Navbar({
   onOpenUserProfile,
 }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { t } = useTranslation();
+  const { t, currentLang } = useTranslation();
+  const adminPath = currentLang === "vi" ? "/vi/admin" : "/admin";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -65,6 +67,17 @@ export default function Navbar({
 
         <div className="flex items-center gap-3">
           <LanguageSwitcher variant="compact" className="hidden sm:block" />
+
+          {user?.role === "admin" && (
+            <a
+              href={adminPath}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-300 bg-indigo-500/10 border border-indigo-500/30 rounded-lg hover:bg-indigo-500/20 transition-all"
+              title="Admin"
+            >
+              <Shield className="w-4 h-4" />
+              <span className="hidden md:inline">{t("admin", { en: "Admin", vi: "Quản trị" })}</span>
+            </a>
+          )}
 
           {user ? (
             <div className="relative user-dropdown">

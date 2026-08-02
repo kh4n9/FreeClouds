@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, AuthError, createAuthResponse } from "@/lib/auth";
 import { User } from "@/models/User";
 import { File } from "@/models/File";
 import { Folder } from "@/models/Folder";
+import { logAction } from "@/lib/activity-log";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
@@ -237,17 +238,7 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Admin users GET error:", error);
-
-    if (
-      error instanceof Error &&
-      error.message.includes("Admin access required")
-    ) {
-      return NextResponse.json(
-        { error: "Admin access required" },
-        { status: 403 },
-      );
-    }
-
+    if (error instanceof AuthError) return createAuthResponse(error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -258,7 +249,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify admin authentication
-    await requireAdmin(request);
+    const adminUser = await requireAdmin(request);
 
     // Connect to database
     await connectToDatabase();
@@ -314,6 +305,15 @@ export async function POST(request: NextRequest) {
 
     await newUser.save();
 
+    await logAction("admin.user.create", {
+      userId: adminUser.id,
+      email: adminUser.email,
+      entityType: "user",
+      entityId: newUser._id.toString(),
+      metadata: { createdEmail: newUser.email, role },
+      request,
+    });
+
     // Return user without password hash
     const userResponse = (newUser as any).toSafeObject();
 
@@ -326,17 +326,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Admin users POST error:", error);
-
-    if (
-      error instanceof Error &&
-      error.message.includes("Admin access required")
-    ) {
-      return NextResponse.json(
-        { error: "Admin access required" },
-        { status: 403 },
-      );
-    }
-
+    if (error instanceof AuthError) return createAuthResponse(error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

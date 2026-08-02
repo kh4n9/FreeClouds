@@ -3,8 +3,8 @@ import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import { requireAuth, AuthError, createAuthResponse, validateOrigin, createCsrfError } from "@/lib/auth";
 import { telegramAPI, isAllowedFileType, validateFileName, sanitizeFileName } from "@/lib/telegram";
-
-const STORAGE_LIMIT = 1024 * 1024 * 1024 * 1024;
+import { getSystemSettings } from "@/lib/settings";
+import { logAction } from "@/lib/activity-log";
 
 export async function handleComplete(request: NextRequest) {
   try {
@@ -69,7 +69,8 @@ export async function handleComplete(request: NextRequest) {
 
     // Check storage limit
     const userStats = await (File as any).getStorageUsage(user.id);
-    if ((userStats.totalSize || 0) + totalSize > STORAGE_LIMIT) {
+    const settings = await getSystemSettings();
+    if ((userStats.totalSize || 0) + totalSize > settings.storageLimit) {
       return NextResponse.json({ error: "Storage limit exceeded" }, { status: 413 });
     }
 
@@ -113,6 +114,15 @@ export async function handleComplete(request: NextRequest) {
       ...(originalExt ? { originalExt } : {}),
     });
     await parentFile.save();
+
+    await logAction("file.upload", {
+      userId: user.id,
+      email: user.email,
+      entityType: "file",
+      entityId: parentFile._id.toString(),
+      metadata: { name: parentFile.name, size: parentFile.size, chunked: true },
+      request,
+    });
 
     return NextResponse.json({
       id: parentFile._id.toString(),

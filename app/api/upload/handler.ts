@@ -23,9 +23,10 @@ import {
   validateFileName,
   sanitizeFileName,
 } from "@/lib/telegram";
+import { getSystemSettings } from "@/lib/settings";
+import { logAction } from "@/lib/activity-log";
 
 const CHUNK_SIZE = 15 * 1024 * 1024;
-const STORAGE_LIMIT = 1024 * 1024 * 1024 * 1024;
 const uploadSchema = z.object({
   folderId: z.string().optional().nullable(),
 });
@@ -62,8 +63,9 @@ export async function handleUpload(request: NextRequest) {
     if (file.size === 0) return NextResponse.json({ error: "Empty file not allowed" }, { status: 400 });
 
     const userStats = await (File as any).getStorageUsage(user.id);
-    if ((userStats.totalSize || 0) + file.size > STORAGE_LIMIT) {
-      return NextResponse.json({ error: "Storage limit exceeded (1TB per account)" }, { status: 413 });
+    const settings = await getSystemSettings();
+    if ((userStats.totalSize || 0) + file.size > settings.storageLimit) {
+      return NextResponse.json({ error: "Storage limit exceeded" }, { status: 413 });
     }
 
     let fileName = file.name;

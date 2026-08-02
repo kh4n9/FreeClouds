@@ -17,7 +17,7 @@ import PlainFolderTree from "@/components/PlainFolderTree";
 import ContextMenu from "@/components/ContextMenu";
 import Footer from "@/components/Footer";
 
-interface User { id: string; email: string; name: string; createdAt: string; updatedAt: string; stats?: { totalFiles: number; totalSize: number; totalFolders: number; }; }
+interface User { id: string; email: string; name: string; role?: string; createdAt: string; updatedAt: string; stats?: { totalFiles: number; totalSize: number; totalFolders: number; }; }
 interface FolderData { id: string; name: string; parent: string | null; createdAt: string; }
 interface FileData { id: string; name: string; displayName?: string; size: number; mime: string; folderId: string | null; folderName?: string | null; createdAt: string; }
 interface TrashFileData { id: string; name: string; displayName?: string; size: number; mime: string; deletedAt: string; trashExpiresAt: string; }

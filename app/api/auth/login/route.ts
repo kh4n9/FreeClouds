@@ -10,6 +10,7 @@ import {
   RATE_LIMITS,
 } from "@/lib/ratelimit";
 import { validateOrigin, createCsrfError } from "@/lib/auth";
+import { logAction } from "@/lib/activity-log";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address").min(1, "Email is required"),
@@ -63,6 +64,11 @@ export async function POST(request: NextRequest) {
     // Find user by email
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
+      await logAction("login.failed", {
+        email: email.toLowerCase().trim(),
+        metadata: { reason: "user_not_found" },
+        request,
+      });
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 },
@@ -70,6 +76,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user.isActive) {
+      await logAction("login.blocked", {
+        userId: (user._id as any).toString(),
+        email: user.email,
+        metadata: { reason: "account_disabled" },
+        request,
+      });
       return NextResponse.json(
         { error: "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên." },
         { status: 403 },
@@ -79,11 +91,23 @@ export async function POST(request: NextRequest) {
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
+      await logAction("login.failed", {
+        userId: (user._id as any).toString(),
+        email: user.email,
+        metadata: { reason: "wrong_password" },
+        request,
+      });
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 },
       );
     }
+
+    await logAction("login", {
+      userId: (user._id as any).toString(),
+      email: user.email,
+      request,
+    });
 
     // Generate JWT token
     const token = signJwt({
@@ -96,6 +120,7 @@ export async function POST(request: NextRequest) {
       id: (user._id as any).toString(),
       email: user.email,
       name: user.name,
+      role: user.role,
     };
 
     const response = NextResponse.json(userData, { status: 200 });

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, AuthError, createAuthResponse } from "@/lib/auth";
 import { User } from "@/models/User";
+import { File } from "@/models/File";
+import mongoose from "mongoose";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,6 +19,7 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get("role") || "";
     const status = searchParams.get("status") || "";
     const format = searchParams.get("format") || "csv";
+    const lang = searchParams.get("lang") === "vi" ? "vi" : "en";
 
     // Build query
     const query: any = {};
@@ -42,33 +45,89 @@ export async function GET(request: NextRequest) {
       .sort({ createdAt: -1 })
       .lean();
 
+    // Compute live storage/file stats (exclude deleted files)
+    const userIds = users.map(
+      (user) => new mongoose.Types.ObjectId(user._id.toString()),
+    );
+    const fileStatsResults = await File.aggregate([
+      {
+        $match: {
+          owner: { $in: userIds },
+          deletedAt: null,
+        },
+      },
+      {
+        $group: {
+          _id: "$owner",
+          totalFiles: { $sum: 1 },
+          totalSize: { $sum: "$size" },
+        },
+      },
+    ]);
+    const statsMap = new Map(
+      fileStatsResults.map((stat) => [stat._id.toString(), stat]),
+    );
+    const getStats = (userId: string) =>
+      statsMap.get(userId) || { totalFiles: 0, totalSize: 0 };
+
+    const t = lang === "vi"
+      ? {
+          headers: [
+            "ID",
+            "Tên",
+            "Email",
+            "Vai trò",
+            "Trạng thái",
+            "Tổng file",
+            "Dung lượng sử dụng (bytes)",
+            "Ngày tham gia",
+            "Đăng nhập cuối",
+          ],
+          admin: "Quản trị viên",
+          user: "Người dùng",
+          active: "Hoạt động",
+          inactive: "Vô hiệu hóa",
+          never: "Chưa đăng nhập",
+          locale: "vi-VN",
+        }
+      : {
+          headers: [
+            "ID",
+            "Name",
+            "Email",
+            "Role",
+            "Status",
+            "Total files",
+            "Storage used (bytes)",
+            "Joined",
+            "Last login",
+          ],
+          admin: "Administrator",
+          user: "User",
+          active: "Active",
+          inactive: "Inactive",
+          never: "Never",
+          locale: "en-US",
+        };
+
     if (format === "csv") {
       // Generate CSV content
-      const headers = [
-        "ID",
-        "Tên",
-        "Email",
-        "Vai trò",
-        "Trạng thái",
-        "Tổng file",
-        "Dung lượng sử dụng (bytes)",
-        "Ngày tham gia",
-        "Đăng nhập cuối"
-      ];
+      const csvRows = [t.headers.join(",")];
 
-      const csvRows = [headers.join(",")];
-
-      users.forEach(user => {
+      users.forEach((user) => {
+        const stats = getStats(user._id.toString());
         const row = [
           user._id.toString(),
-          `"${user.name.replace(/"/g, '""')}"`, // Escape quotes
+          `"${user.name.replace(/"/g, '""')}"`,
           user.email,
-          user.role === "admin" ? "Quản trị viên" : "Người dùng",
-          user.isActive ? "Hoạt động" : "Vô hiệu hóa",
-          user.totalFilesUploaded || 0,
-          user.totalStorageUsed || 0,
-          new Date(user.createdAt).toLocaleDateString("vi-VN"),
-          user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString("vi-VN") : "Chưa đăng nhập"
+          user.role === "admin" ? t.admin : t.user,
+          user.isActive ? t.active : t.inactive,
+          stats.totalFiles,
+          stats.totalSize,
+          new Date(user.createdAt).toLocaleDateString(t.locale),
+          user.lastLoginAt
+            ? new Date(user.lastLoginAt).toLocaleDateString(t.locale)
+            : t.never,
         ];
         csvRows.push(row.join(","));
       });
@@ -91,18 +150,21 @@ export async function GET(request: NextRequest) {
 
     if (format === "json") {
       // Format users for JSON export
-      const formattedUsers = users.map(user => ({
-        id: user._id.toString(),
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive,
-        totalFilesUploaded: user.totalFilesUploaded || 0,
-        totalStorageUsed: user.totalStorageUsed || 0,
-        createdAt: user.createdAt,
-        lastLoginAt: user.lastLoginAt,
-        updatedAt: user.updatedAt
-      }));
+      const formattedUsers = users.map((user) => {
+        const stats = getStats(user._id.toString());
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isActive: user.isActive,
+          totalFilesUploaded: stats.totalFiles,
+          totalStorageUsed: stats.totalSize,
+          createdAt: user.createdAt,
+          lastLoginAt: user.lastLoginAt,
+          updatedAt: user.updatedAt
+        };
+      });
 
       const jsonContent = JSON.stringify({
         exportDate: new Date().toISOString(),
@@ -132,14 +194,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error("Admin users export error:", error);
-
-    if (error instanceof Error && error.message.includes("Admin access required")) {
-      return NextResponse.json(
-        { error: "Admin access required" },
-        { status: 403 }
-      );
-    }
-
+    if (error instanceof AuthError) return createAuthResponse(error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

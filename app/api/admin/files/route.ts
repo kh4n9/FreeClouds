@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
-import { User } from "@/models/User";
 import { requireAuth, AuthError, createAuthResponse } from "@/lib/auth";
+import { logAction } from "@/lib/activity-log";
 import mongoose from "mongoose";
 
 const querySchema = z.object({
@@ -77,23 +77,27 @@ export async function GET(request: NextRequest) {
     const pipeline: any[] = [];
 
     // Match stage
-    const matchStage: any = {};
+    const matchConditions: any[] = [
+      // Exclude internal chunk records
+      { $or: [{ chunkedId: null }, { chunkIndex: -1 }] },
+    ];
 
     // Filter by user if specified
     if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-      matchStage.owner = new mongoose.Types.ObjectId(userId);
+      matchConditions.push({ owner: new mongoose.Types.ObjectId(userId) });
     }
 
     // Filter by deletion status
     if (!includeDeleted) {
-      matchStage.deletedAt = null;
+      matchConditions.push({ deletedAt: null });
     }
 
     // Search functionality
     if (search) {
-      matchStage.name = { $regex: search, $options: "i" };
+      matchConditions.push({ name: { $regex: search, $options: "i" } });
     }
 
+    const matchStage: any = { $and: matchConditions };
     pipeline.push({ $match: matchStage });
 
     // Add owner information
@@ -197,6 +201,22 @@ export async function GET(request: NextRequest) {
     const [countResult] = await File.aggregate(countPipeline);
     const total = countResult?.total || 0;
 
+    // Compute totals for stat cards (respecting current filters)
+    const [totalsResult] = await File.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: null,
+          totalFiles: { $sum: 1 },
+          totalSize: { $sum: "$size" },
+        },
+      },
+    ]);
+    const totals = {
+      totalFiles: totalsResult?.totalFiles || 0,
+      totalSize: totalsResult?.totalSize || 0,
+    };
+
     // Add pagination
     const skip = (page - 1) * limit;
     pipeline.push({ $skip: skip });
@@ -243,6 +263,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       files: transformedFiles,
       pagination,
+      totals,
     });
   } catch (error) {
     console.error("Admin files API error:", error);
@@ -315,6 +336,14 @@ export async function DELETE(request: NextRequest) {
         },
       );
     }
+
+    await logAction(permanent ? "admin.file.deletePermanent" : "admin.file.delete", {
+      userId: user.id,
+      email: user.email,
+      entityType: "file",
+      metadata: { fileIds: validFileIds, count: validFileIds.length },
+      request,
+    });
 
     return NextResponse.json({
       success: true,
@@ -394,6 +423,14 @@ export async function PATCH(request: NextRequest) {
         },
       );
     }
+
+    await logAction("admin.file.restore", {
+      userId: user.id,
+      email: user.email,
+      entityType: "file",
+      metadata: { fileIds: validFileIds, count: validFileIds.length },
+      request,
+    });
 
     return NextResponse.json({
       success: true,
