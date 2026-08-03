@@ -13,6 +13,12 @@ import {
   validateOrigin,
   createCsrfError,
 } from "@/lib/auth";
+import { telegramAPI } from "@/lib/telegram";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  RATE_LIMITS,
+} from "@/lib/ratelimit";
 
 const updateProfileSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name too long").trim(),
@@ -66,7 +72,11 @@ export async function GET(request: NextRequest) {
         name: userDoc.name,
         email: userDoc.email,
         emailVerified: Boolean(userDoc.emailVerified),
-        avatar: userDoc.avatar || null,
+        avatar: userDoc.avatarFileId
+          ? `/api/user/avatar?v=${
+              userDoc.avatarUpdatedAt?.getTime() || Date.now()
+            }`
+          : userDoc.avatar || null,
         createdAt: userDoc.createdAt,
         updatedAt: userDoc.updatedAt,
         stats: {
@@ -168,6 +178,11 @@ export async function PATCH(request: NextRequest) {
         { status: 200 },
       );
     } else if (action === "update-avatar") {
+      const rateLimit = checkRateLimit(request, RATE_LIMITS.UPLOAD);
+      if (!rateLimit.allowed) {
+        return createRateLimitResponse(rateLimit.remaining, rateLimit.resetTime);
+      }
+
       const validation = updateAvatarSchema.safeParse(body);
       if (!validation.success) {
         return NextResponse.json(
@@ -176,9 +191,53 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
+      const avatarMatch = String(validation.data.avatar).match(
+        /^data:image\/(png|jpeg|webp);base64,(.+)$/,
+      );
+      if (!avatarMatch) {
+        return NextResponse.json(
+          { error: "Invalid avatar image" },
+          { status: 400 },
+        );
+      }
+
+      const mimeType = `image/${avatarMatch[1]}`;
+      const imageBuffer = Buffer.from(avatarMatch[2]!, "base64");
+
+      let telegramResponse;
+      try {
+        telegramResponse = await telegramAPI.sendDocument(
+          imageBuffer,
+          `avatar_${user.id}.${avatarMatch[1]}`,
+          mimeType,
+        );
+      } catch (error) {
+        console.error("Telegram avatar upload failed:", error);
+        return NextResponse.json(
+          { error: "Avatar upload failed. Please try again." },
+          { status: 500 },
+        );
+      }
+
+      let avatarFilePath: string | null = null;
+      try {
+        const fileInfo = await telegramAPI.getFile(
+          telegramResponse.document.file_id,
+        );
+        avatarFilePath = fileInfo.file_path || null;
+      } catch {
+        // File path is optional; avatar still streams via getFile fallback
+      }
+
       const updatedUser = await User.findByIdAndUpdate(
         user.id,
-        { avatar: validation.data.avatar },
+        {
+          avatar: null,
+          avatarFileId: telegramResponse.document.file_id,
+          avatarFilePath,
+          avatarMime: mimeType,
+          avatarUpdatedAt: new Date(),
+        },
         { new: true, runValidators: true },
       );
 
@@ -189,14 +248,22 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(
         {
           message: "Avatar updated successfully",
-          avatar: updatedUser.avatar || null,
+          avatar: `/api/user/avatar?v=${
+            updatedUser.avatarUpdatedAt?.getTime() || Date.now()
+          }`,
         },
         { status: 200 },
       );
     } else if (action === "remove-avatar") {
       const updatedUser = await User.findByIdAndUpdate(
         user.id,
-        { avatar: null },
+        {
+          avatar: null,
+          avatarFileId: null,
+          avatarFilePath: null,
+          avatarMime: null,
+          avatarUpdatedAt: null,
+        },
         { new: true },
       );
 

@@ -9,6 +9,10 @@ export interface IUser extends Document {
   isActive: boolean;
   emailVerified: boolean;
   avatar?: string;
+  avatarFileId?: string;
+  avatarFilePath?: string;
+  avatarMime?: string;
+  avatarUpdatedAt?: Date;
   lastLoginAt?: Date;
   totalFilesUploaded: number;
   totalStorageUsed: number;
@@ -84,6 +88,22 @@ const userSchema = new Schema<IUser>(
     },
     avatar: {
       type: String,
+      default: null,
+    },
+    avatarFileId: {
+      type: String,
+      default: null,
+    },
+    avatarFilePath: {
+      type: String,
+      default: null,
+    },
+    avatarMime: {
+      type: String,
+      default: null,
+    },
+    avatarUpdatedAt: {
+      type: Date,
       default: null,
     },
     lastLoginAt: {
