@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
+import { env } from "@/lib/env";
 import {
   requireAuth,
   AuthError,
@@ -11,13 +13,34 @@ import { buildDownloadResponse } from "@/lib/download-file";
 
 export async function handleDownload(request: NextRequest, paramsPromise: Promise<{ id: string }>) {
   try {
-    const user = await requireAuth(request);
-    await connectToDatabase();
-
     const { id: fileId } = await paramsPromise;
     if (!fileId || fileId.length !== 24) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
+
+    // Signed short-lived token (minted by /signed-download) allows
+    // cookie-less access for external viewers such as Google Docs Viewer.
+    const token = new URL(request.url).searchParams.get("token");
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, env.JWT_SECRET, {
+          algorithms: ["HS256"],
+        }) as { fid?: unknown };
+        if (decoded.fid === fileId) {
+          await connectToDatabase();
+          const file = await File.findById(fileId);
+          if (!file || file.deletedAt) {
+            return NextResponse.json({ error: "File not found" }, { status: 404 });
+          }
+          return buildDownloadResponse(request, file);
+        }
+      } catch {
+        // Invalid/expired token — fall through to normal auth
+      }
+    }
+
+    const user = await requireAuth(request);
+    await connectToDatabase();
 
     const file = await File.findById(fileId);
     if (!file || file.deletedAt) {

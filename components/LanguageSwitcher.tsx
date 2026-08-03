@@ -428,6 +428,20 @@ export const commonTranslations = {
   rows: { en: "rows", vi: "dòng" },
   spreadsheet: { en: "Spreadsheet", vi: "Bảng tính" },
 
+  // Word document preview
+  loadingWordDoc: {
+    en: "Loading Word document...",
+    vi: "Đang tải tài liệu Word...",
+  },
+  wordParseError: {
+    en: "Could not read this Word document. The file may be corrupted or unsupported.",
+    vi: "Không thể đọc tài liệu Word này. Tệp có thể bị hỏng hoặc không được hỗ trợ.",
+  },
+  openInGoogleDocs: {
+    en: "Open in Google Docs",
+    vi: "Mở trong Google Docs",
+  },
+
   // User profile / settings translations
   userSettings: { en: "User Settings", vi: "Cài đặt người dùng" },
   profileTab: { en: "Profile", vi: "Hồ sơ" },

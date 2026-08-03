@@ -165,7 +165,7 @@ const PREVIEW_CAPABILITIES: Record<string, PreviewCapability> = {
     canPreview: true,
     previewType: "pdf",
     requiresSpecialHandling: false,
-    maxPreviewSize: 50 * 1024 * 1024,
+    maxPreviewSize: 100 * 1024 * 1024, // 100MB
     description: "PDF document with page navigation",
   },
   "text/plain": {
@@ -220,10 +220,10 @@ const PREVIEW_CAPABILITIES: Record<string, PreviewCapability> = {
 
   // Office Documents
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
-    canPreview: false,
+    canPreview: true,
     previewType: "office",
     requiresSpecialHandling: true,
-    maxPreviewSize: 0,
+    maxPreviewSize: 50 * 1024 * 1024, // 50MB
     description: "Microsoft Word document",
     recommendations: [
       "Open in Microsoft Word",
@@ -280,10 +280,10 @@ const PREVIEW_CAPABILITIES: Record<string, PreviewCapability> = {
     ],
   },
   "application/msword": {
-    canPreview: false,
+    canPreview: true,
     previewType: "office",
     requiresSpecialHandling: true,
-    maxPreviewSize: 0,
+    maxPreviewSize: 50 * 1024 * 1024, // 50MB
     description: "Legacy Microsoft Word document",
     recommendations: [
       "Open in Microsoft Word",

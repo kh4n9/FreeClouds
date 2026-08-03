@@ -45,6 +45,7 @@ import {
   CalendarPreview,
 } from "./preview/SpecializedPreviews";
 import VideoConverter from "./preview/VideoConverter";
+import WordPreview from "./preview/WordPreview";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 import * as pdfjsLib from "pdfjs-dist";
 
@@ -139,6 +140,21 @@ export default function FilePreview({
       file?.mime.includes("presentation") ||
       false,
     [file?.mime],
+  );
+  const isWordDoc = useMemo(
+    () =>
+      file?.mime.includes("word") ||
+      file?.name.toLowerCase().match(/\.(docx|doc)$/) ||
+      false,
+    [file?.mime, file?.name],
+  );
+  const isLegacyDoc = useMemo(
+    () =>
+      file?.mime === "application/msword" ||
+      (file?.name.toLowerCase().endsWith(".doc") &&
+        !file?.name.toLowerCase().endsWith(".docx")) ||
+      false,
+    [file?.mime, file?.name],
   );
   const isSpreadsheet = useMemo(
     () =>
@@ -296,7 +312,7 @@ export default function FilePreview({
 
         if (isCancelled) return;
 
-        if (isImage || isVideo || isAudio || isPDF || isSpreadsheet) {
+        if (isImage || isVideo || isAudio || isPDF || isSpreadsheet || (isWordDoc && !isLegacyDoc)) {
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
           if (!isCancelled) {
@@ -539,7 +555,10 @@ export default function FilePreview({
                   {isPDF && (
                     <FileText className={`w-5 h-5 ${fileInfo.color}`} />
                   )}
-                  {!isImage && !isVideo && !isAudio && !isText && !isPDF && (
+                  {isWordDoc && (
+                    <FileText className={`w-5 h-5 ${fileInfo.color}`} />
+                  )}
+                  {!isImage && !isVideo && !isAudio && !isText && !isPDF && !isWordDoc && (
                     <File className={`w-5 h-5 ${fileInfo.color}`} />
                   )}
                 </div>
@@ -923,6 +942,18 @@ export default function FilePreview({
             />
           )}
 
+          {!loading &&
+            !error &&
+            !securityWarning &&
+            isWordDoc &&
+            (fileContent || isLegacyDoc) && (
+              <WordPreview
+                file={file}
+                fileContent={fileContent}
+                onDownload={handleDownload}
+              />
+            )}
+
           {!loading && !error && !securityWarning && isCAD && (
             <CADPreview
               file={file}
@@ -963,7 +994,8 @@ export default function FilePreview({
             !error &&
             !securityWarning &&
             !fileContent &&
-            isOffice && (
+            isOffice &&
+            !isWordDoc && (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center text-gray-500 max-w-md">
                   <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
@@ -999,6 +1031,7 @@ export default function FilePreview({
             !securityWarning &&
             !fileContent &&
             !isOffice &&
+            !isWordDoc &&
             !isArchive &&
             !is3DModel &&
             !isFont &&
