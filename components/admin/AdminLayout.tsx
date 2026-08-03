@@ -86,7 +86,7 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+      <div className="min-h-screen app-bg flex items-center justify-center">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mx-auto mb-4 animate-pulse">
           <Cloud className="w-7 h-7 text-white" />
         </div>
@@ -97,7 +97,7 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex animate-fade-in">
+    <div className="min-h-screen app-bg flex animate-fade-in">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div

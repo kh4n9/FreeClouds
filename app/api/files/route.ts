@@ -8,6 +8,8 @@ import { requireAuth, AuthError, createAuthResponse } from "@/lib/auth";
 const querySchema = z.object({
   folderId: z.string().nullable().optional(),
   q: z.string().nullable().optional(),
+  favorite: z.string().nullable().optional(),
+  view: z.enum(["recent"]).nullable().optional(),
   page: z
     .string()
     .nullable()
@@ -33,6 +35,8 @@ export async function GET(request: NextRequest) {
     const queryParams = {
       folderId: searchParams.get("folderId"),
       q: searchParams.get("q"),
+      favorite: searchParams.get("favorite"),
+      view: searchParams.get("view"),
       page: searchParams.get("page"),
       limit: searchParams.get("limit"),
     };
@@ -45,7 +49,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { folderId, q: search, page = 1, limit = 50 } = validation.data;
+    const { folderId, q: search, favorite, view, page = 1, limit = 50 } = validation.data;
+
+    // Recent view: files across all folders sorted by newest first
+    if (view === "recent") {
+      const files = await File.findRecent(user.id, Math.min(limit, 100));
+      return NextResponse.json(
+        { files, total: files.length, page: 1, limit: files.length, totalPages: 1 },
+        { status: 200 },
+      );
+    }
 
     // Validate folderId if provided
     if (
@@ -73,12 +86,16 @@ export async function GET(request: NextRequest) {
       limit: number;
       folderId?: string | null;
       search?: string;
+      favorite?: boolean;
     } = { page, limit };
     if (finalFolderId !== undefined) {
       options.folderId = finalFolderId;
     }
     if (search !== undefined && search !== null) {
       options.search = search;
+    }
+    if (favorite !== undefined && favorite !== null) {
+      options.favorite = favorite === "true";
     }
 
     const result = await File.findByOwnerWithCount(user.id, options);

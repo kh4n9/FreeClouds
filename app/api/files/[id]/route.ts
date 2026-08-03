@@ -172,6 +172,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ id: file._id.toString(), name: file.name }, { status: 200 });
     }
 
+    if (action === "favorite") {
+      const file = await File.findById(fileId);
+      if (!file || file.deletedAt) return NextResponse.json({ error: "File not found" }, { status: 404 });
+      if (!(await verifyOwnership(user.id, file))) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      file.favorite = typeof body.favorite === "boolean" ? body.favorite : !file.favorite;
+      await file.save();
+      return NextResponse.json({ id: file._id.toString(), favorite: file.favorite }, { status: 200 });
+    }
+
     if (action === "restore") {
       const file = await File.findById(fileId);
       if (!file || !file.deletedAt) return NextResponse.json({ error: "File not found in trash" }, { status: 404 });

@@ -6,7 +6,8 @@ import {
   FolderPlus, Upload, RefreshCw, AlertCircle, X, Cloud, Search,
   HardDrive, FileIcon, FolderIcon, LogOut, Settings, Grid3X3,
   List, ChevronLeft, ChevronRight, ChevronDown, Sidebar, Trash2, FileText,
-  RotateCcw, Clock, type LucideIcon,
+  RotateCcw, Clock, Star, Sun, Moon, FolderOpen, Download,
+  type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 const DynamicFileGrid = dynamic(() => import("@/components/FileGrid"), { ssr: false });
@@ -21,7 +22,7 @@ import Footer from "@/components/Footer";
 
 interface User { id: string; email: string; name: string; role?: string; createdAt: string; updatedAt: string; stats?: { totalFiles: number; totalSize: number; totalFolders: number; }; }
 interface FolderData { id: string; name: string; parent: string | null; createdAt: string; }
-interface FileData { id: string; name: string; displayName?: string; size: number; mime: string; folderId: string | null; folderName?: string | null; createdAt: string; }
+interface FileData { id: string; name: string; displayName?: string; size: number; mime: string; folderId: string | null; folderName?: string | null; createdAt: string; favorite?: boolean; }
 interface TrashFileData { id: string; name: string; displayName?: string; size: number; mime: string; deletedAt: string; trashExpiresAt: string; }
 type CacheKey = string;
 
@@ -177,6 +178,50 @@ function SkeletonLoader() {
   );
 }
 
+function FileRow({ file, gradient, children }: { file: FileData; gradient: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-slate-600/50 transition-all">
+      <div className={`w-10 h-10 rounded-xl ${gradient} flex items-center justify-center flex-shrink-0`}>
+        <FileIcon className="w-5 h-5 text-slate-200" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-slate-200 truncate">{file.displayName || file.name}</p>
+        <p className="text-xs text-slate-400 flex items-center gap-2">
+          <span>{formatSize(file.size)}</span>
+          <span>{formatDate(file.createdAt)}</span>
+          {file.folderName && <span className="text-sky-400 truncate">in {file.folderName}</span>}
+        </p>
+      </div>
+      <div className="flex items-center gap-1 flex-shrink-0">{children}</div>
+    </div>
+  );
+}
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  return sameDay
+    ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : d.toLocaleDateString([], { month: "short", day: "numeric", year: d.getFullYear() !== now.getFullYear() ? "numeric" : undefined });
+}
+
+function EmptyState({ icon, title, subtitle, gradient }: { icon: React.ReactNode; title: string; subtitle: string; gradient: string }) {
+  return (
+    <div className="text-center py-20">
+      <div className="relative w-24 h-24 mx-auto mb-6">
+        <div className={`absolute inset-0 rounded-3xl ${gradient} blur-lg animate-pulse-slow`} />
+        <div className="relative w-24 h-24 rounded-3xl bg-slate-800/50 border border-blue-500/30 flex items-center justify-center">
+          {icon}
+        </div>
+      </div>
+      <h3 className="text-xl font-semibold text-slate-300 mb-2">{title}</h3>
+      <p className="text-sm text-slate-400">{subtitle}</p>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [folders, setFolders] = useState<FolderData[]>([]);
@@ -190,7 +235,15 @@ export default function DashboardPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [spaceMenu, setSpaceMenu] = useState<{ x: number; y: number } | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [showTrash, setShowTrash] = useState(false);
+  const [activeView, setActiveView] = useState<"files" | "favorites" | "recent" | "trash">("files");
+  const [favoriteFiles, setFavoriteFiles] = useState<FileData[]>([]);
+  const [recentFiles, setRecentFiles] = useState<FileData[]>([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [recentLoading, setRecentLoading] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">(() =>
+    typeof window !== "undefined" && localStorage.getItem("theme") === "light" ? "light" : "dark"
+  );
+  const showTrash = activeView === "trash";
   const [trashFiles, setTrashFiles] = useState<TrashFileData[]>([]);
   const [trashLoading, setTrashLoading] = useState(false);
   const [emptyingTrash, setEmptyingTrash] = useState(false);
@@ -225,6 +278,12 @@ export default function DashboardPage() {
     debounceTimer.current = setTimeout(() => setDebouncedSearch(searchQuery), 300);
     return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
   }, [searchQuery]);
+
+  // Persist theme preference and apply to <html>
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try { localStorage.setItem("theme", theme); } catch { /* ignore */ }
+  }, [theme]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -328,6 +387,7 @@ export default function DashboardPage() {
   const handleFolderSelect = useCallback((folderId: string | null) => {
     setSelectedFolderId(folderId);
     setSearchQuery("");
+    setActiveView("files");
   }, []);
 
   const handleCreateFolder = useCallback((parentId: string | null) => {
@@ -443,6 +503,61 @@ export default function DashboardPage() {
     finally { setTrashLoading(false); }
   }, []);
 
+  const loadFavorites = useCallback(async () => {
+    setFavoritesLoading(true);
+    try {
+      const res = await fetch("/api/files?favorite=true&limit=100");
+      if (res.ok) {
+        const data = await res.json();
+        setFavoriteFiles(data.files || []);
+      }
+    } catch { /* ignore */ }
+    finally { setFavoritesLoading(false); }
+  }, []);
+
+  const loadRecent = useCallback(async () => {
+    setRecentLoading(true);
+    try {
+      const res = await fetch("/api/files?view=recent&limit=30");
+      if (res.ok) {
+        const data = await res.json();
+        setRecentFiles(data.files || []);
+      }
+    } catch { /* ignore */ }
+    finally { setRecentLoading(false); }
+  }, []);
+
+  const handleToggleFavorite = useCallback(async (file: FileData) => {
+    try {
+      const res = await fetch(`/api/files/${file.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "favorite" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const isFav: boolean = data.favorite;
+        setFiles((prev) => prev.map((f) => (f.id === file.id ? { ...f, favorite: isFav } : f)));
+        setFavoriteFiles((prev) =>
+          isFav
+            ? prev.some((f) => f.id === file.id) ? prev : [{ ...file, favorite: true }, ...prev]
+            : prev.filter((f) => f.id !== file.id)
+        );
+        setRecentFiles((prev) => prev.map((f) => (f.id === file.id ? { ...f, favorite: isFav } : f)));
+        setToast({ type: "success", message: isFav ? "Added to Favorites" : "Removed from Favorites" });
+      } else {
+        setToast({ type: "error", message: "Failed to update favorite" });
+      }
+    } catch { setToast({ type: "error", message: "Failed to update favorite" }); }
+    finally { setTimeout(() => setToast(null), 3000); }
+  }, []);
+
+  const handleOpenFolder = useCallback((folderId: string | null) => {
+    handleFolderSelect(folderId);
+    setActiveView("files");
+    setSearchQuery("");
+  }, [handleFolderSelect]);
+
   const handleRestoreFile = async (fileId: string) => {
     try {
       const res = await fetch(`/api/files/${fileId}`, {
@@ -498,7 +613,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+      <div className="min-h-screen app-bg flex items-center justify-center">
         <div className="text-center">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-500/20 animate-pulse">
             <Cloud className="w-8 h-8 text-white" />
@@ -516,7 +631,7 @@ export default function DashboardPage() {
   if (!user) return null;
 
   return (
-    <div className="h-screen bg-[#0f172a] flex flex-col overflow-hidden animate-fade-in">
+    <div className="h-screen app-bg flex flex-col overflow-hidden animate-fade-in">
       <Navbar user={user} onOpenUserProfile={() => setShowUserProfile(true)} />
 
       <div className="flex-1 flex overflow-hidden">
@@ -588,9 +703,22 @@ export default function DashboardPage() {
               </div>
               <div className="p-3 border-t border-slate-800/50">
                 <div className="flex flex-col gap-1">
-                  <button onClick={() => { setShowTrash(!showTrash); loadTrashFiles(); setSidebarOpen(false); }}
+                  <button onClick={() => { setActiveView(activeView === "favorites" ? "files" : "favorites"); loadFavorites(); setSidebarOpen(false); }}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${activeView === "favorites" ? "text-amber-400 bg-amber-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
+                    <Star className={`w-4 h-4 ${activeView === "favorites" ? "fill-amber-400" : ""}`} /> Favorites
+                  </button>
+                  <button onClick={() => { setActiveView(activeView === "recent" ? "files" : "recent"); loadRecent(); setSidebarOpen(false); }}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${activeView === "recent" ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
+                    <Clock className="w-4 h-4" /> Recent
+                  </button>
+                  <button onClick={() => { setActiveView(activeView === "trash" ? "files" : "trash"); loadTrashFiles(); setSidebarOpen(false); }}
                     className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${showTrash ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
                     <Trash2 className="w-4 h-4" /> Trash
+                  </button>
+                  <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all min-h-[44px]">
+                    {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
                   </button>
                   <button onClick={() => { setShowUserProfile(true); setSidebarOpen(false); }}
                     className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all min-h-[44px]">
@@ -618,9 +746,21 @@ export default function DashboardPage() {
                 <FolderPlus className="w-4 h-4" />
               </button>
               <div className="flex-1" />
-              <button onClick={() => { setShowTrash(!showTrash); loadTrashFiles(); }}
+              <button onClick={() => { setActiveView(activeView === "favorites" ? "files" : "favorites"); loadFavorites(); }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeView === "favorites" ? "text-amber-400 bg-amber-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`} title="Favorites">
+                <Star className={`w-4 h-4 ${activeView === "favorites" ? "fill-amber-400" : ""}`} />
+              </button>
+              <button onClick={() => { setActiveView(activeView === "recent" ? "files" : "recent"); loadRecent(); }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeView === "recent" ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`} title="Recent">
+                <Clock className="w-4 h-4" />
+              </button>
+              <button onClick={() => { setActiveView(activeView === "trash" ? "files" : "trash"); loadTrashFiles(); }}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${showTrash ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`} title="Trash">
                 <Trash2 className="w-4 h-4" />
+              </button>
+              <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all" title={theme === "dark" ? "Light Mode" : "Dark Mode"}>
+                {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
               </button>
               <button onClick={() => setShowUserProfile(true)}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all" title="Settings">
@@ -650,13 +790,21 @@ export default function DashboardPage() {
                 </button>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
-                    <h1 className="text-xl font-bold text-white truncate">{currentFolderName || "All Files"}</h1>
-                    {debouncedSearch && <span className="text-sm text-sky-400 hidden sm:inline">&mdash; &ldquo;{debouncedSearch}&rdquo;</span>}
+                    <h1 className="text-xl font-bold text-white truncate">
+                      {activeView === "trash" ? "Trash" : activeView === "favorites" ? "Favorites" : activeView === "recent" ? "Recent" : currentFolderName || "All Files"}
+                    </h1>
+                    {debouncedSearch && activeView === "files" && <span className="text-sm text-sky-400 hidden sm:inline">&mdash; &ldquo;{debouncedSearch}&rdquo;</span>}
                   </div>
                   <p className="text-xs text-slate-400">
-                    {selectedFolderId
-                      ? `${files.length} file${files.length !== 1 ? "s" : ""}${childFolders.length > 0 ? ` · ${childFolders.length} sub-folder${childFolders.length !== 1 ? "s" : ""}` : ""}`
-                      : `${totalFiles} file${totalFiles !== 1 ? "s" : ""} · ${totalFolders} folder${totalFolders !== 1 ? "s" : ""}`}
+                    {activeView === "favorites"
+                      ? `${favoriteFiles.length} favorited file${favoriteFiles.length !== 1 ? "s" : ""}`
+                      : activeView === "recent"
+                        ? `Last ${recentFiles.length} files by date`
+                        : showTrash
+                          ? `${trashFiles.length} file${trashFiles.length !== 1 ? "s" : ""} in trash`
+                          : selectedFolderId
+                            ? `${files.length} file${files.length !== 1 ? "s" : ""}${childFolders.length > 0 ? ` · ${childFolders.length} sub-folder${childFolders.length !== 1 ? "s" : ""}` : ""}`
+                            : `${totalFiles} file${totalFiles !== 1 ? "s" : ""} · ${totalFolders} folder${totalFolders !== 1 ? "s" : ""}`}
                   </p>
                 </div>
               </div>
@@ -714,7 +862,7 @@ export default function DashboardPage() {
             )}
 
             {/* Trash view */}
-            {showTrash ? (
+            {activeView === "trash" ? (
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
@@ -773,6 +921,85 @@ export default function DashboardPage() {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+              </div>
+            ) : activeView === "favorites" ? (
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <Star className="w-5 h-5 text-amber-400" />
+                  <h2 className="text-lg font-semibold text-white">Favorites</h2>
+                  <span className="text-xs text-slate-400">{favoriteFiles.length} file{favoriteFiles.length !== 1 ? "s" : ""}</span>
+                </div>
+                {favoritesLoading ? (
+                  <SkeletonLoader />
+                ) : favoriteFiles.length === 0 ? (
+                  <EmptyState
+                    icon={<Star className="w-12 h-12 text-amber-400" />}
+                    title="No favorites yet"
+                    subtitle="Star files to pin them here for quick access."
+                    gradient="bg-gradient-to-br from-amber-500/25 to-orange-400/25"
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    {favoriteFiles.map((file) => (
+                      <FileRow key={file.id} file={file} gradient="bg-gradient-to-br from-amber-500/20 to-orange-500/20">
+                        {file.folderId && (
+                          <button onClick={() => handleOpenFolder(file.folderId)}
+                            className="px-2.5 py-2 rounded-lg text-xs text-sky-400 hover:text-sky-300 hover:bg-blue-500/10 transition-all flex items-center gap-1.5" title="Open containing folder">
+                            <FolderOpen className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button onClick={() => handleDownload(file.id, file.displayName || file.name)}
+                          className="px-2.5 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all flex items-center gap-1.5" title="Download">
+                          <Download className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleToggleFavorite(file)}
+                          className="px-2.5 py-2 rounded-lg text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 transition-all flex items-center gap-1.5" title="Remove from Favorites">
+                          <Star className="w-4 h-4 fill-amber-400" />
+                        </button>
+                      </FileRow>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : activeView === "recent" ? (
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <Clock className="w-5 h-5 text-sky-400" />
+                  <h2 className="text-lg font-semibold text-white">Recent</h2>
+                  <span className="text-xs text-slate-400">Latest files across all folders</span>
+                </div>
+                {recentLoading ? (
+                  <SkeletonLoader />
+                ) : recentFiles.length === 0 ? (
+                  <EmptyState
+                    icon={<Clock className="w-12 h-12 text-sky-400" />}
+                    title="No recent files"
+                    subtitle="Files you upload will appear here."
+                    gradient="bg-gradient-to-br from-blue-500/25 to-cyan-400/25"
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    {recentFiles.map((file) => (
+                      <FileRow key={file.id} file={file} gradient="bg-gradient-to-br from-sky-500/20 to-cyan-500/20">
+                        {file.folderId && (
+                          <button onClick={() => handleOpenFolder(file.folderId)}
+                            className="px-2.5 py-2 rounded-lg text-xs text-sky-400 hover:text-sky-300 hover:bg-blue-500/10 transition-all flex items-center gap-1.5" title="Open containing folder">
+                            <FolderOpen className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button onClick={() => handleDownload(file.id, file.displayName || file.name)}
+                          className="px-2.5 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all flex items-center gap-1.5" title="Download">
+                          <Download className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleToggleFavorite(file)}
+                          className={`px-2.5 py-2 rounded-lg text-xs transition-all flex items-center gap-1.5 ${file.favorite ? "text-amber-400 hover:bg-amber-500/10" : "text-slate-400 hover:text-amber-300 hover:bg-slate-700/50"}`}
+                          title={file.favorite ? "Remove from Favorites" : "Add to Favorites"}>
+                          <Star className={`w-4 h-4 ${file.favorite ? "fill-amber-400" : ""}`} />
+                        </button>
+                      </FileRow>
+                    ))}
                   </div>
                 )}
               </div>
@@ -853,6 +1080,7 @@ export default function DashboardPage() {
                         onDownload={handleDownload} onDelete={handleDeleteFile}
                         onShare={handleShare} onMove={handleMove}
                         onSearch={setSearchQuery} searchQuery={searchQuery}
+                        onToggleFavorite={handleToggleFavorite} onOpenFolder={handleOpenFolder}
                         viewMode={viewMode} onViewModeChange={setViewMode} />
 
                       {files.length > 0 && filesPage < filesTotalPages && (

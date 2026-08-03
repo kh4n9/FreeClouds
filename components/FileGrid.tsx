@@ -30,6 +30,11 @@ import {
   GitBranch,
   Link2,
   Folder,
+  Star,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  FolderOpen,
 } from "lucide-react";
 import {
   getFileTypeInfo,
@@ -56,6 +61,7 @@ interface FileData {
   folderName?: string | null;
   createdAt: string;
   originalExt?: string | null;
+  favorite?: boolean;
 }
 
 interface FileGridProps {
@@ -69,6 +75,8 @@ interface FileGridProps {
   searchQuery?: string;
   viewMode?: "grid" | "list";
   onViewModeChange?: (mode: "grid" | "list") => void;
+  onToggleFavorite?: (file: FileData) => void;
+  onOpenFolder?: (folderId: string | null) => void;
 }
 
 interface FileItemProps {
@@ -79,6 +87,8 @@ interface FileItemProps {
   onShare: ((file: FileData) => void) | undefined;
   onMove: ((file: FileData) => void) | undefined;
   onPreview: (file: FileData) => void;
+  onToggleFavorite: ((file: FileData) => void) | undefined;
+  onOpenFolder: ((folderId: string | null) => void) | undefined;
   // New props for bulk selection support
   selected?: boolean;
   onToggleSelect?: (fileId: string) => void;
@@ -143,6 +153,8 @@ function FileItem({
   onShare,
   onMove,
   onPreview,
+  onToggleFavorite,
+  onOpenFolder,
   selected = false,
   onToggleSelect,
 }: FileItemProps) {
@@ -173,6 +185,16 @@ function FileItem({
 
   const handleMove = () => {
     onMove?.(file);
+    setIsMenuOpen(false);
+  };
+
+  const handleToggleFavorite = () => {
+    onToggleFavorite?.(file);
+    setIsMenuOpen(false);
+  };
+
+  const handleOpenFolder = () => {
+    if (file.folderId) onOpenFolder?.(file.folderId);
     setIsMenuOpen(false);
   };
 
@@ -239,6 +261,21 @@ function FileItem({
     { label: "Download", icon: <Download className="w-4 h-4" />, onClick: handleDownload },
     { label: "Share", icon: <Link2 className="w-4 h-4" />, onClick: handleShare },
     { label: "Move", icon: <Folder className="w-4 h-4" />, onClick: handleMove },
+    { divider: true },
+    {
+      label: file.favorite ? "Remove from Favorites" : "Add to Favorites",
+      icon: <Star className={`w-4 h-4 ${file.favorite ? "text-amber-400" : ""}`} />,
+      onClick: handleToggleFavorite,
+    },
+    ...(file.folderId && onOpenFolder
+      ? [
+          {
+            label: "Open containing folder",
+            icon: <FolderOpen className="w-4 h-4" />,
+            onClick: handleOpenFolder,
+          },
+        ]
+      : []),
     { divider: true },
     {
       label: "Copy Name", icon: <FileText className="w-4 h-4" />, onClick: () => {
@@ -308,7 +345,16 @@ function FileItem({
           </div>
 
           {/* More button */}
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 right-2 flex items-center gap-1">
+            {onToggleFavorite && (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleToggleFavorite(); }}
+                className={`p-1.5 rounded-lg transition-all border border-white/5 ${file.favorite ? "bg-amber-500/15 text-amber-400" : "bg-slate-800/80 backdrop-blur-sm text-slate-500 hover:text-amber-400 hover:bg-slate-700/80 sm:opacity-0 sm:group-hover:opacity-100"}`}
+                title={file.favorite ? "Remove from Favorites" : "Add to Favorites"}
+              >
+                <Star className={`w-3.5 h-3.5 ${file.favorite ? "fill-amber-400" : ""}`} />
+              </button>
+            )}
             <button
               onClick={handleMenuToggle}
               className="sm:opacity-0 sm:group-hover:opacity-100 p-1.5 bg-slate-800/80 backdrop-blur-sm rounded-lg hover:bg-slate-700/80 border border-white/5 transition-all"
@@ -390,6 +436,13 @@ function FileItem({
 
         {/* Hover action buttons */}
         <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+          {onToggleFavorite && (
+            <button onClick={(e) => { e.stopPropagation(); handleToggleFavorite(); }}
+              className={`p-2 rounded-lg transition-all ${file.favorite ? "text-amber-400 hover:bg-slate-800/50" : "text-slate-500 hover:text-amber-400 hover:bg-slate-800/50"}`}
+              title={file.favorite ? "Remove from Favorites" : "Add to Favorites"}>
+              <Star className={`w-4 h-4 ${file.favorite ? "fill-amber-400" : ""}`} />
+            </button>
+          )}
           <button onClick={(e) => { e.stopPropagation(); handlePreview(); }}
             className="p-2 text-slate-500 hover:text-sky-400 hover:bg-slate-800/50 rounded-lg transition-all">
             <Eye className="w-4 h-4" />
@@ -419,10 +472,15 @@ export default function FileGrid({
   searchQuery = "",
   viewMode = "grid",
   onViewModeChange,
+  onToggleFavorite,
+  onOpenFolder,
 }: FileGridProps) {
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -655,6 +713,25 @@ export default function FileGrid({
     return fileInfo.category === selectedFilter;
   });
 
+  // Sort files
+  const sortedFiles = [...filteredFiles].sort((a, b) => {
+    let cmp = 0;
+    if (sortBy === "name") {
+      cmp = (a.displayName || a.name).localeCompare(b.displayName || b.name, undefined, { sensitivity: "base" });
+    } else if (sortBy === "size") {
+      cmp = a.size - b.size;
+    } else {
+      cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    }
+    return sortOrder === "asc" ? cmp : -cmp;
+  });
+
+  const sortOptions = [
+    { value: "date", label: "Date" },
+    { value: "name", label: "Name" },
+    { value: "size", label: "Size" },
+  ];
+
   // Get file type counts
   const fileTypeCounts = files.reduce(
     (acc, file) => {
@@ -740,6 +817,47 @@ export default function FileGrid({
               onChange={(e) => setLocalSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-slate-800/70 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-200 placeholder-slate-500"
             />
+          </div>
+
+          {/* Sort Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSortDropdown(!showSortDropdown)}
+              className="flex items-center gap-2 px-3 py-2 border border-slate-700 bg-slate-800/70 rounded-lg hover:bg-slate-700/70 transition-colors text-slate-200"
+            >
+              <ArrowUpDown className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                {sortOptions.find((opt) => opt.value === sortBy)?.label || "Date"}
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setSortOrder(sortOrder === "asc" ? "desc" : "asc"); }}
+                className="p-0.5 rounded text-slate-400 hover:text-sky-400"
+                title={sortOrder === "asc" ? "Ascending" : "Descending"}
+              >
+                {sortOrder === "asc" ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
+              </button>
+            </button>
+
+            {showSortDropdown && (
+              <div className="absolute right-0 top-full mt-1 w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10 py-1 backdrop-blur-xl">
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setSortBy(option.value);
+                      setShowSortDropdown(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-slate-700/50 first:rounded-t-lg last:rounded-b-lg ${
+                      sortBy === option.value
+                        ? "bg-blue-500/15 text-blue-300"
+                        : "text-slate-300"
+                    }`}
+                  >
+                    <span>{option.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Filter Dropdown */}
@@ -863,7 +981,7 @@ export default function FileGrid({
 
       {/* File List */}
       <div className="flex-1 overflow-auto">
-        {filteredFiles.length === 0 ? (
+        {sortedFiles.length === 0 ? (
           <div className="flex-1 flex items-center justify-center p-12">
             <div className="text-center">
               <File className="w-12 h-12 text-slate-600 mx-auto mb-4" />
@@ -883,7 +1001,7 @@ export default function FileGrid({
           <div className="p-6">
             {viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {filteredFiles.map((file) => (
+                {sortedFiles.map((file) => (
                   <FileItem
                     key={file.id}
                     file={file}
@@ -893,6 +1011,8 @@ export default function FileGrid({
                     onShare={onShare}
                     onMove={onMove}
                     onPreview={handleFilePreview}
+                    onToggleFavorite={onToggleFavorite}
+                    onOpenFolder={onOpenFolder}
                     selected={selectedFiles.includes(file.id)}
                     onToggleSelect={handleSelectFile}
                   />
@@ -900,7 +1020,7 @@ export default function FileGrid({
               </div>
             ) : (
               <div className="bg-white/5 border border-slate-700/50 rounded-lg overflow-hidden">
-                {filteredFiles.map((file) => (
+                {sortedFiles.map((file) => (
                   <FileItem
                     key={file.id}
                     file={file}
@@ -910,6 +1030,8 @@ export default function FileGrid({
                     onShare={onShare}
                     onMove={onMove}
                     onPreview={handleFilePreview}
+                    onToggleFavorite={onToggleFavorite}
+                    onOpenFolder={onOpenFolder}
                     selected={selectedFiles.includes(file.id)}
                     onToggleSelect={handleSelectFile}
                   />

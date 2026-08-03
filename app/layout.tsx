@@ -72,6 +72,19 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="//api.telegram.org" />
         <link rel="dns-prefetch" href="//mongodb.com" />
         <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function () {
+              try {
+                var t = localStorage.getItem("theme");
+                if (t === "light") document.documentElement.dataset.theme = "light";
+                else document.documentElement.dataset.theme = "dark";
+              } catch (e) {}
+            })();`,
+          }}
+        />
+        <Script
           id="sw-register"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
@@ -100,7 +113,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <div className="min-h-screen bg-[#0f172a]">{children}</div>
+        <div className="min-h-screen app-bg">{children}</div>
       </body>
     </html>
   );

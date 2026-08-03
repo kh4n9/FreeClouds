@@ -25,6 +25,9 @@ export interface IFile extends Document {
   // Vercel Blob cache for assembled chunked files
   blobCacheUrl?: string | null;
 
+  // Favorites support
+  favorite: boolean;
+
   // Virtuals (computed on the schema)
   displayName: string;
   formattedSize: string;
@@ -48,6 +51,7 @@ export interface IFileStatics {
       search?: string;
       page?: number;
       limit?: number;
+      favorite?: boolean;
     },
   ): Promise<IFile[]>;
   findByOwnerWithCount(
@@ -58,6 +62,7 @@ export interface IFileStatics {
       search?: string;
       page?: number;
       limit?: number;
+      favorite?: boolean;
     },
   ): Promise<{
     files: IFile[];
@@ -66,6 +71,7 @@ export interface IFileStatics {
     limit: number;
     totalPages: number;
   }>;
+  findRecent(ownerId: string, limit?: number): Promise<IFile[]>;
   getStorageUsage(
     ownerId: string,
   ): Promise<{ totalSize: number; totalFiles: number }>;
@@ -173,6 +179,11 @@ const fileSchema = new Schema<IFile>({
     type: String,
     default: null,
   },
+  favorite: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
 });
 
 // Compound indexes for better query performance
@@ -266,6 +277,7 @@ fileSchema.statics.findByOwner = function (
     search?: string;
     page?: number;
     limit?: number;
+    favorite?: boolean;
   } = {},
 ) {
   const {
@@ -274,6 +286,7 @@ fileSchema.statics.findByOwner = function (
     search,
     page = 1,
     limit = 50,
+    favorite,
   } = options;
 
   const query: FilterQuery<IFile> = { owner: ownerId };
@@ -286,6 +299,11 @@ fileSchema.statics.findByOwner = function (
   // Filter by deletion status
   if (!includeDeleted) {
     query.deletedAt = null;
+  }
+
+  // Filter by favorites
+  if (favorite !== undefined) {
+    query.favorite = favorite;
   }
 
   // Exclude chunk files (only show parent/chunked files or non-chunked files)
@@ -316,6 +334,7 @@ fileSchema.statics.findByOwnerWithCount = async function (
     search?: string;
     page?: number;
     limit?: number;
+    favorite?: boolean;
   } = {},
 ) {
   const {
@@ -324,6 +343,7 @@ fileSchema.statics.findByOwnerWithCount = async function (
     search,
     page = 1,
     limit = 50,
+    favorite,
   } = options;
 
   const query: FilterQuery<IFile> = { owner: ownerId };
@@ -334,6 +354,10 @@ fileSchema.statics.findByOwnerWithCount = async function (
 
   if (!includeDeleted) {
     query.deletedAt = null;
+  }
+
+  if (favorite !== undefined) {
+    query.favorite = favorite;
   }
 
   if (search) {
@@ -451,6 +475,20 @@ function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
 }
+
+fileSchema.statics.findRecent = function (ownerId: string, limit = 30) {
+  return this.find({
+    owner: ownerId,
+    deletedAt: null,
+    $or: [
+      { chunkedId: null },
+      { chunkIndex: -1 },
+    ],
+  })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .populate("folder", "name");
+};
 
 // Static methods for trash
 fileSchema.statics.findTrashByOwner = function (ownerId: string) {

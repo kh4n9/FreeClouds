@@ -130,7 +130,7 @@ export default function SharePage({ token, lang = "en" }: SharePageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+      <div className="min-h-screen app-bg flex items-center justify-center">
         <div className="text-center">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-500/20 animate-pulse">
             <Cloud className="w-8 h-8 text-white" />
@@ -146,7 +146,7 @@ export default function SharePage({ token, lang = "en" }: SharePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex flex-col">
+    <div className="min-h-screen app-bg flex flex-col">
       <nav className="flex-shrink-0 border-b border-slate-800/50 bg-slate-950/40 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
