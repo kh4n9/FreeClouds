@@ -244,13 +244,37 @@ const PREVIEW_CAPABILITIES: Record<string, PreviewCapability> = {
     ],
   },
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
-    canPreview: false,
+    canPreview: true,
     previewType: "spreadsheet",
     requiresSpecialHandling: true,
-    maxPreviewSize: 0,
+    maxPreviewSize: 10 * 1024 * 1024, // 10MB
     description: "Microsoft Excel spreadsheet",
     recommendations: [
       "Open in Microsoft Excel",
+      "Open in Google Sheets",
+      "Download to view",
+    ],
+  },
+  "application/vnd.ms-excel": {
+    canPreview: true,
+    previewType: "spreadsheet",
+    requiresSpecialHandling: true,
+    maxPreviewSize: 10 * 1024 * 1024, // 10MB
+    description: "Legacy Excel spreadsheet",
+    recommendations: [
+      "Open in Microsoft Excel",
+      "Open in Google Sheets",
+      "Download to view",
+    ],
+  },
+  "application/vnd.oasis.opendocument.spreadsheet": {
+    canPreview: true,
+    previewType: "spreadsheet",
+    requiresSpecialHandling: true,
+    maxPreviewSize: 10 * 1024 * 1024, // 10MB
+    description: "OpenDocument spreadsheet",
+    recommendations: [
+      "Open in LibreOffice Calc",
       "Open in Google Sheets",
       "Download to view",
     ],

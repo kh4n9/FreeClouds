@@ -22,6 +22,8 @@ import {
   VolumeX,
   Maximize,
   ExternalLink,
+  VideoOff,
+  RefreshCw,
 } from "lucide-react";
 import { getFileTypeInfo, formatFileSize, formatDate } from "@/lib/file-utils";
 import {
@@ -42,6 +44,7 @@ import {
   EmailPreview,
   CalendarPreview,
 } from "./preview/SpecializedPreviews";
+import VideoConverter from "./preview/VideoConverter";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 import * as pdfjsLib from "pdfjs-dist";
 
@@ -86,10 +89,13 @@ export default function FilePreview({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState(false);
+  const [converting, setConverting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const pdfCanvasRef = useRef<HTMLCanvasElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const convertedUrlRef = useRef<string | null>(null);
 
   const fname = file?.displayName || file?.name || "";
   const fileInfo = useMemo(
@@ -220,6 +226,12 @@ export default function FilePreview({
       setIsPlaying(false);
       setIsMuted(false);
       setSecurityWarning(null);
+      setVideoError(false);
+      setConverting(false);
+      if (convertedUrlRef.current) {
+        URL.revokeObjectURL(convertedUrlRef.current);
+        convertedUrlRef.current = null;
+      }
       return;
     }
 
@@ -284,7 +296,7 @@ export default function FilePreview({
 
         if (isCancelled) return;
 
-        if (isImage || isVideo || isAudio || isPDF) {
+        if (isImage || isVideo || isAudio || isPDF || isSpreadsheet) {
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
           if (!isCancelled) {
@@ -328,6 +340,10 @@ export default function FilePreview({
         fileContent.startsWith("blob:")
       ) {
         URL.revokeObjectURL(fileContent);
+      }
+      if (convertedUrlRef.current) {
+        URL.revokeObjectURL(convertedUrlRef.current);
+        convertedUrlRef.current = null;
       }
     };
   }, [file?.id, isOpen]);
@@ -747,20 +763,76 @@ export default function FilePreview({
 
           {!loading && !error && !securityWarning && fileContent && isVideo && (
             <div className="flex items-center justify-center h-full p-4">
-              <video
-                ref={videoRef}
-                src={fileContent}
-                controls
-                className={`max-w-full max-h-full ${isFullscreen ? "w-full h-full object-contain" : ""}`}
-                preload="metadata"
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onVolumeChange={(e) =>
-                  setIsMuted((e.target as HTMLVideoElement).muted)
-                }
-              >
-                Your browser does not support video playback.
-              </video>
+              {converting ? (
+                <VideoConverter
+                  file={file}
+                  sourceUrl={fileContent}
+                  onDone={(url) => {
+                    if (
+                      convertedUrlRef.current &&
+                      convertedUrlRef.current !== fileContent
+                    ) {
+                      URL.revokeObjectURL(convertedUrlRef.current);
+                    }
+                    convertedUrlRef.current = url;
+                    setFileContent(url);
+                    setVideoError(false);
+                  }}
+                  onCancel={() => setConverting(false)}
+                />
+              ) : videoError ? (
+                <div className="text-center text-gray-500 max-w-md">
+                  <VideoOff className="w-16 h-16 mx-auto mb-4 opacity-50 text-orange-500" />
+                  <p className="text-lg font-medium mb-2 text-gray-900">
+                    {t("videoCodecUnsupported", commonTranslations.videoCodecUnsupported)}
+                  </p>
+                  <p className="text-sm mb-6">{t("videoCodecUnsupportedHint", commonTranslations.videoCodecUnsupportedHint)}</p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    {file.size <= 150 * 1024 * 1024 && (
+                      <button
+                        onClick={() => setConverting(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        {t("convertToView", commonTranslations.convertToView)}
+                      </button>
+                    )}
+                    <button
+                      onClick={handleDownload}
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      {t("download", commonTranslations.download)}
+                    </button>
+                  </div>
+                  {file.size > 150 * 1024 * 1024 && (
+                    <p className="text-sm text-gray-400 mt-4">
+                      {t("videoTooLargeToConvert", commonTranslations.videoTooLargeToConvert)}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <video
+                  ref={videoRef}
+                  src={fileContent}
+                  controls
+                  className={`max-w-full max-h-full ${isFullscreen ? "w-full h-full object-contain" : ""}`}
+                  preload="metadata"
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  onError={() => setVideoError(true)}
+                  onLoadedMetadata={(e) => {
+                    if ((e.target as HTMLVideoElement).videoWidth === 0) {
+                      setVideoError(true);
+                    }
+                  }}
+                  onVolumeChange={(e) =>
+                    setIsMuted((e.target as HTMLVideoElement).muted)
+                  }
+                >
+                  Your browser does not support video playback.
+                </video>
+              )}
             </div>
           )}
 

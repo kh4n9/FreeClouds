@@ -380,6 +380,54 @@ export const commonTranslations = {
     vi: "Loại tệp này có thể chứa mã thực thi và không thể xem trước vì lý do bảo mật.",
   },
 
+  // Video conversion (codec not supported)
+  videoCodecUnsupported: {
+    en: "Video codec not supported by your browser",
+    vi: "Trình duyệt không hỗ trợ codec của video này",
+  },
+  videoCodecUnsupportedHint: {
+    en: "The video track uses a codec your browser cannot decode (e.g. HEVC/H.265 from iPhone recordings). You can convert it to a playable format right in the browser.",
+    vi: "Video sử dụng codec mà trình duyệt của bạn không thể giải mã (ví dụ HEVC/H.265 từ bản ghi iPhone). Bạn có thể chuyển đổi sang định dạng xem được ngay trong trình duyệt.",
+  },
+  convertToView: {
+    en: "Convert to play",
+    vi: "Chuyển đổi để xem",
+  },
+  videoTooLargeToConvert: {
+    en: "This video is too large to convert in the browser (max 150MB). Download it and play with VLC or another player.",
+    vi: "Video quá lớn để chuyển đổi trong trình duyệt (tối đa 150MB). Hãy tải về và phát bằng VLC hoặc trình phát khác.",
+  },
+  convertingVideo: {
+    en: "Converting video... This may take a few minutes depending on file size and device.",
+    vi: "Đang chuyển đổi video... Có thể mất vài phút tùy kích thước tệp và thiết bị.",
+  },
+  convertFailed: {
+    en: "Video conversion failed. Try downloading the file instead.",
+    vi: "Chuyển đổi video thất bại. Hãy thử tải tệp về thay thế.",
+  },
+  loadingConverter: {
+    en: "Loading conversion engine...",
+    vi: "Đang tải công cụ chuyển đổi...",
+  },
+  retry: { en: "Retry", vi: "Thử lại" },
+
+  // Spreadsheet preview
+  loadingSpreadsheet: {
+    en: "Loading spreadsheet...",
+    vi: "Đang tải bảng tính...",
+  },
+  spreadsheetParseError: {
+    en: "Could not read this spreadsheet. The file may be corrupted or unsupported.",
+    vi: "Không thể đọc bảng tính này. Tệp có thể bị hỏng hoặc không được hỗ trợ.",
+  },
+  showingFirstRows: {
+    en: "Showing first {count} rows. Download the file to view all data.",
+    vi: "Hiển thị {count} dòng đầu tiên. Tải tệp về để xem toàn bộ dữ liệu.",
+  },
+  sheets: { en: "sheets", vi: "trang tính" },
+  rows: { en: "rows", vi: "dòng" },
+  spreadsheet: { en: "Spreadsheet", vi: "Bảng tính" },
+
   // User profile / settings translations
   userSettings: { en: "User Settings", vi: "Cài đặt người dùng" },
   profileTab: { en: "Profile", vi: "Hồ sơ" },

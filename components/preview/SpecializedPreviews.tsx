@@ -491,42 +491,257 @@ export function ExecutablePreview({
 }
 
 // Spreadsheet Preview
+const MAX_PREVIEW_ROWS = 200;
+
+function formatCell(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return "";
+    return value.toLocaleString();
+  }
+  if (typeof value === "boolean") return value ? "TRUE" : "FALSE";
+  if (typeof value === "number") {
+    return Number.isInteger(value)
+      ? String(value)
+      : String(Math.round(value * 10000) / 10000);
+  }
+  return String(value);
+}
+
 export function SpreadsheetPreview({
   file,
+  fileContent,
   onDownload,
 }: SpecializedPreviewProps) {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center max-w-md p-8">
-        <div className="text-green-600 mb-4">
-          <BarChart3 className="w-24 h-24 mx-auto" />
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Spreadsheet
-        </h3>
-        <p className="text-gray-600 mb-6">
-          Excel and spreadsheet files can be viewed in Microsoft Excel, Google
-          Sheets, or LibreOffice Calc.
-        </p>
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sheetNames, setSheetNames] = useState<string[]>([]);
+  const [activeSheet, setActiveSheet] = useState<string>("");
+  const [rows, setRows] = useState<string[][]>([]);
+  const [totalRows, setTotalRows] = useState(0);
 
-        <div className="flex flex-col gap-3 mb-6">
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const loadSpreadsheet = async () => {
+      if (!fileContent) {
+        if (!cancelled) setError("No content");
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(fileContent);
+        if (!response.ok) throw new Error("Fetch failed");
+        const data = await response.arrayBuffer();
+        const XLSX = await import("xlsx");
+        const workbook = XLSX.read(data, { type: "array", cellDates: true });
+        if (cancelled) return;
+        const names = workbook.SheetNames;
+        const first = names[0] || "";
+        setSheetNames(names);
+        setActiveSheet(first);
+        if (first) {
+          const ws = workbook.Sheets[first];
+          if (ws) {
+            const raw = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+              header: 1,
+              defval: "",
+            });
+            setRows(
+              raw
+                .slice(0, MAX_PREVIEW_ROWS)
+                .map((r) => r.map((cell) => formatCell(cell))),
+            );
+            if (ws["!ref"]) {
+              setTotalRows(XLSX.utils.decode_range(ws["!ref"]).e.r + 1);
+            } else {
+              setTotalRows(raw.length);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to parse spreadsheet:", err);
+        if (!cancelled) setError("Parse failed");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadSpreadsheet();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fileContent]);
+
+  const handleSheetChange = React.useCallback(
+    async (name: string) => {
+      if (!fileContent || name === activeSheet) return;
+      setActiveSheet(name);
+      setLoading(true);
+      try {
+        const response = await fetch(fileContent);
+        const data = await response.arrayBuffer();
+        const XLSX = await import("xlsx");
+        const workbook = XLSX.read(data, { type: "array", cellDates: true });
+        const ws = workbook.Sheets[name];
+        if (ws) {
+          const raw = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+            header: 1,
+            defval: "",
+          });
+          setRows(
+            raw
+              .slice(0, MAX_PREVIEW_ROWS)
+              .map((r) => r.map((cell) => formatCell(cell))),
+          );
+          if (ws["!ref"]) {
+            setTotalRows(XLSX.utils.decode_range(ws["!ref"]).e.r + 1);
+          } else {
+            setTotalRows(raw.length);
+          }
+        } else {
+          setRows([]);
+          setTotalRows(0);
+        }
+      } catch (err) {
+        console.error("Failed to parse sheet:", err);
+        setRows([]);
+        setTotalRows(0);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fileContent, activeSheet],
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading spreadsheet...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !fileContent) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center max-w-md p-8">
+          <div className="text-red-500 mb-4">
+            <BarChart3 className="w-24 h-24 mx-auto" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Spreadsheet
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Could not read this spreadsheet. The file may be corrupted or
+            unsupported.
+          </p>
+          <button
+            onClick={onDownload}
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+          >
+            <Download className="w-5 h-5" />
+            Download
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col bg-white">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 p-4 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center gap-2 min-w-0">
+          <BarChart3 className="w-5 h-5 text-green-600 flex-shrink-0" />
+          <span className="font-medium truncate">{file.name}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
           <a
             href={`https://docs.google.com/spreadsheets/d/create?usp=drive_web&authuser=0&importurl=${encodeURIComponent(window.location.origin + "/api/files/" + file.id + "/download")}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors"
           >
             <ExternalLink className="w-4 h-4" />
             Open in Google Sheets
           </a>
           <button
             onClick={onDownload}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Download className="w-4 h-4" />
             Download
           </button>
         </div>
+      </div>
+
+      {/* Sheet tabs */}
+      {sheetNames.length > 0 && (
+        <div className="flex items-center gap-1 px-2 py-1.5 border-b border-gray-200 bg-gray-50 overflow-x-auto">
+          {sheetNames.map((name) => (
+            <button
+              key={name}
+              onClick={() => handleSheetChange(name)}
+              className={`px-3 py-1 text-sm rounded whitespace-nowrap transition-colors ${
+                name === activeSheet
+                  ? "bg-green-600 text-white"
+                  : "text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {name}
+            </button>
+          ))}
+          <span className="ml-auto pl-3 text-xs text-gray-500 whitespace-nowrap">
+            {sheetNames.length} sheets · {totalRows} rows
+          </span>
+        </div>
+      )}
+
+      {/* Table */}
+      <div className="flex-1 overflow-auto">
+        {rows.length > 0 ? (
+          <div className="p-4">
+            <div className="overflow-x-auto border border-gray-300 rounded-lg">
+              <table className="min-w-full border-collapse">
+                <tbody>
+                  {rows.map((row, i) => (
+                    <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                      <td className="px-2 py-1 text-xs text-gray-400 border-b border-gray-200 bg-gray-50 text-right select-none sticky left-0 w-10">
+                        {i + 1}
+                      </td>
+                      {row.map((cell, j) => (
+                        <td
+                          key={j}
+                          className={`px-3 py-1.5 text-sm text-gray-900 border-b border-gray-200 whitespace-pre-wrap break-words max-w-md ${
+                            i === 0 ? "font-medium" : ""
+                          }`}
+                        >
+                          {cell || "\u00A0"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {totalRows > MAX_PREVIEW_ROWS && (
+              <p className="text-sm text-gray-500 mt-2 text-center">
+                Showing first {MAX_PREVIEW_ROWS} of {totalRows} rows. Download
+                the file to view all data.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <p>This sheet is empty</p>
+          </div>
+        )}
       </div>
     </div>
   );
