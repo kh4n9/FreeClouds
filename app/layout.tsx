@@ -54,7 +54,7 @@ export default function RootLayout({
   const organizationStructuredData = generateOrganizationStructuredData();
 
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logo.svg" type="image/svg+xml" />
         <link rel="icon" href="/favicon.ico" sizes="any" />

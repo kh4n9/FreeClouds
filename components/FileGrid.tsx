@@ -821,22 +821,24 @@ export default function FileGrid({
 
           {/* Sort Dropdown */}
           <div className="relative">
-            <button
-              onClick={() => setShowSortDropdown(!showSortDropdown)}
-              className="flex items-center gap-2 px-3 py-2 border border-slate-700 bg-slate-800/70 rounded-lg hover:bg-slate-700/70 transition-colors text-slate-200"
-            >
-              <ArrowUpDown className="w-4 h-4" />
-              <span className="text-sm font-medium">
-                {sortOptions.find((opt) => opt.value === sortBy)?.label || "Date"}
-              </span>
+            <div className="flex items-center border border-slate-700 bg-slate-800/70 rounded-lg">
               <button
-                onClick={(e) => { e.stopPropagation(); setSortOrder(sortOrder === "asc" ? "desc" : "asc"); }}
-                className="p-0.5 rounded text-slate-400 hover:text-sky-400"
+                onClick={() => setShowSortDropdown(!showSortDropdown)}
+                className="flex items-center gap-2 px-3 py-2 rounded-l-lg hover:bg-slate-700/70 transition-colors text-slate-200"
+              >
+                <ArrowUpDown className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {sortOptions.find((opt) => opt.value === sortBy)?.label || "Date"}
+                </span>
+              </button>
+              <button
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                className="p-2 rounded-r-lg border-l border-slate-700 text-slate-400 hover:text-sky-400 transition-colors"
                 title={sortOrder === "asc" ? "Ascending" : "Descending"}
               >
                 {sortOrder === "asc" ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
               </button>
-            </button>
+            </div>
 
             {showSortDropdown && (
               <div className="absolute right-0 top-full mt-1 w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10 py-1 backdrop-blur-xl">
