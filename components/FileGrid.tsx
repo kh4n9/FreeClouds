@@ -35,6 +35,7 @@ import {
   ArrowUp,
   ArrowDown,
   FolderOpen,
+  History,
 } from "lucide-react";
 import {
   getFileTypeInfo,
@@ -50,6 +51,7 @@ const DynamicFilePreview = dynamic(() => import("./FilePreview"), {
 import PreviewIndicator, { PreviewStatusBadge } from "./PreviewIndicator";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 import ContextMenu, { type ContextMenuAction } from "./ContextMenu";
+import { ListStagger, ListStaggerItem } from "./motion/Reveal";
 
 interface FileData {
   id: string;
@@ -77,6 +79,7 @@ interface FileGridProps {
   onViewModeChange?: (mode: "grid" | "list") => void;
   onToggleFavorite?: (file: FileData) => void;
   onOpenFolder?: (folderId: string | null) => void;
+  onVersions?: (file: FileData) => void;
 }
 
 interface FileItemProps {
@@ -89,6 +92,7 @@ interface FileItemProps {
   onPreview: (file: FileData) => void;
   onToggleFavorite: ((file: FileData) => void) | undefined;
   onOpenFolder: ((folderId: string | null) => void) | undefined;
+  onVersions: ((file: FileData) => void) | undefined;
   // New props for bulk selection support
   selected?: boolean;
   onToggleSelect?: (fileId: string) => void;
@@ -157,6 +161,7 @@ function FileItem({
   onOpenFolder,
   selected = false,
   onToggleSelect,
+  onVersions,
 }: FileItemProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -195,6 +200,11 @@ function FileItem({
 
   const handleOpenFolder = () => {
     if (file.folderId) onOpenFolder?.(file.folderId);
+    setIsMenuOpen(false);
+  };
+
+  const handleVersions = () => {
+    onVersions?.(file);
     setIsMenuOpen(false);
   };
 
@@ -261,6 +271,7 @@ function FileItem({
     { label: "Download", icon: <Download className="w-4 h-4" />, onClick: handleDownload },
     { label: "Share", icon: <Link2 className="w-4 h-4" />, onClick: handleShare },
     { label: "Move", icon: <Folder className="w-4 h-4" />, onClick: handleMove },
+    { label: "Version History", icon: <History className="w-4 h-4" />, onClick: handleVersions },
     { divider: true },
     {
       label: file.favorite ? "Remove from Favorites" : "Add to Favorites",
@@ -474,6 +485,7 @@ export default function FileGrid({
   onViewModeChange,
   onToggleFavorite,
   onOpenFolder,
+  onVersions,
 }: FileGridProps) {
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
@@ -1002,43 +1014,47 @@ export default function FileGrid({
         ) : (
           <div className="p-6">
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <ListStagger className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {sortedFiles.map((file) => (
-                  <FileItem
-                    key={file.id}
-                    file={file}
-                    viewMode={viewMode}
-                    onDownload={onDownload}
-                    onDelete={onDelete}
-                    onShare={onShare}
-                    onMove={onMove}
-                    onPreview={handleFilePreview}
-                    onToggleFavorite={onToggleFavorite}
-                    onOpenFolder={onOpenFolder}
-                    selected={selectedFiles.includes(file.id)}
-                    onToggleSelect={handleSelectFile}
-                  />
+                  <ListStaggerItem key={file.id}>
+                    <FileItem
+                      file={file}
+                      viewMode={viewMode}
+                      onDownload={onDownload}
+                      onDelete={onDelete}
+                      onShare={onShare}
+                      onMove={onMove}
+                      onPreview={handleFilePreview}
+                      onToggleFavorite={onToggleFavorite}
+                      onOpenFolder={onOpenFolder}
+                      onVersions={onVersions}
+                      selected={selectedFiles.includes(file.id)}
+                      onToggleSelect={handleSelectFile}
+                    />
+                  </ListStaggerItem>
                 ))}
-              </div>
+              </ListStagger>
             ) : (
-              <div className="bg-white/5 border border-slate-700/50 rounded-lg overflow-hidden">
+              <ListStagger className="bg-white/5 border border-slate-700/50 rounded-lg overflow-hidden">
                 {sortedFiles.map((file) => (
-                  <FileItem
-                    key={file.id}
-                    file={file}
-                    viewMode={viewMode}
-                    onDownload={onDownload}
-                    onDelete={onDelete}
-                    onShare={onShare}
-                    onMove={onMove}
-                    onPreview={handleFilePreview}
-                    onToggleFavorite={onToggleFavorite}
-                    onOpenFolder={onOpenFolder}
-                    selected={selectedFiles.includes(file.id)}
-                    onToggleSelect={handleSelectFile}
-                  />
+                  <ListStaggerItem key={file.id}>
+                    <FileItem
+                      file={file}
+                      viewMode={viewMode}
+                      onDownload={onDownload}
+                      onDelete={onDelete}
+                      onShare={onShare}
+                      onMove={onMove}
+                      onPreview={handleFilePreview}
+                      onToggleFavorite={onToggleFavorite}
+                      onOpenFolder={onOpenFolder}
+                      onVersions={onVersions}
+                      selected={selectedFiles.includes(file.id)}
+                      onToggleSelect={handleSelectFile}
+                    />
+                  </ListStaggerItem>
                 ))}
-              </div>
+              </ListStagger>
             )}
           </div>
         )}

@@ -6,7 +6,7 @@ import {
   FolderPlus, Upload, RefreshCw, AlertCircle, X, Cloud, Search,
   HardDrive, FileIcon, FolderIcon, LogOut, Settings, Grid3X3,
   List, ChevronLeft, ChevronRight, ChevronDown, Sidebar, Trash2, FileText,
-  RotateCcw, Clock, Star, Sun, Moon, FolderOpen, Download,
+  RotateCcw, Clock, Star, Sun, Moon, FolderOpen, Download, Copy,
   type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -15,10 +15,14 @@ const DynamicUploadDropzone = dynamic(() => import("@/components/UploadDropzone"
 const DynamicUserProfile = dynamic(() => import("@/components/UserProfile"), { ssr: false });
 const DynamicShareModal = dynamic(() => import("@/components/ShareModal"), { ssr: false });
 const DynamicMoveModal = dynamic(() => import("@/components/MoveModal"), { ssr: false });
+const DynamicVersionHistoryModal = dynamic(() => import("@/components/VersionHistoryModal"), { ssr: false });
+const DynamicDuplicatesModal = dynamic(() => import("@/components/DuplicatesModal"), { ssr: false });
 import Navbar from "@/components/Navbar";
 import PlainFolderTree from "@/components/PlainFolderTree";
 import ContextMenu from "@/components/ContextMenu";
 import Footer from "@/components/Footer";
+import { AnimatePresence, motion } from "framer-motion";
+import { ListStagger, ListStaggerItem } from "@/components/motion/Reveal";
 
 interface User { id: string; email: string; name: string; role?: string; createdAt: string; updatedAt: string; stats?: { totalFiles: number; totalSize: number; totalFolders: number; }; }
 interface FolderData { id: string; name: string; parent: string | null; createdAt: string; }
@@ -34,30 +38,58 @@ function formatSize(bytes: number): string {
 }
 
 function Toast({ toast, onDismiss }: { toast: { type: string; message: string } | null; onDismiss: () => void }) {
-  if (!toast) return null;
   return (
-    <div className={`fixed bottom-6 right-6 z-[60] max-w-sm animate-slide-up ${toast.type === "success" ? "toast-success" : toast.type === "error" ? "toast-error" : "toast-info"}`}>
-      <div className="flex items-center gap-3">
-        <span className="text-sm">{toast.message}</span>
-        <button onClick={onDismiss} className="ml-auto opacity-70 hover:opacity-100"><X className="w-4 h-4" /></button>
-      </div>
-    </div>
+    <AnimatePresence>
+      {toast && (
+        <motion.div
+          key={`${toast.type}-${toast.message}`}
+          initial={{ opacity: 0, y: 16, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.96 }}
+          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          className={`fixed bottom-6 right-6 z-[60] max-w-sm ${toast.type === "success" ? "toast-success" : toast.type === "error" ? "toast-error" : "toast-info"}`}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-sm">{toast.message}</span>
+            <button onClick={onDismiss} className="ml-auto opacity-70 hover:opacity-100"><X className="w-4 h-4" /></button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
+const modalVariants = {
+  overlay: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.2 },
+  },
+  content: {
+    initial: { opacity: 0, scale: 0.95, y: 12 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.95, y: 8 },
+    transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+
 function Modal({ show, onClose, title, children }: { show: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
-  if (!show) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative modal-content w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all"><X className="w-4 h-4" /></button>
-        </div>
-        <div className="p-6">{children}</div>
-      </div>
-    </div>
+    <AnimatePresence>
+      {show && (
+        <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} {...modalVariants.overlay}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <motion.div className="relative modal-content w-full max-w-lg max-h-[90vh] overflow-y-auto" style={{ animation: "none" }} {...modalVariants.content}>
+            <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
+              <h3 className="text-lg font-semibold text-white">{title}</h3>
+              <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-6">{children}</div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -77,28 +109,31 @@ function CreateFolderModal({ show, onClose, onConfirm, loading }: { show: boolea
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [show, onClose]);
-  if (!show) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative modal-content w-full max-w-md">
-        <div className="p-6 border-b border-slate-700/50"><h3 className="text-lg font-semibold text-white">Create New Folder</h3></div>
-        <div className="p-6">
-          <input ref={inputRef} type="text" placeholder="Folder name" value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="input-modern w-full px-4 py-2.5 rounded-xl mb-4"
-            onKeyDown={(e) => e.key === "Enter" && name.trim() && onConfirm(name.trim())} />
-          <div className="flex gap-2 justify-end">
-            <button onClick={onClose} className="btn-secondary px-4 py-2 rounded-lg text-sm">Cancel</button>
-            <button onClick={() => onConfirm(name.trim())} disabled={!name.trim() || loading}
-              className="btn-primary px-4 py-2 rounded-lg text-sm disabled:opacity-50">
-              {loading && <svg className="animate-spin h-4 w-4 inline mr-1.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
-              Create
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <AnimatePresence>
+      {show && (
+        <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} {...modalVariants.overlay}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <motion.div className="relative modal-content w-full max-w-md" style={{ animation: "none" }} {...modalVariants.content}>
+            <div className="p-6 border-b border-slate-700/50"><h3 className="text-lg font-semibold text-white">Create New Folder</h3></div>
+            <div className="p-6">
+              <input ref={inputRef} type="text" placeholder="Folder name" value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="input-modern w-full px-4 py-2.5 rounded-xl mb-4"
+                onKeyDown={(e) => e.key === "Enter" && name.trim() && onConfirm(name.trim())} />
+              <div className="flex gap-2 justify-end">
+                <button onClick={onClose} className="btn-secondary px-4 py-2 rounded-lg text-sm">Cancel</button>
+                <button onClick={() => onConfirm(name.trim())} disabled={!name.trim() || loading}
+                  className="btn-primary px-4 py-2 rounded-lg text-sm disabled:opacity-50">
+                  {loading && <svg className="animate-spin h-4 w-4 inline mr-1.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
+                  Create
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -106,27 +141,30 @@ function ConfirmModal({ show, title, message, warning, loading, onCancel, onConf
   show: boolean; title: string; message: string; warning?: string; loading?: boolean;
   onCancel: () => void; onConfirm: () => void; confirmLabel?: string;
 }) {
-  if (!show) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative modal-content w-full max-w-md p-6">
-        <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 mx-auto">
-          <AlertCircle className="w-6 h-6 text-red-400" />
-        </div>
-        <h3 className="text-lg font-semibold text-white mb-2 text-center">{title}</h3>
-        <p className="text-sm text-slate-300 mb-1 text-center">{message}</p>
-        {warning && <p className="text-sm text-red-400/80 mb-6 text-center">{warning}</p>}
-        <div className="flex gap-3 justify-center">
-          <button onClick={onCancel} disabled={loading} className="btn-secondary px-5 py-2.5 rounded-lg text-sm font-medium">Cancel</button>
-          <button onClick={onConfirm} disabled={loading}
-            className="px-5 py-2.5 rounded-lg text-sm font-medium bg-gradient-to-r from-red-500 to-rose-600 text-white hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-50 transition-all">
-            {loading && <svg className="animate-spin h-4 w-4 inline mr-1.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+    <AnimatePresence>
+      {show && (
+        <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }} {...modalVariants.overlay}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <motion.div className="relative modal-content w-full max-w-md p-6" style={{ animation: "none" }} {...modalVariants.content}>
+            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 mx-auto">
+              <AlertCircle className="w-6 h-6 text-red-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2 text-center">{title}</h3>
+            <p className="text-sm text-slate-300 mb-1 text-center">{message}</p>
+            {warning && <p className="text-sm text-red-400/80 mb-6 text-center">{warning}</p>}
+            <div className="flex gap-3 justify-center">
+              <button onClick={onCancel} disabled={loading} className="btn-secondary px-5 py-2.5 rounded-lg text-sm font-medium">Cancel</button>
+              <button onClick={onConfirm} disabled={loading}
+                className="px-5 py-2.5 rounded-lg text-sm font-medium bg-gradient-to-r from-red-500 to-rose-600 text-white hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-50 transition-all">
+                {loading && <svg className="animate-spin h-4 w-4 inline mr-1.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
+                {confirmLabel}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -244,6 +282,7 @@ export default function DashboardPage() {
     typeof window !== "undefined" && localStorage.getItem("theme") === "light" ? "light" : "dark"
   );
   const showTrash = activeView === "trash";
+  const [showDuplicates, setShowDuplicates] = useState(false);
   const [trashFiles, setTrashFiles] = useState<TrashFileData[]>([]);
   const [trashLoading, setTrashLoading] = useState(false);
   const [emptyingTrash, setEmptyingTrash] = useState(false);
@@ -361,13 +400,23 @@ export default function DashboardPage() {
           fetch("/api/auth/me"),
           fetch("/api/folders"),
         ]);
-        if (!authRes.ok) { router.push("/login"); return; }
+        if (authRes.status === 401) {
+          // Only unauthenticated bounces to login. 5xx / network errors are
+          // transient — navigating away re-triggers the login page's
+          // auto-redirect and causes an endless reload loop.
+          router.push("/login");
+          return;
+        }
+        if (!authRes.ok) {
+          setError("Failed to verify your session. Please try again.");
+          return;
+        }
         setUser(await authRes.json());
         if (foldersRes.ok) {
           const folderData = await foldersRes.json();
           setFolders(folderData);
         }
-      } catch { router.push("/login"); }
+      } catch { setError("Failed to verify your session. Please try again."); }
       finally { setLoading(false); }
     })();
   }, []);
@@ -489,6 +538,33 @@ export default function DashboardPage() {
 
   const handleMove = useCallback((file: FileData) => {
     setMoveFile(file);
+  }, []);
+
+  const [moveFolder, setMoveFolder] = useState<{ id: string; name: string } | null>(null);
+
+  const [versionsFile, setVersionsFile] = useState<FileData | null>(null);
+  const [versionsKey, setVersionsKey] = useState(0);
+
+  const handleVersions = useCallback((file: FileData) => {
+    setVersionsFile(file);
+  }, []);
+
+  const getFolderDescendants = (folderId: string, all: FolderData[] = folders): string[] => {
+    const result: string[] = [];
+    const walk = (parentId: string) => {
+      all.forEach((f) => {
+        if (f.parent === parentId) {
+          result.push(f.id);
+          walk(f.id);
+        }
+      });
+    };
+    walk(folderId);
+    return result;
+  };
+
+  const handleMoveFolder = useCallback((folder: { id: string; name: string }) => {
+    setMoveFolder(folder);
   }, []);
 
   const loadTrashFiles = useCallback(async () => {
@@ -711,6 +787,10 @@ export default function DashboardPage() {
                     className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${activeView === "recent" ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
                     <Clock className="w-4 h-4" /> Recent
                   </button>
+                  <button onClick={() => { setShowDuplicates(true); setSidebarOpen(false); }}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all min-h-[44px]">
+                    <Copy className="w-4 h-4" /> Duplicates
+                  </button>
                   <button onClick={() => { setActiveView(activeView === "trash" ? "files" : "trash"); loadTrashFiles(); setSidebarOpen(false); }}
                     className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${showTrash ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
                     <Trash2 className="w-4 h-4" /> Trash
@@ -847,11 +927,11 @@ export default function DashboardPage() {
             }}
             onClick={() => setSpaceMenu(null)}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 px-6 pt-5 pb-2">
-              <StatsCard icon={FileIcon} label="Files" value={totalFiles.toLocaleString()} gradient="bg-gradient-to-br from-blue-500 to-cyan-600" />
-              <StatsCard icon={FolderIcon} label="Folders" value={totalFolders.toLocaleString()} gradient="bg-gradient-to-br from-cyan-400 to-pink-600" />
-              <StatsCard icon={HardDrive} label="Storage" value={formatSize(totalSize)} gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
-            </div>
+            <ListStagger className="grid grid-cols-1 sm:grid-cols-3 gap-3 px-6 pt-5 pb-2">
+              <ListStaggerItem><StatsCard icon={FileIcon} label="Files" value={totalFiles.toLocaleString()} gradient="bg-gradient-to-br from-blue-500 to-cyan-600" /></ListStaggerItem>
+              <ListStaggerItem><StatsCard icon={FolderIcon} label="Folders" value={totalFolders.toLocaleString()} gradient="bg-gradient-to-br from-cyan-400 to-pink-600" /></ListStaggerItem>
+              <ListStaggerItem><StatsCard icon={HardDrive} label="Storage" value={formatSize(totalSize)} gradient="bg-gradient-to-br from-amber-500 to-orange-600" /></ListStaggerItem>
+            </ListStagger>
 
             {error && (
               <div className="mx-6 mt-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400">
@@ -862,6 +942,14 @@ export default function DashboardPage() {
             )}
 
             {/* Trash view */}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={activeView}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              >
             {activeView === "trash" ? (
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -1020,6 +1108,7 @@ export default function DashboardPage() {
                             { divider: true },
                             { label: "Create sub-folder", icon: <FolderPlus className="w-4 h-4" />, onClick: () => handleCreateFolder(child.id) },
                             { divider: true },
+                            { label: "Move to...", icon: <FolderOpen className="w-4 h-4" />, onClick: () => handleMoveFolder(child) },
                             { label: "Rename", icon: <FileText className="w-4 h-4" />, onClick: () => { const name = prompt("Rename folder:", child.name); if (name && name.trim()) handleRenameFolder(child.id, name.trim()); } },
                             { label: "Delete", icon: <Trash2 className="w-4 h-4" />, onClick: () => handleDeleteFolder(child.id), danger: true },
                           ]}>
@@ -1078,7 +1167,7 @@ export default function DashboardPage() {
                       )}
                       <DynamicFileGrid files={files} loading={filesLoading}
                         onDownload={handleDownload} onDelete={handleDeleteFile}
-                        onShare={handleShare} onMove={handleMove}
+                        onShare={handleShare} onMove={handleMove} onVersions={handleVersions}
                         onSearch={setSearchQuery} searchQuery={searchQuery}
                         onToggleFavorite={handleToggleFavorite} onOpenFolder={handleOpenFolder}
                         viewMode={viewMode} onViewModeChange={setViewMode} />
@@ -1097,12 +1186,19 @@ export default function DashboardPage() {
                 </div>
               </>
             )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
 
       {spaceMenu && (
-        <div className="fixed z-[100] min-w-[180px] py-1.5 rounded-xl bg-slate-800 border border-slate-700 shadow-2xl shadow-black/30 backdrop-blur-xl"
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed z-[100] min-w-[180px] py-1.5 rounded-xl bg-slate-800 border border-slate-700 shadow-2xl shadow-black/30 backdrop-blur-xl"
           style={{ left: spaceMenu.x, top: spaceMenu.y }}
           onClick={() => setSpaceMenu(null)}>
           <button onClick={() => { setShowUpload(true); setSpaceMenu(null); }}
@@ -1118,7 +1214,7 @@ export default function DashboardPage() {
             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors">
             <RefreshCw className="w-4 h-4" /> Refresh
           </button>
-        </div>
+        </motion.div>
       )}
 
       <Modal show={showUpload} onClose={() => setShowUpload(false)} title="Upload Files">
@@ -1139,10 +1235,38 @@ export default function DashboardPage() {
       {moveFile && (
         <DynamicMoveModal isOpen={!!moveFile}
           onClose={() => setMoveFile(null)}
-          file={{ id: moveFile.id, name: moveFile.displayName || moveFile.name }}
+          item={{ id: moveFile.id, name: moveFile.displayName || moveFile.name, kind: "file" }}
           folders={folders}
           currentFolderId={selectedFolderId}
           onMoved={() => { fileCache.current.clear(); loadFiles(selectedFolderId, debouncedSearch, false); setToast({ type: "success", message: "File moved" }); setTimeout(() => setToast(null), 3000); }} />
+      )}
+
+      {moveFolder && (
+        <DynamicMoveModal isOpen={!!moveFolder}
+          onClose={() => setMoveFolder(null)}
+          item={{ id: moveFolder.id, name: moveFolder.name, kind: "folder" }}
+          folders={folders}
+          currentFolderId={selectedFolderId}
+          excludeIds={[moveFolder.id, ...getFolderDescendants(moveFolder.id)]}
+          onMoved={() => { refreshFolders(); if (selectedFolderId && (moveFolder.id === selectedFolderId || getFolderDescendants(moveFolder.id).includes(selectedFolderId))) setSelectedFolderId(null); setToast({ type: "success", message: "Folder moved" }); setTimeout(() => setToast(null), 3000); }} />
+      )}
+
+      {versionsFile && (
+        <DynamicVersionHistoryModal
+          key={versionsKey}
+          fileId={versionsFile.id}
+          fileName={versionsFile.displayName || versionsFile.name}
+          onClose={() => setVersionsFile(null)}
+          onToast={(type, message) => { setToast({ type, message }); setTimeout(() => setToast(null), 3000); }}
+          onVersionChanged={() => { setVersionsKey((k) => k + 1); fileCache.current.clear(); loadFiles(selectedFolderId, debouncedSearch, false); }} />
+      )}
+
+      {showDuplicates && (
+        <DynamicDuplicatesModal
+          onClose={() => setShowDuplicates(false)}
+          onToast={(type, message) => { setToast({ type, message }); setTimeout(() => setToast(null), 3000); }}
+          onChanged={() => { fileCache.current.clear(); loadFiles(selectedFolderId, debouncedSearch, false); }}
+          onOpenFolder={(folderId) => { setActiveView("files"); setSelectedFolderId(folderId); loadFiles(folderId, debouncedSearch, false); }} />
       )}
 
       <CreateFolderModal show={showCreateFolder} loading={creatingFolder} onClose={() => { setShowCreateFolder(false); setNewFolderName(""); }} onConfirm={confirmCreateFolder} />

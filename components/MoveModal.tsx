@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Folder, FileText, Loader2, CheckCircle2 } from "lucide-react";
+import { X, Folder, FileText, FolderOpen, Loader2, CheckCircle2 } from "lucide-react";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 
 interface FolderData {
@@ -12,21 +12,31 @@ interface FolderData {
   children?: FolderData[];
 }
 
+export interface MoveItem {
+  id: string;
+  name: string;
+  kind: "file" | "folder";
+}
+
 interface MoveModalProps {
   isOpen: boolean;
   onClose: () => void;
-  file: { id: string; name: string } | null;
+  item: MoveItem | null;
   folders: FolderData[];
   currentFolderId: string | null;
+  /** Folder ids that must not be shown as destinations (e.g. the folder being moved and its descendants) */
+  excludeIds?: string[];
   onMoved: () => void;
 }
 
-function buildTree(folders: FolderData[]): FolderData[] {
+function buildTree(folders: FolderData[], excludeIds: Set<string>): FolderData[] {
   const map = new Map<string, FolderData & { children: FolderData[] }>();
   const roots: (FolderData & { children: FolderData[] })[] = [];
-  folders.forEach((f) => map.set(f.id, { ...f, children: [] }));
+  folders.forEach((f) => {
+    if (!excludeIds.has(f.id)) map.set(f.id, { ...f, children: [] });
+  });
   map.forEach((node) => {
-    if (node.parent) {
+    if (node.parent && map.has(node.parent)) {
       const parent = map.get(node.parent);
       if (parent) parent.children.push(node);
       else roots.push(node);
@@ -102,9 +112,10 @@ function FolderRow({
 export default function MoveModal({
   isOpen,
   onClose,
-  file,
+  item,
   folders,
   currentFolderId,
+  excludeIds = [],
   onMoved,
 }: MoveModalProps) {
   const { t } = useTranslation();
@@ -112,18 +123,24 @@ export default function MoveModal({
   const [moving, setMoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen || !file) return null;
+  if (!isOpen || !item) return null;
 
-  const tree = buildTree(folders);
+  const isFolder = item.kind === "folder";
+  const excludeSet = new Set(excludeIds);
+  const tree = buildTree(folders, excludeSet);
 
   const handleMove = async () => {
     setMoving(true);
     setError(null);
     try {
-      const response = await fetch(`/api/files/${file.id}`, {
+      const endpoint = isFolder ? `/api/folders/${item.id}` : `/api/files/${item.id}`;
+      const payload = isFolder
+        ? { action: "move", targetFolderId: targetId }
+        : { action: "move", folderId: targetId };
+      const response = await fetch(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "move", folderId: targetId }),
+        body: JSON.stringify(payload),
       });
       const data = await response.json();
       if (response.ok) {
@@ -154,15 +171,17 @@ export default function MoveModal({
         <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-              <Folder className="w-4 h-4 text-white" />
+              {isFolder ? <FolderOpen className="w-4 h-4 text-white" /> : <Folder className="w-4 h-4 text-white" />}
             </div>
             <div className="min-w-0">
               <h2 className="text-lg font-semibold text-white leading-tight">
-                {t("moveFile", { en: "Move File", vi: "Di chuyển tệp" })}
+                {isFolder
+                  ? t("moveFolder", { en: "Move Folder", vi: "Di chuyển thư mục" })
+                  : t("moveFile", { en: "Move File", vi: "Di chuyển tệp" })}
               </h2>
               <p className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
-                <FileText className="w-3 h-3 shrink-0" />
-                {file.name}
+                {isFolder ? <FolderOpen className="w-3 h-3 shrink-0" /> : <FileText className="w-3 h-3 shrink-0" />}
+                {item.name}
               </p>
             </div>
           </div>
@@ -207,10 +226,15 @@ export default function MoveModal({
 
           {targetId !== currentFolderId && (
             <p className="text-xs text-slate-500 mt-3">
-              {t("moveNote", {
-                en: "The file will be moved to the selected folder.",
-                vi: "Tệp sẽ được chuyển đến thư mục đã chọn.",
-              })}
+              {isFolder
+                ? t("moveFolderNote", {
+                    en: "The folder and all its contents will be moved to the selected location.",
+                    vi: "Thư mục và toàn bộ nội dung sẽ được chuyển đến nơi đã chọn.",
+                  })
+                : t("moveNote", {
+                    en: "The file will be moved to the selected folder.",
+                    vi: "Tệp sẽ được chuyển đến thư mục đã chọn.",
+                  })}
             </p>
           )}
 

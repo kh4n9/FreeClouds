@@ -6,7 +6,7 @@ import {
   FolderPlus, Upload, RefreshCw, AlertCircle, X, Cloud, Search,
   HardDrive, FileIcon, FolderIcon, LogOut, Settings, Grid3X3,
   List, ChevronLeft, ChevronRight, ChevronDown, Sidebar, Trash2, FileText,
-  RotateCcw, Clock, Star, Sun, Moon, FolderOpen, Download,
+  RotateCcw, Clock, Star, Sun, Moon, FolderOpen, Download, Copy,
   type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -15,6 +15,8 @@ const DynamicUploadDropzone = dynamic(() => import("@/components/UploadDropzone"
 const DynamicUserProfile = dynamic(() => import("@/components/UserProfile"), { ssr: false });
 const DynamicShareModal = dynamic(() => import("@/components/ShareModal"), { ssr: false });
 const DynamicMoveModal = dynamic(() => import("@/components/MoveModal"), { ssr: false });
+const DynamicVersionHistoryModal = dynamic(() => import("@/components/VersionHistoryModal"), { ssr: false });
+const DynamicDuplicatesModal = dynamic(() => import("@/components/DuplicatesModal"), { ssr: false });
 import Navbar from "@/components/Navbar";
 import PlainFolderTree from "@/components/PlainFolderTree";
 import ContextMenu from "@/components/ContextMenu";
@@ -361,13 +363,20 @@ export default function DashboardPage() {
           fetch("/api/auth/me"),
           fetch("/api/folders"),
         ]);
-        if (!authRes.ok) { router.push("/login"); return; }
+        if (authRes.status === 401) {
+          router.push("/login");
+          return;
+        }
+        if (!authRes.ok) {
+          setError("Không thể xác minh phiên đăng nhập. Vui lòng thử lại.");
+          return;
+        }
         setUser(await authRes.json());
         if (foldersRes.ok) {
           const folderData = await foldersRes.json();
           setFolders(folderData);
         }
-      } catch { router.push("/login"); }
+      } catch { setError("Không thể xác minh phiên đăng nhập. Vui lòng thử lại."); }
       finally { setLoading(false); }
     })();
   }, []);
@@ -486,6 +495,35 @@ export default function DashboardPage() {
 
   const handleMove = useCallback((file: FileData) => {
     setMoveFile(file);
+  }, []);
+
+  const [moveFolder, setMoveFolder] = useState<{ id: string; name: string } | null>(null);
+
+  const [versionsFile, setVersionsFile] = useState<FileData | null>(null);
+  const [versionsKey, setVersionsKey] = useState(0);
+
+  const handleVersions = useCallback((file: FileData) => {
+    setVersionsFile(file);
+  }, []);
+
+  const [showDuplicates, setShowDuplicates] = useState(false);
+
+  const getFolderDescendants = (folderId: string, all: FolderData[] = folders): string[] => {
+    const result: string[] = [];
+    const walk = (parentId: string) => {
+      all.forEach((f) => {
+        if (f.parent === parentId) {
+          result.push(f.id);
+          walk(f.id);
+        }
+      });
+    };
+    walk(folderId);
+    return result;
+  };
+
+  const handleMoveFolder = useCallback((folder: { id: string; name: string }) => {
+    setMoveFolder(folder);
   }, []);
 
   const loadTrashFiles = useCallback(async () => {
@@ -706,6 +744,10 @@ export default function DashboardPage() {
                   <button onClick={() => { setActiveView(activeView === "recent" ? "files" : "recent"); loadRecent(); setSidebarOpen(false); }}
                     className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${activeView === "recent" ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
                     <Clock className="w-4 h-4" /> Gần đây
+                  </button>
+                  <button onClick={() => { setShowDuplicates(true); setSidebarOpen(false); }}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all min-h-[44px]">
+                    <Copy className="w-4 h-4" /> Trùng lặp
                   </button>
                   <button onClick={() => { setActiveView(activeView === "trash" ? "files" : "trash"); loadTrashFiles(); setSidebarOpen(false); }}
                     className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${showTrash ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
@@ -1016,6 +1058,7 @@ export default function DashboardPage() {
                             { divider: true },
                             { label: "Tạo thư mục con", icon: <FolderPlus className="w-4 h-4" />, onClick: () => handleCreateFolder(child.id) },
                             { divider: true },
+                            { label: "Di chuyển tới...", icon: <FolderOpen className="w-4 h-4" />, onClick: () => handleMoveFolder(child) },
                             { label: "Đổi tên", icon: <FileText className="w-4 h-4" />, onClick: () => { const name = prompt("Đổi tên thư mục:", child.name); if (name && name.trim()) handleRenameFolder(child.id, name.trim()); } },
                             { label: "Xoá", icon: <Trash2 className="w-4 h-4" />, onClick: () => handleDeleteFolder(child.id), danger: true },
                           ]}>
@@ -1074,7 +1117,7 @@ export default function DashboardPage() {
                   )}
                   <DynamicFileGrid files={files} loading={filesLoading}
                     onDownload={handleDownload} onDelete={handleDeleteFile}
-                    onShare={handleShare} onMove={handleMove}
+                    onShare={handleShare} onMove={handleMove} onVersions={handleVersions}
                     onSearch={setSearchQuery} searchQuery={searchQuery}
                     onToggleFavorite={handleToggleFavorite} onOpenFolder={handleOpenFolder}
                     viewMode={viewMode} onViewModeChange={setViewMode} />
@@ -1135,10 +1178,38 @@ export default function DashboardPage() {
       {moveFile && (
         <DynamicMoveModal isOpen={!!moveFile}
           onClose={() => setMoveFile(null)}
-          file={{ id: moveFile.id, name: moveFile.displayName || moveFile.name }}
+          item={{ id: moveFile.id, name: moveFile.displayName || moveFile.name, kind: "file" }}
           folders={folders}
           currentFolderId={selectedFolderId}
           onMoved={() => { fileCache.current.clear(); loadFiles(selectedFolderId, debouncedSearch, false); setToast({ type: "success", message: "Đã di chuyển tệp" }); setTimeout(() => setToast(null), 3000); }} />
+      )}
+
+      {moveFolder && (
+        <DynamicMoveModal isOpen={!!moveFolder}
+          onClose={() => setMoveFolder(null)}
+          item={{ id: moveFolder.id, name: moveFolder.name, kind: "folder" }}
+          folders={folders}
+          currentFolderId={selectedFolderId}
+          excludeIds={[moveFolder.id, ...getFolderDescendants(moveFolder.id)]}
+          onMoved={() => { refreshFolders(); if (selectedFolderId && (moveFolder.id === selectedFolderId || getFolderDescendants(moveFolder.id).includes(selectedFolderId))) setSelectedFolderId(null); setToast({ type: "success", message: "Đã di chuyển thư mục" }); setTimeout(() => setToast(null), 3000); }} />
+      )}
+
+      {versionsFile && (
+        <DynamicVersionHistoryModal
+          key={versionsKey}
+          fileId={versionsFile.id}
+          fileName={versionsFile.displayName || versionsFile.name}
+          onClose={() => setVersionsFile(null)}
+          onToast={(type, message) => { setToast({ type, message }); setTimeout(() => setToast(null), 3000); }}
+          onVersionChanged={() => { setVersionsKey((k) => k + 1); fileCache.current.clear(); loadFiles(selectedFolderId, debouncedSearch, false); }} />
+      )}
+
+      {showDuplicates && (
+        <DynamicDuplicatesModal
+          onClose={() => setShowDuplicates(false)}
+          onToast={(type, message) => { setToast({ type, message }); setTimeout(() => setToast(null), 3000); }}
+          onChanged={() => { fileCache.current.clear(); loadFiles(selectedFolderId, debouncedSearch, false); }}
+          onOpenFolder={(folderId) => { setActiveView("files"); setSelectedFolderId(folderId); loadFiles(folderId, debouncedSearch, false); }} />
       )}
 
       <CreateFolderModal show={showCreateFolder} loading={creatingFolder} onClose={() => { setShowCreateFolder(false); setNewFolderName(""); }} onConfirm={confirmCreateFolder} />

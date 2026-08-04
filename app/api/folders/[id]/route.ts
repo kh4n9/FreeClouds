@@ -25,6 +25,11 @@ const updateFolderSchema = z.object({
     .trim(),
 });
 
+const moveFolderSchema = z.object({
+  action: z.literal("move"),
+  targetFolderId: z.string().length(24).nullable(),
+});
+
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     // CSRF protection
@@ -46,6 +51,113 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // Parse and validate request body
     const body = await request.json();
+
+    // Find folder
+    const folder = await Folder.findById(folderId);
+
+    if (!folder) {
+      return NextResponse.json({ error: "Folder not found" }, { status: 404 });
+    }
+
+    // Verify ownership
+    if (!(await verifyOwnership(user.id, folder))) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    // Move action: relocate this folder under another folder (or root)
+    if (body.action === "move") {
+      const moveValidation = moveFolderSchema.safeParse(body);
+      if (!moveValidation.success) {
+        return NextResponse.json(
+          { error: "Invalid move request" },
+          { status: 400 },
+        );
+      }
+
+      const { targetFolderId } = moveValidation.data;
+
+      let target: typeof folder | null = null;
+      if (targetFolderId) {
+        target = await Folder.findOne({
+          _id: targetFolderId,
+          owner: user.id,
+        });
+        if (!target) {
+          return NextResponse.json(
+            { error: "Target folder not found" },
+            { status: 404 },
+          );
+        }
+        // Moving into itself or its own descendant is a cycle — reject early
+        let cursor: typeof folder | null = target;
+        const visited = new Set<string>();
+        while (cursor) {
+          if (cursor._id.toString() === folderId) {
+            return NextResponse.json(
+              { error: "Cannot move a folder into itself or its sub-folder" },
+              { status: 400 },
+            );
+          }
+          if (visited.has(cursor._id.toString())) break;
+          visited.add(cursor._id.toString());
+          cursor = cursor.parent ? await Folder.findById(cursor.parent) : null;
+        }
+      }
+
+      if ((target?._id.toString() ?? null) === folder.parent?.toString()) {
+        return NextResponse.json(
+          { error: "Folder is already in this location" },
+          { status: 400 },
+        );
+      }
+
+      // Check for duplicate folder name in the destination
+      const existingFolder = await Folder.findOne({
+        _id: { $ne: folderId },
+        owner: user.id,
+        parent: targetFolderId,
+        name: folder.name,
+      });
+      if (existingFolder) {
+        return NextResponse.json(
+          {
+            error: "A folder with this name already exists in the destination",
+          },
+          { status: 409 },
+        );
+      }
+
+      folder.parent = target ? target._id : null;
+      try {
+        await folder.save();
+      } catch (saveError) {
+        if (
+          saveError instanceof Error &&
+          (saveError.message.includes("E11000") ||
+            saveError.message.includes("duplicate key"))
+        ) {
+          return NextResponse.json(
+            {
+              error: "A folder with this name already exists in the destination",
+            },
+            { status: 409 },
+          );
+        }
+        throw saveError;
+      }
+
+      return NextResponse.json(
+        {
+          id: folder._id.toString(),
+          name: folder.name,
+          parent: folder.parent?.toString() || null,
+          moved: true,
+        },
+        { status: 200 },
+      );
+    }
+
+    // Rename action (default)
     const validation = updateFolderSchema.safeParse(body);
 
     if (!validation.success) {
@@ -62,18 +174,6 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const { name } = validation.data;
-
-    // Find folder
-    const folder = await Folder.findById(folderId);
-
-    if (!folder) {
-      return NextResponse.json({ error: "Folder not found" }, { status: 404 });
-    }
-
-    // Verify ownership
-    if (!(await verifyOwnership(user.id, folder))) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
 
     // Check for duplicate folder name in the same parent
     const existingFolder = await Folder.findOne({
