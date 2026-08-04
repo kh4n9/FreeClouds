@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   Download,
   Lock,
@@ -161,7 +162,12 @@ export default function SharePage({ token, lang = "en" }: SharePageProps) {
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-lg">
           {error ? (
-            <div className="rounded-2xl bg-slate-800/50 border border-slate-700/50 p-10 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="rounded-2xl bg-slate-800/50 border border-slate-700/50 p-10 text-center"
+            >
               <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto mb-5">
                 <ShieldAlert className="w-8 h-8 text-red-400" />
               </div>
@@ -172,9 +178,14 @@ export default function SharePage({ token, lang = "en" }: SharePageProps) {
               <Link href="/" className="btn-primary px-6 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
                 <Globe className="w-4 h-4" /> {vi ? "Về trang chủ" : "Go to homepage"}
               </Link>
-            </div>
+            </motion.div>
           ) : meta ? (
-            <div className="rounded-2xl bg-slate-800/50 border border-slate-700/50 overflow-hidden animate-fade-in">
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="rounded-2xl bg-slate-800/50 border border-slate-700/50 overflow-hidden"
+            >
               {/* Header */}
               <div className="p-6 border-b border-slate-700/50">
                 <div className="text-xs text-slate-400 mb-4 flex items-center gap-2">
@@ -241,7 +252,7 @@ export default function SharePage({ token, lang = "en" }: SharePageProps) {
                     : "File securely stored on Telegram infrastructure"}
                 </p>
               </div>
-            </div>
+            </motion.div>
           ) : null}
         </div>
       </main>

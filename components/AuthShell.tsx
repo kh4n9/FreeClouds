@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Footer from "@/components/Footer";
+import { Reveal } from "@/components/motion/Reveal";
 
 export default function AuthShell({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +12,7 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
       <div className="absolute top-1/4 -left-24 w-96 h-96 bg-blue-500/20 rounded-full blur-[128px] animate-pulse-slow" />
       <div className="absolute bottom-1/4 -right-24 w-96 h-96 bg-cyan-500/20 rounded-full blur-[128px] animate-pulse-slow" style={{ animationDelay: "1.5s" }} />
       <div className="relative flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">{children}</div>
+        <Reveal className="w-full max-w-md" delay={0.05}>{children}</Reveal>
       </div>
       <Footer />
     </div>

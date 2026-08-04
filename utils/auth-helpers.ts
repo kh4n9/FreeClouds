@@ -136,11 +136,22 @@ export const validateLoginForm = (form: LoginForm): LoginError | null => {
 };
 
 // Redirect utilities
-export const redirectToPage = (path: string, delay: number = 200) => {
-  setTimeout(() => {
-    console.log(`Redirecting to ${path}...`);
-    window.location.href = path;
-  }, delay);
+// Returns the safely resolved post-auth redirect path from a query param.
+export const getSafeRedirect = (
+  query: string | null | undefined,
+  fallback: string,
+): string => {
+  const target = query;
+  if (
+    target &&
+    target.startsWith("/") &&
+    !target.startsWith("//") &&
+    !target.includes("\\") &&
+    !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(target)
+  ) {
+    return target;
+  }
+  return fallback;
 };
 
 // Cookie utilities

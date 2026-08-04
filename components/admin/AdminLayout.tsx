@@ -19,6 +19,7 @@ import {
   Cloud,
 } from "lucide-react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Lang, getDict } from "./i18n";
 
 interface AdminUser {
@@ -41,6 +42,8 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
 
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -67,17 +70,22 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
             return;
           }
           setUser(data);
-        } else {
+        } else if (res.status === 401) {
+          // Only unauthenticated should bounce to login. 5xx / other errors
+          // are transient — navigating away re-triggers the login page's
+          // auto-redirect and causes an endless reload loop.
           router.push(loginPath);
+        } else {
+          setAuthError(true);
         }
       } catch {
-        router.push(loginPath);
+        setAuthError(true);
       } finally {
         setLoading(false);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reloadKey]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -89,6 +97,32 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
       <div className="min-h-screen app-bg flex items-center justify-center">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mx-auto mb-4 animate-pulse">
           <Cloud className="w-7 h-7 text-white" />
+        </div>
+      </div>
+    );
+  }
+
+  if (authError) {
+    return (
+      <div className="min-h-screen app-bg flex items-center justify-center p-4">
+        <div className="modal-content p-8 max-w-md w-full text-center">
+          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+            <Bell className="w-6 h-6 text-amber-400" />
+          </div>
+          <h2 className="text-lg font-semibold text-white mb-2">
+            {t.nav.brand}
+          </h2>
+          <p className="text-sm text-slate-400 mb-6">{t.common.authError}</p>
+          <button
+            onClick={() => {
+              setLoading(true);
+              setAuthError(false);
+              setReloadKey((k) => k + 1);
+            }}
+            className="btn-primary px-6 py-2.5 rounded-xl text-sm font-medium"
+          >
+            {t.common.retry}
+          </button>
         </div>
       </div>
     );
@@ -133,8 +167,9 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
-              pathname === item.href ||
-              (item.href !== base && pathname.startsWith(item.href));
+              !!pathname &&
+              (pathname === item.href ||
+                (item.href !== base && pathname.startsWith(item.href)));
             return (
               <Link
                 key={item.href}
@@ -196,7 +231,16 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+        <main className="flex-1 p-6 overflow-y-auto">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {children}
+          </motion.div>
+        </main>
       </div>
     </div>
   );

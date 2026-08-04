@@ -49,6 +49,29 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body,
+body *,
+body *::before,
+body *::after {
+  transition-property: background-color, border-color;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 .app-bg {
   background-color: var(--background);
 }

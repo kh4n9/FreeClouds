@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import AdminLayout from "@/components/admin/AdminLayout";
 
 export const metadata: Metadata = {
   robots: {
@@ -8,10 +7,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AdminRootLayout({
+export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AdminLayout lang="vi">{children}</AdminLayout>;
+  return <>{children}</>;
 }

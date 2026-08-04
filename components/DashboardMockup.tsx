@@ -27,7 +27,7 @@ const folders = ["Projects", "Media", "Documents", "Backups"];
 
 export default function DashboardMockup() {
   return (
-    <div className="relative mx-auto max-w-5xl animate-slide-up" style={{ animationDelay: "0.25s" }}>
+    <div className="relative mx-auto max-w-5xl">
       <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-blue-500/40 via-cyan-400/40 to-sky-500/40 blur-sm" />
       <div className="relative rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-slate-700/60 shadow-2xl shadow-blue-500/10 overflow-hidden">
         <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-800 bg-slate-950/60">

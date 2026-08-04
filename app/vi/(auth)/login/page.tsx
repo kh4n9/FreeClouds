@@ -12,10 +12,13 @@ import {
   useAuth,
   validateLoginForm,
   createInputChangeHandler,
-  redirectToPage,
+  getSafeRedirect,
   type LoginForm,
   type LoginError,
 } from "@/utils/auth-helpers";
+
+const getRedirectParam = () =>
+  new URLSearchParams(window.location.search).get("redirect");
 
 export default function VietnameseLoginPage() {
   const [form, setForm] = useState<LoginForm>({
@@ -31,11 +34,17 @@ export default function VietnameseLoginPage() {
     const checkExistingAuth = async () => {
       const user = await checkAuth();
       if (user) {
-        redirectToPage(user.role === "admin" ? "/vi/admin" : "/dashboard");
+        router.replace(
+          getSafeRedirect(
+            getRedirectParam(),
+            user.role === "admin" ? "/vi/admin" : "/dashboard",
+          ),
+        );
       }
     };
     checkExistingAuth();
-  }, [checkAuth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleInputChange = createInputChangeHandler(setForm, setError);
 
@@ -69,7 +78,12 @@ export default function VietnameseLoginPage() {
 
     const user = await login(form);
     if (user) {
-      redirectToPage(user.role === "admin" ? "/vi/admin" : "/dashboard");
+      router.replace(
+        getSafeRedirect(
+          getRedirectParam(),
+          user.role === "admin" ? "/vi/admin" : "/dashboard",
+        ),
+      );
     } else if (!error) {
       // Set Vietnamese error message if login failed but no specific error was set
       setError({

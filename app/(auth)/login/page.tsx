@@ -9,10 +9,13 @@ import {
   useAuth,
   validateLoginForm,
   createInputChangeHandler,
-  redirectToPage,
+  getSafeRedirect,
   type LoginForm,
   type LoginError,
 } from "@/utils/auth-helpers";
+
+const getRedirectParam = () =>
+  new URLSearchParams(window.location.search).get("redirect");
 
 export default function LoginPage() {
   const [form, setForm] = useState<LoginForm>({ email: "", password: "" });
@@ -23,10 +26,18 @@ export default function LoginPage() {
   useEffect(() => {
     const checkExistingAuth = async () => {
       const user = await checkAuth();
-      if (user) redirectToPage(user.role === "admin" ? "/admin" : "/dashboard");
+      if (user) {
+        router.replace(
+          getSafeRedirect(
+            getRedirectParam(),
+            user.role === "admin" ? "/admin" : "/dashboard",
+          ),
+        );
+      }
     };
     checkExistingAuth();
-  }, [checkAuth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleInputChange = createInputChangeHandler(setForm, setError);
 
@@ -35,7 +46,14 @@ export default function LoginPage() {
     const validationError = validateLoginForm(form);
     if (validationError) { setError(validationError); return; }
     const user = await login(form);
-    if (user) redirectToPage(user.role === "admin" ? "/admin" : "/dashboard");
+    if (user) {
+      router.replace(
+        getSafeRedirect(
+          getRedirectParam(),
+          user.role === "admin" ? "/admin" : "/dashboard",
+        ),
+      );
+    }
   };
 
   return (
