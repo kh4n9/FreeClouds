@@ -16,6 +16,11 @@ export interface IUser extends Document {
   lastLoginAt?: Date;
   totalFilesUploaded: number;
   totalStorageUsed: number;
+  // Per-user storage quota in bytes (null = use system default)
+  storageLimit: number | null;
+  // BCrypt hash of the WebDAV app password (null = not enabled)
+  webdavTokenHash: string | null;
+  webdavTokenCreatedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -120,6 +125,19 @@ const userSchema = new Schema<IUser>(
       default: 0,
       min: 0,
     },
+    storageLimit: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
+    webdavTokenHash: {
+      type: String,
+      default: null,
+    },
+    webdavTokenCreatedAt: {
+      type: Date,
+      default: null,
+    },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -154,6 +172,7 @@ userSchema.set("toJSON", {
     delete safeRet._id;
     delete safeRet.__v;
     delete safeRet.passwordHash; // Never include password hash in JSON
+    delete safeRet.webdavTokenHash; // Never include WebDAV token hash in JSON
     return safeRet;
   },
 });
@@ -239,6 +258,7 @@ userSchema.methods.toSafeObject = function () {
   const user = this.toObject();
   const safeUser = user as unknown as Record<string, unknown>;
   delete safeUser.passwordHash;
+  delete safeUser.webdavTokenHash; // Never expose WebDAV token hash
   delete safeUser._id;
   delete safeUser.__v;
   return safeUser;

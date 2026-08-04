@@ -18,6 +18,9 @@ import {
   Clock,
   Camera,
   Trash,
+  KeyRound,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 
@@ -28,6 +31,7 @@ interface UserData {
   emailVerified?: boolean;
   avatar?: string | null;
   storageLimit?: number;
+  customStorageLimit?: boolean;
   createdAt: string;
   updatedAt: string;
   stats?: {
@@ -52,7 +56,7 @@ export default function UserProfile({
 }: UserProfileProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<
-    "profile" | "password" | "account"
+    "profile" | "password" | "account" | "webdav"
   >("profile");
 
   const formatBytes = (bytes: number): string => {
@@ -102,6 +106,27 @@ export default function UserProfile({
   const [avatarSaving, setAvatarSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // WebDAV state
+  const [webdav, setWebdav] = useState<{
+    enabled: boolean;
+    createdAt: string | null;
+    webdavUrl: string;
+  } | null>(null);
+  const [webdavToken, setWebdavToken] = useState<string | null>(null);
+  const [webdavBusy, setWebdavBusy] = useState(false);
+  const [webdavCopied, setWebdavCopied] = useState(false);
+
+  const loadWebdavStatus = async () => {
+    try {
+      const response = await fetch("/api/user/webdav-token");
+      if (response.ok) {
+        setWebdav(await response.json());
+      }
+    } catch {
+      // Ignore - treated as disabled
+    }
+  };
+
   const loadUserStats = async () => {
     try {
       const response = await fetch("/api/user");
@@ -119,6 +144,7 @@ export default function UserProfile({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setProfileForm({ name: user.name, email: user.email });
       loadUserStats();
+      loadWebdavStatus();
     }
   }, [isOpen, user]);
 
@@ -138,6 +164,9 @@ export default function UserProfile({
       setVerifyCode("");
       setVerifyCountdown(0);
       setAvatarPreview(null);
+      setWebdav(null);
+      setWebdavToken(null);
+      setWebdavCopied(false);
     }
   }, [isOpen]);
 
@@ -430,6 +459,60 @@ export default function UserProfile({
     }
   };
 
+  const handleGenerateWebdavToken = async () => {
+    setWebdavBusy(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const response = await fetch("/api/user/webdav-token", { method: "POST" });
+      const data = await response.json();
+      if (response.ok) {
+        setWebdavToken(data.token);
+        setWebdav({ enabled: true, createdAt: new Date().toISOString(), webdavUrl: data.webdavUrl });
+        setSuccess(t("webdavTokenCreated", commonTranslations.webdavTokenCreated));
+      } else {
+        setError(data.error || t("error", commonTranslations.error));
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setWebdavBusy(false);
+    }
+  };
+
+  const handleRevokeWebdavToken = async () => {
+    setWebdavBusy(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const response = await fetch("/api/user/webdav-token", { method: "DELETE" });
+      const data = await response.json();
+      if (response.ok) {
+        setWebdav(null);
+        setWebdavToken(null);
+        setWebdavCopied(false);
+        setSuccess(t("webdavTokenRevoked", commonTranslations.webdavTokenRevoked));
+      } else {
+        setError(data.error || t("error", commonTranslations.error));
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setWebdavBusy(false);
+    }
+  };
+
+  const handleCopyWebdavToken = async () => {
+    if (!webdavToken) return;
+    try {
+      await navigator.clipboard.writeText(webdavToken);
+      setWebdavCopied(true);
+      setTimeout(() => setWebdavCopied(false), 2000);
+    } catch {
+      setError("Failed to copy token");
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -452,7 +535,7 @@ export default function UserProfile({
 
         {/* Tabs */}
         <div className="flex border-b border-slate-700/50">
-          {(["profile", "password", "account"] as const).map((tab) => (
+          {(["profile", "password", "account", "webdav"] as const).map((tab) => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`flex-1 px-6 py-3 text-sm font-medium transition-all ${
                 activeTab === tab
@@ -461,7 +544,8 @@ export default function UserProfile({
               }`}>
               {tab === "profile" ? t("profileTab", commonTranslations.profileTab)
                 : tab === "password" ? t("passwordTab", commonTranslations.passwordTab)
-                : t("accountTab", commonTranslations.accountTab)}
+                : tab === "account" ? t("accountTab", commonTranslations.accountTab)
+                : t("webdavTab", commonTranslations.webdavTab)}
             </button>
           ))}
         </div>
@@ -741,9 +825,14 @@ export default function UserProfile({
                       <div className="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full"
                         style={{ width: `${Math.min((userStats.stats.totalSize / (userStats.storageLimit || 1)) * 100, 100)}%` }} />
                     </div>
-                    <p className="text-xs text-slate-500">
-                      {formatBytes(userStats.stats.totalSize)} of {formatBytes(userStats.storageLimit || 0)} used
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-slate-500">
+                        {formatBytes(userStats.stats.totalSize)} of {formatBytes(userStats.storageLimit || 0)} used
+                      </p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${userStats.customStorageLimit ? "bg-sky-500/10 text-sky-400" : "bg-slate-700/50 text-slate-400"}`}>
+                        {userStats.customStorageLimit ? "Custom plan" : "System default"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -785,6 +874,93 @@ export default function UserProfile({
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* WebDAV Tab */}
+          {activeTab === "webdav" && (
+            <div className="space-y-5">
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 shrink-0 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
+                    <KeyRound className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-200 mb-1">
+                      {t("webdavAccess", commonTranslations.webdavAccess)}
+                    </h4>
+                    <p className="text-sm text-slate-400">
+                      {t("webdavDescription", commonTranslations.webdavDescription)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {webdavToken && (
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+                  <p className="text-sm text-emerald-300 mb-3 font-medium">
+                    {t("webdavTokenGenerated", commonTranslations.webdavTokenGenerated)}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 break-all bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-sm text-emerald-300 font-mono">
+                      {webdavToken}
+                    </code>
+                    <button onClick={handleCopyWebdavToken}
+                      className="flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-lg text-sm font-medium bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition-all"
+                      title={t("webdavCopy", commonTranslations.webdavCopy)}>
+                      {webdavCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {webdavCopied ? t("webdavTokenCopied", commonTranslations.webdavTokenCopied) : t("webdavCopy", commonTranslations.webdavCopy)}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {webdav?.enabled && webdav.webdavUrl && (
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                  <p className="text-sm text-slate-400 mb-2">
+                    {t("webdavUrl", commonTranslations.webdavUrl)}
+                  </p>
+                  <code className="block break-all bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-sm text-sky-300 font-mono">
+                    {webdav.webdavUrl}
+                  </code>
+                  {webdav.createdAt && (
+                    <p className="text-xs text-slate-500 mt-2">
+                      {t("webdavEnabledSince", commonTranslations.webdavEnabledSince)}{" "}
+                      {new Date(webdav.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                <h4 className="font-medium text-slate-200 mb-2">
+                  {t("webdavHowTo", commonTranslations.webdavHowTo)}
+                </h4>
+                <ol className="space-y-2 text-sm text-slate-400 list-decimal list-inside">
+                  <li>{t("webdavHowToStep1", commonTranslations.webdavHowToStep1)}</li>
+                  <li>{t("webdavHowToStep2", commonTranslations.webdavHowToStep2)}</li>
+                  <li>{t("webdavHowToStep3", commonTranslations.webdavHowToStep3)}</li>
+                </ol>
+              </div>
+
+              {!webdav?.enabled && !webdavToken && (
+                <p className="text-sm text-slate-500">
+                  {t("webdavNoTokenYet", commonTranslations.webdavNoTokenYet)}
+                </p>
+              )}
+
+              <button onClick={webdav?.enabled ? handleRevokeWebdavToken : handleGenerateWebdavToken}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-50 ${
+                  webdav?.enabled
+                    ? "bg-gradient-to-r from-red-600 to-rose-700 text-white hover:shadow-lg hover:shadow-red-500/25"
+                    : "bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:shadow-lg hover:shadow-blue-500/25"
+                }`}
+                disabled={webdavBusy}>
+                {webdavBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : webdav?.enabled ? <Trash className="w-4 h-4" /> : <KeyRound className="w-4 h-4" />}
+                {webdav?.enabled
+                  ? t("webdavRevokeToken", commonTranslations.webdavRevokeToken)
+                  : t("webdavGenerateToken", commonTranslations.webdavGenerateToken)}
+              </button>
             </div>
           )}
         </div>

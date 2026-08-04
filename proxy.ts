@@ -4,6 +4,21 @@ import type { NextRequest } from "next/server";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Rewrite WebDAV requests to the pages API handler (which supports
+  // non-standard methods like PROPFIND/MKCOL/COPY/MOVE that app router
+  // route handlers reject with 400).
+  if (pathname.startsWith("/webdav")) {
+    let target = pathname === "/webdav" ? "/api/webdav" : `/api/webdav${pathname.slice("/webdav".length)}`;
+    // Normalize a trailing slash: pages router redirects /api/webdav/ with
+    // a 308, but WebDAV clients frequently request collection roots with one.
+    if (target.length > "/api/webdav".length && target.endsWith("/")) {
+      target = target.slice(0, -1);
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = target;
+    return NextResponse.rewrite(url);
+  }
+
   // Skip middleware for API routes, static files, and images
   if (
     pathname.startsWith("/api/") ||
@@ -14,6 +29,14 @@ export function proxy(request: NextRequest) {
     pathname.includes(".")
   ) {
     return NextResponse.next();
+  }
+
+  // Normalize trailing slashes (replaces the built-in 308 that was disabled
+  // via skipTrailingSlashRedirect to keep WebDAV paths working).
+  if (pathname.length > 1 && pathname.endsWith("/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.slice(0, -1);
+    return NextResponse.rewrite(url);
   }
 
   // Admin route protection (both English and Vietnamese)
@@ -55,7 +78,7 @@ export function proxy(request: NextRequest) {
   }
 
   // Language routing for Vietnamese pages
-  if (pathname.startsWith("/vi/")) {
+  if (pathname === "/vi" || pathname.startsWith("/vi/")) {
     // Set a header to indicate Vietnamese locale
     const response = NextResponse.next();
     response.headers.set("x-locale", "vi");

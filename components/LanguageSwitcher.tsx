@@ -447,6 +447,7 @@ export const commonTranslations = {
   profileTab: { en: "Profile", vi: "Hồ sơ" },
   passwordTab: { en: "Password", vi: "Mật khẩu" },
   accountTab: { en: "Account", vi: "Tài khoản" },
+  webdavTab: { en: "WebDAV", vi: "WebDAV" },
 
   // Profile form
   fullName: { en: "Full Name", vi: "Họ và tên" },
@@ -505,4 +506,54 @@ export const commonTranslations = {
     vi: "Xác nhận xóa tài khoản",
   },
   deleteAccount: { en: "Delete account", vi: "Xóa tài khoản" },
+
+  // WebDAV settings
+  webdavAccess: { en: "WebDAV Access", vi: "Truy cập WebDAV" },
+  webdavDescription: {
+    en: "Mount FreeClouds as a network drive on your computer, phone, or tablet using any WebDAV client.",
+    vi: "Gắn FreeClouds như một ổ đĩa mạng trên máy tính, điện thoại hoặc máy tính bảng bằng bất kỳ ứng dụng WebDAV nào.",
+  },
+  webdavUrl: { en: "WebDAV URL", vi: "URL WebDAV" },
+  webdavStatusEnabled: { en: "Enabled", vi: "Đã bật" },
+  webdavStatusDisabled: { en: "Disabled", vi: "Đã tắt" },
+  webdavEnabledSince: {
+    en: "Enabled since",
+    vi: "Bật từ",
+  },
+  webdavGenerateToken: { en: "Generate Token", vi: "Tạo mã token" },
+  webdavRevokeToken: { en: "Revoke Token", vi: "Thu hồi mã token" },
+  webdavTokenGenerated: {
+    en: "Copy this token now. It will only be shown once.",
+    vi: "Sao chép mã token ngay. Mã chỉ được hiển thị một lần.",
+  },
+  webdavTokenCopied: {
+    en: "Copied to clipboard!",
+    vi: "Đã sao chép vào clipboard!",
+  },
+  webdavCopy: { en: "Copy", vi: "Sao chép" },
+  webdavTokenRevoked: {
+    en: "WebDAV token revoked",
+    vi: "Đã thu hồi mã token WebDAV",
+  },
+  webdavTokenCreated: {
+    en: "WebDAV token created",
+    vi: "Đã tạo mã token WebDAV",
+  },
+  webdavHowTo: { en: "How to connect", vi: "Cách kết nối" },
+  webdavHowToStep1: {
+    en: "Open your WebDAV client (e.g. Windows File Explorer, Finder, RaiDrive, DAVx5).",
+    vi: "Mở ứng dụng WebDAV của bạn (ví dụ: File Explorer, Finder, RaiDrive, DAVx5).",
+  },
+  webdavHowToStep2: {
+    en: "Use the URL above as the server address.",
+    vi: "Dùng URL ở trên làm địa chỉ máy chủ.",
+  },
+  webdavHowToStep3: {
+    en: "Sign in with your email as username and the generated token as password.",
+    vi: "Đăng nhập với email của bạn làm tên người dùng và mã token làm mật khẩu.",
+  },
+  webdavNoTokenYet: {
+    en: "You haven't enabled WebDAV yet. Generate a token to get started.",
+    vi: "Bạn chưa bật WebDAV. Hãy tạo mã token để bắt đầu.",
+  },
 };

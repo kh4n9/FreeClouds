@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 let nextConfig = {
   serverExternalPackages: ["mongoose"],
+  // Next.js auto-adds a pre-middleware 308 redirect that strips trailing
+  // slashes, which breaks WebDAV collection paths like /webdav/. We disable
+  // it and normalize trailing slashes in proxy.ts instead (WebDAV paths keep
+  // theirs, everything else gets rewritten to the canonical no-slash form).
+  skipTrailingSlashRedirect: true,
   images: {
     remotePatterns: [
       {
