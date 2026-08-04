@@ -12,6 +12,7 @@ export default function robots(): MetadataRoute.Robots {
           '/dashboard/',
           '/_next/',
           '/admin/',
+          '/s/',
           '/private/',
           '*.json',
           '/tmp/',
@@ -39,11 +40,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/'],
       },
     ],
-    sitemap: [
-      `${BASE_URL}/sitemap.xml`,
-      `${BASE_URL}/sitemap-en.xml`,
-      `${BASE_URL}/sitemap-vi.xml`,
-    ],
+    sitemap: `${BASE_URL}/sitemap.xml`,
     host: BASE_URL,
   }
 }

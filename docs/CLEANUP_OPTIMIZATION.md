@@ -10,7 +10,7 @@ This document outlines the cleanup and optimization process performed on the Fre
 - **Empty `src` directory** - Deleted unused directory structure
 - **Consolidated test files** - Moved all test scripts to `scripts/tests/`
 - **Shared auth utilities** - Created `utils/auth-helpers.ts` to eliminate duplicate login logic
-- **Unified SEO components** - Enhanced `components/SEOHead.tsx` with reusable SEO patterns
+- **Unified SEO components** - Enhanced `components/SEOHead.tsx` with reusable SEO patterns (later removed — replaced by the Next.js Metadata API in `lib/seo/`, see `docs/SEO_SETUP.md`)
 
 #### 2. **Code Consolidation**
 - **Login pages refactored** - Both English and Vietnamese login pages now use shared utilities
@@ -36,7 +36,7 @@ After:
 │       ├── test-login.js
 │       ├── test-admin.js
 │       └── test-email.js
-├── components/SEOHead.tsx (enhanced)
+├── components/SEOHead.tsx (enhanced — later removed, replaced by Next.js Metadata API)
 └── app/(auth)/login/page.tsx (uses shared utilities)
 └── app/vi/(auth)/login/page.tsx (uses shared utilities)
 ```
@@ -146,8 +146,9 @@ export default function LoginPage() {
 ```
 
 ### Using SEO Components
+> Note: `components/SEOHead.tsx` was removed. Use the Next.js Metadata API instead (see `docs/SEO_SETUP.md`).
 ```typescript
-import { LoginPageSEO } from '@/components/SEOHead';
+import { LoginPageSEO } from '@/components/SEOHead'; // REMOVED — see docs/SEO_SETUP.md
 
 export default function LoginPage() {
   return (

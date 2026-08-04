@@ -1,41 +1,28 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { headers } from "next/headers";
+import { MotionConfig } from "framer-motion";
 import "@fontsource-variable/inter";
 import {
   generateMetadata as generateSEOMetadata,
   generateWebApplicationStructuredData,
   generateOrganizationStructuredData,
 } from "@/lib/seo/utils";
+import { seoConfig } from "@/lib/seo/config";
 import "../styles/globals.css";
 
-export const metadata: Metadata = generateSEOMetadata({
-  language: "en",
-  title: "Free Clouds - Secure Cloud Storage & File Sharing Platform",
-  description:
-    "Free secure cloud storage powered by Telegram. Upload, organize, and share your files with enterprise-grade security. 50MB file limit, unlimited folders, blazing-fast access, and cross-platform compatibility.",
-  keywords: [
-    "cloud storage",
-    "file sharing",
-    "free storage",
-    "telegram storage",
-    "secure file upload",
-    "online storage",
-    "file management",
-    "cloud backup",
-    "file organization",
-    "digital storage",
-    "remote access",
-    "file sync",
-    "data storage",
-    "document storage",
-    "photo storage",
-    "video storage",
-    "file hosting",
-    "cloud drive",
-    "online backup",
-    "file security",
-  ],
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const headerList = await headers();
+  const lang = headerList.get("x-locale") === "vi" ? "vi" : "en";
+  const config = seoConfig[lang];
+
+  return generateSEOMetadata({
+    language: lang,
+    title: config.title,
+    description: config.description,
+    keywords: config.keywords,
+  });
+}
 
 export const viewport = {
   width: "device-width",
@@ -45,16 +32,18 @@ export const viewport = {
   themeColor: "#0f172a",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const webAppStructuredData = generateWebApplicationStructuredData("en");
+  const headerList = await headers();
+  const lang = headerList.get("x-locale") === "vi" ? "vi" : "en";
+  const webAppStructuredData = generateWebApplicationStructuredData(lang);
   const organizationStructuredData = generateOrganizationStructuredData();
 
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang={lang} className="dark" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logo.svg" type="image/svg+xml" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -66,9 +55,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="format-detection" content="telephone=no" />
-        <link rel="alternate" href="https://free-clouds.vercel.app/" hrefLang="x-default" />
-        <link rel="alternate" href="https://free-clouds.vercel.app/en" hrefLang="en" />
-        <link rel="alternate" href="https://free-clouds.vercel.app/vi" hrefLang="vi" />
+        <link rel="alternate" href={new URL("/", process.env.NEXT_PUBLIC_BASE_URL || "https://www.freeclouds.cloud").toString()} hrefLang="x-default" />
+        <link rel="alternate" href="https://www.freeclouds.cloud/" hrefLang="en" />
+        <link rel="alternate" href="https://www.freeclouds.cloud/vi" hrefLang="vi" />
         <link rel="dns-prefetch" href="//api.telegram.org" />
         <link rel="dns-prefetch" href="//mongodb.com" />
         <Script
@@ -113,7 +102,9 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <div className="min-h-screen app-bg">{children}</div>
+        <MotionConfig reducedMotion="user">
+          <div className="min-h-screen app-bg">{children}</div>
+        </MotionConfig>
       </body>
     </html>
   );
