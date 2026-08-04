@@ -6,13 +6,13 @@ export interface IFile extends Document {
   size: number;
   mime: string;
   fileId: string; // Telegram file_id (for chunks, each chunk has its own fileId)
-  telegramFilePath?: string; // cached Telegram file_path (skip getFile call on download)
-  telegramMessageId?: string; // Telegram message_id of the uploaded document (for deleteMessage)
+  telegramFilePath?: string | null; // cached Telegram file_path (skip getFile call on download)
+  telegramMessageId?: string | null; // Telegram message_id of the uploaded document (for deleteMessage)
   owner: Types.ObjectId;
   folder: Types.ObjectId | null;
   deletedAt: Date | null;
   createdAt: Date;
-  originalExt?: string;     // restored on download when set
+  originalExt?: string | null;     // restored on download when set
 
   // Chunked file support
   chunkedId?: string;       // group UUID shared by all chunks + parent
@@ -27,6 +27,9 @@ export interface IFile extends Document {
 
   // Favorites support
   favorite: boolean;
+
+  // Versioning support
+  currentVersion: number;
 
   // Virtuals (computed on the schema)
   displayName: string;
@@ -183,6 +186,11 @@ const fileSchema = new Schema<IFile>({
     type: Boolean,
     default: false,
     index: true,
+  },
+  currentVersion: {
+    type: Number,
+    default: 1,
+    min: 1,
   },
 });
 
@@ -567,6 +575,16 @@ fileSchema.statics.deletePermanently = async function (
     }
     await this.deleteMany({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
   }
+
+  // Clean up version records + their Telegram messages
+  const { FileVersion } = await import("@/models/FileVersion");
+  const versionDocs = await FileVersion.find({ file: file._id });
+  for (const v of versionDocs) {
+    if (v.telegramMessageId) {
+      await telegramAPI.deleteMessage(v.telegramMessageId).catch(() => {});
+    }
+  }
+  await FileVersion.deleteMany({ file: file._id }).catch(() => {});
 
   await this.findByIdAndDelete(file._id).catch(() => {});
   return { ok: true, deleted };

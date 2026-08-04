@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
+import { FileVersion } from "@/models/FileVersion";
 import { telegramAPI } from "@/lib/telegram";
 import { logAction } from "@/lib/activity-log";
 import {
@@ -40,6 +41,15 @@ export async function POST(request: NextRequest) {
       if (file.telegramMessageId) {
         await telegramAPI.deleteMessage(file.telegramMessageId).catch(() => {});
       }
+
+      // Delete stored versions (best-effort)
+      const versionDocs = await FileVersion.find({ file: file._id });
+      for (const v of versionDocs) {
+        if (v.telegramMessageId) {
+          await telegramAPI.deleteMessage(v.telegramMessageId).catch(() => {});
+        }
+      }
+      await FileVersion.deleteMany({ file: file._id }).catch(() => {});
 
       if (file.chunkedId && file.totalChunks! > 1) {
         const chunkDocs = await File.find({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } });
