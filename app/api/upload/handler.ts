@@ -23,7 +23,7 @@ import {
   validateFileName,
   sanitizeFileName,
 } from "@/lib/telegram";
-import { getSystemSettings } from "@/lib/settings";
+import { getEffectiveStorageLimit } from "@/lib/quota";
 
 const CHUNK_SIZE = 15 * 1024 * 1024;
 const uploadSchema = z.object({
@@ -62,8 +62,8 @@ export async function handleUpload(request: NextRequest) {
     if (file.size === 0) return NextResponse.json({ error: "Empty file not allowed" }, { status: 400 });
 
     const userStats = await File.getStorageUsage(user.id);
-    const settings = await getSystemSettings();
-    if ((userStats.totalSize || 0) + file.size > settings.storageLimit) {
+    const storageLimit = await getEffectiveStorageLimit(user.id);
+    if ((userStats.totalSize || 0) + file.size > storageLimit) {
       return NextResponse.json({ error: "Storage limit exceeded" }, { status: 413 });
     }
 

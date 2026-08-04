@@ -134,8 +134,8 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, email, role, isActive, password } = body;
-    const updatedFields = { name, email, role, isActive, password };
+    const { name, email, role, isActive, password, storageLimit } = body;
+    const updatedFields = { name, email, role, isActive, password, storageLimit };
 
     // Find user
     const user = await User.findById(id);
@@ -221,6 +221,22 @@ export async function PUT(
 
       const saltRounds = 12;
       user.passwordHash = await bcrypt.hash(password, saltRounds);
+    }
+
+    // Per-user storage quota (bytes). null/0 means "use system default".
+    if (storageLimit !== undefined) {
+      if (storageLimit === null || storageLimit === "") {
+        user.storageLimit = null;
+      } else {
+        const limit = Math.floor(Number(storageLimit));
+        if (!Number.isFinite(limit) || limit < 0) {
+          return NextResponse.json(
+            { error: "Storage limit must be a non-negative number" },
+            { status: 400 },
+          );
+        }
+        user.storageLimit = limit === 0 ? null : limit;
+      }
     }
 
     await user.save();

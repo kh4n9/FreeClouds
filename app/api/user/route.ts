@@ -5,7 +5,7 @@ import { connectToDatabase } from "@/lib/db";
 import { User } from "@/models/User";
 import { File } from "@/models/File";
 import { Folder } from "@/models/Folder";
-import { getSystemSettings } from "@/lib/settings";
+import { getStorageLimitInfo } from "@/lib/quota";
 import {
   requireAuth,
   AuthError,
@@ -65,6 +65,9 @@ export async function GET(request: NextRequest) {
     // Get storage statistics
     const storageStats = await File.getStorageUsage(user.id);
     const folderCount = await Folder.countDocuments({ owner: user.id });
+    const { storageLimit, customStorageLimit } = await getStorageLimitInfo(
+      user.id,
+    );
 
     return NextResponse.json(
       {
@@ -84,7 +87,8 @@ export async function GET(request: NextRequest) {
           totalSize: storageStats.totalSize,
           totalFolders: folderCount,
         },
-        storageLimit: (await getSystemSettings()).storageLimit,
+        storageLimit,
+        customStorageLimit,
       },
       { status: 200 },
     );

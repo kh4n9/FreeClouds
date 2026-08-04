@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, AuthError, createAuthResponse } from "@/lib/auth";
-import { getSystemSettings } from "@/lib/settings";
+import { getStorageLimitInfo } from "@/lib/quota";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,10 +14,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const settings = await getSystemSettings();
+    const { storageLimit, customStorageLimit } = await getStorageLimitInfo(
+      user.id,
+    );
 
     return NextResponse.json(
-      { ...user, storageLimit: settings.storageLimit },
+      { ...user, storageLimit, customStorageLimit },
       { status: 200 }
     );
   } catch (error) {

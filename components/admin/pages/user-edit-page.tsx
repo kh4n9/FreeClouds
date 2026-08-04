@@ -15,6 +15,7 @@ import {
   CheckCircle,
   UserCheck,
   UserX,
+  HardDrive,
 } from "lucide-react";
 import Link from "next/link";
 import { Lang, getDict } from "../i18n";
@@ -28,6 +29,7 @@ interface UserDetail {
   isActive: boolean;
   totalFilesUploaded: number;
   totalStorageUsed: number;
+  storageLimit: number | null;
   createdAt: string;
   lastLoginAt?: string;
 }
@@ -39,6 +41,7 @@ interface EditForm {
   isActive: boolean;
   password: string;
   confirmPassword: string;
+  storageLimit: string;
 }
 
 interface FormError {
@@ -65,6 +68,7 @@ export default function AdminUserEditPage({
     isActive: true,
     password: "",
     confirmPassword: "",
+    storageLimit: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -89,6 +93,10 @@ export default function AdminUserEditPage({
           isActive: userData.isActive,
           password: "",
           confirmPassword: "",
+          storageLimit:
+            userData.storageLimit && userData.storageLimit > 0
+              ? String(userData.storageLimit / (1024 * 1024 * 1024))
+              : "",
         });
         setError(null);
       } else if (response.status === 404) {
@@ -171,7 +179,7 @@ export default function AdminUserEditPage({
     setError(null);
 
     try {
-      const updateData: Record<string, string | boolean> = {
+      const updateData: Record<string, string | boolean | number | null> = {
         name: form.name.trim(),
         email: form.email.toLowerCase().trim(),
         role: form.role,
@@ -180,6 +188,23 @@ export default function AdminUserEditPage({
 
       if (form.password) {
         updateData.password = form.password;
+      }
+
+      if (form.storageLimit.trim() === "") {
+        updateData.storageLimit = null;
+      } else {
+        const gb = parseFloat(form.storageLimit);
+        if (isNaN(gb) || gb <= 0) {
+          setErrors([
+            {
+              field: "storageLimit",
+              message: t.userEdit.storageLimitHint,
+            },
+          ]);
+          setSaving(false);
+          return;
+        }
+        updateData.storageLimit = Math.floor(gb * 1024 * 1024 * 1024);
       }
 
       const response = await fetch(`/api/admin/users/${userId}`, {
@@ -509,6 +534,44 @@ export default function AdminUserEditPage({
                       )}
                     </label>
                   </div>
+                </div>
+
+                {/* Storage Limit Field */}
+                <div>
+                  <label
+                    htmlFor="storageLimit"
+                    className="block text-sm font-medium text-slate-200 mb-2"
+                  >
+                    {t.userEdit.storageLimit}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <HardDrive className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="storageLimit"
+                      name="storageLimit"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={form.storageLimit}
+                      onChange={handleInputChange}
+                      className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        getFieldError("storageLimit")
+                          ? "border-red-500/50 text-red-900 placeholder-red-300"
+                          : "border-slate-600/50"
+                      }`}
+                      placeholder={t.userEdit.storageLimitPlaceholder}
+                    />
+                  </div>
+                  {getFieldError("storageLimit") && (
+                    <p className="mt-1 text-sm text-red-400">
+                      {getFieldError("storageLimit")}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-slate-500">
+                    {t.userEdit.storageLimitHint}
+                  </p>
                 </div>
 
                 {/* Password Section */}

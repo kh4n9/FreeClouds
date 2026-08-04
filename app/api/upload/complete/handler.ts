@@ -4,8 +4,8 @@ import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import { requireAuth, AuthError, createAuthResponse, validateOrigin, createCsrfError } from "@/lib/auth";
 import { telegramAPI, isAllowedFileType, validateFileName, sanitizeFileName } from "@/lib/telegram";
-import { getSystemSettings } from "@/lib/settings";
 import { logAction } from "@/lib/activity-log";
+import { getEffectiveStorageLimit } from "@/lib/quota";
 
 export async function handleComplete(request: NextRequest) {
   try {
@@ -69,8 +69,8 @@ export async function handleComplete(request: NextRequest) {
 
     // Check storage limit
     const userStats = await File.getStorageUsage(user.id);
-    const settings = await getSystemSettings();
-    if ((userStats.totalSize || 0) + totalSize > settings.storageLimit) {
+    const storageLimit = await getEffectiveStorageLimit(user.id);
+    if ((userStats.totalSize || 0) + totalSize > storageLimit) {
       // Clean up orphaned chunks so they don't count against the user
       Promise.all(
         chunks.map((chunk) => {
