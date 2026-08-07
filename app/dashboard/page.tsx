@@ -7,11 +7,13 @@ import {
   HardDrive, FileIcon, FolderIcon, LogOut, Settings, Grid3X3,
   List, ChevronLeft, ChevronRight, ChevronDown, Sidebar, Trash2, FileText,
   RotateCcw, Clock, Star, Sun, Moon, FolderOpen, Download, Copy,
+  ScanLine,
   type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 const DynamicFileGrid = dynamic(() => import("@/components/FileGrid"), { ssr: false });
 const DynamicUploadDropzone = dynamic(() => import("@/components/UploadDropzone"), { ssr: false });
+const DynamicDocumentScanner = dynamic(() => import("@/components/scanner/DocumentScanner"), { ssr: false });
 const DynamicUserProfile = dynamic(() => import("@/components/UserProfile"), { ssr: false });
 const DynamicShareModal = dynamic(() => import("@/components/ShareModal"), { ssr: false });
 const DynamicMoveModal = dynamic(() => import("@/components/MoveModal"), { ssr: false });
@@ -287,6 +289,10 @@ export default function DashboardPage() {
   const [trashLoading, setTrashLoading] = useState(false);
   const [emptyingTrash, setEmptyingTrash] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [scannerState, setScannerState] = useState<{
+    open: boolean;
+    files: FileData[];
+  }>({ open: false, files: [] });
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [shareFile, setShareFile] = useState<FileData | null>(null);
@@ -502,6 +508,16 @@ export default function DashboardPage() {
     await loadFiles(selectedFolderId, debouncedSearch, false);
     setShowUpload(false);
   };
+
+  const handleScanDone = useCallback((saved: { images: number; pdf: boolean; names: string[] }) => {
+    fileCache.current.clear();
+    void loadFiles(selectedFolderId, debouncedSearch, false);
+    const parts: string[] = [];
+    if (saved.images > 0) parts.push(`${saved.images} image(s)`);
+    if (saved.pdf) parts.push("1 PDF");
+    setToast({ type: "success", message: `Saved: ${parts.join(" + ")}` });
+    setTimeout(() => setToast(null), 3000);
+  }, [selectedFolderId, debouncedSearch]);
 
   const handleDeleteFile = (fileId: string) => {
     const file = files.find((f) => f.id === fileId);
@@ -745,6 +761,10 @@ export default function DashboardPage() {
               </div>
               <div className="p-3 border-b border-slate-800/50">
                 <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => { setScannerState({ open: true, files: [] }); setSidebarOpen(false); }}
+                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-gradient-to-r from-sky-500/10 to-cyan-500/10 border border-sky-500/20 text-sky-300 hover:from-sky-500/20 hover:to-cyan-500/20 hover:border-sky-500/30 transition-all text-sm font-medium min-h-[44px]">
+                    <ScanLine className="w-4 h-4" /> Scan
+                  </button>
                   <button onClick={() => { setShowUpload(true); setSidebarOpen(false); }}
                     className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 text-blue-300 hover:from-sky-500/20 hover:to-cyan-500/20 hover:border-blue-500/30 transition-all text-sm font-medium min-h-[44px]">
                     <Upload className="w-4 h-4" /> Upload
@@ -817,6 +837,10 @@ export default function DashboardPage() {
                 <span className="text-sm font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
               </div>
               <div className="w-8 border-t border-slate-700/50" />
+              <button onClick={() => setScannerState({ open: true, files: [] })}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-sky-300 hover:bg-slate-800/50 transition-all" title="Scan Documents">
+                <ScanLine className="w-4 h-4" />
+              </button>
               <button onClick={() => setShowUpload(true)}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-blue-300 hover:bg-slate-800/50 transition-all" title="Upload">
                 <Upload className="w-4 h-4" />
@@ -908,6 +932,10 @@ export default function DashboardPage() {
                     className="btn-secondary px-3 py-2 rounded-xl text-sm flex items-center gap-2 border-slate-700/50 hover:border-slate-600/50">
                     <RefreshCw className={`w-4 h-4 ${filesLoading || foldersLoading ? "animate-spin" : ""}`} />
                     <span className="hidden sm:inline">Refresh</span>
+                  </button>
+                  <button onClick={() => setScannerState({ open: true, files: [] })}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-sky-400/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 transition-colors">
+                    <ScanLine className="w-4 h-4" /> <span className="hidden sm:inline">Scan</span>
                   </button>
                   <button onClick={() => setShowUpload(true)}
                     className="btn-primary px-4 py-2 rounded-xl text-sm flex items-center gap-2">
@@ -1170,6 +1198,7 @@ export default function DashboardPage() {
                         onShare={handleShare} onMove={handleMove} onVersions={handleVersions}
                         onSearch={setSearchQuery} searchQuery={searchQuery}
                         onToggleFavorite={handleToggleFavorite} onOpenFolder={handleOpenFolder}
+                        onScan={(selected) => setScannerState({ open: true, files: selected })}
                         viewMode={viewMode} onViewModeChange={setViewMode} />
 
                       {files.length > 0 && filesPage < filesTotalPages && (
@@ -1220,6 +1249,16 @@ export default function DashboardPage() {
       <Modal show={showUpload} onClose={() => setShowUpload(false)} title="Upload Files">
         <DynamicUploadDropzone onUpload={(files) => handleUpload(files, selectedFolderId)} folderId={selectedFolderId} />
       </Modal>
+
+      {scannerState.open && (
+        <DynamicDocumentScanner
+          key={`scanner-${scannerState.open}-${scannerState.files.length}`}
+          files={scannerState.files}
+          folderId={selectedFolderId}
+          onClose={() => setScannerState({ open: false, files: [] })}
+          onDone={handleScanDone}
+        />
+      )}
       <Modal show={showUserProfile} onClose={() => setShowUserProfile(false)} title="User Profile">
         <Suspense fallback={<div className="text-center py-4 text-slate-400">Loading...</div>}>
           <DynamicUserProfile isOpen={showUserProfile} onClose={() => setShowUserProfile(false)} user={user!} onUserUpdate={handleUserUpdate} />

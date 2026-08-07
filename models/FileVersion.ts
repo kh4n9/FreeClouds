@@ -15,7 +15,7 @@ export interface IFileVersion extends Document {
   createdAt: Date;
 }
 
-export interface IFileVersionModel extends mongoose.Model<IFileVersion> {}
+export type IFileVersionModel = mongoose.Model<IFileVersion>;
 
 const fileVersionSchema = new Schema<IFileVersion>({
   file: {

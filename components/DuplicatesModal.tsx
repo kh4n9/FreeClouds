@@ -61,6 +61,7 @@ export default function DuplicatesModal({ onClose, onToast, onChanged, onOpenFol
   }, [onToast, t]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDuplicates();
   }, [loadDuplicates]);
 

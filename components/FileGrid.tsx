@@ -36,6 +36,7 @@ import {
   ArrowDown,
   FolderOpen,
   History,
+  ScanLine,
 } from "lucide-react";
 import {
   getFileTypeInfo,
@@ -80,6 +81,7 @@ interface FileGridProps {
   onToggleFavorite?: (file: FileData) => void;
   onOpenFolder?: (folderId: string | null) => void;
   onVersions?: (file: FileData) => void;
+  onScan?: (files: FileData[]) => void;
 }
 
 interface FileItemProps {
@@ -486,6 +488,7 @@ export default function FileGrid({
   onToggleFavorite,
   onOpenFolder,
   onVersions,
+  onScan,
 }: FileGridProps) {
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
@@ -954,6 +957,26 @@ export default function FileGrid({
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const selected = files.filter(
+                      (f) =>
+                        selectedFiles.includes(f.id) &&
+                        isImageFile(f.name, f.mime),
+                    );
+                    if (selected.length > 0 && onScan) onScan(selected);
+                  }}
+                  disabled={selectedFiles.length === 0}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                    selectedFiles.length > 0 && onScan
+                      ? "bg-sky-600 text-white hover:bg-sky-700"
+                      : "bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700"
+                  }`}
+                  title="Scan selected images"
+                >
+                  <ScanLine className="w-4 h-4" />
+                  Scan
+                </button>
                 <button
                   onClick={handleBulkDownload}
                   disabled={selectedFiles.length === 0}

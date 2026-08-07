@@ -184,6 +184,19 @@ Free Clouds is a comprehensive cloud storage solution built with Next.js 14, fea
 
 ## 🛡️ Security Features
 
+### Document Scanner
+- **📷 Paper Scanning** - Convert photos of paper documents into clean JPG images or a multi-page PDF
+- **🧠 Auto Edge Detection** - OpenCV.js automatically locates the paper edges in a photo
+- **✂️ Perspective Correction** - Straightens tilted/skewed document photos
+- **🎛️ Manual Corner Adjustment** - Drag the 4 corners by hand when auto-detect misses
+- **✨ Enhancement Filters** - Magic color (auto-levels), grayscale, and black & white (Otsu threshold) modes
+- **🔄 Rotation** - Rotate scans by 90° increments
+- **🖼️ Single / Batch Input** - Scan one photo or many at once (cloud files or newly added)
+- **📄 Formats** - Save as separate JPG images, a single multi-page PDF, or both
+- **⚙️ Resolution Control** - 150 / 200 / 300 DPI output
+- **☁️ Saves to Cloud** - Results are stored as new files in your current folder (supports chunked upload for large PDFs)
+- **🔒 Privacy** - All processing happens in the browser; images never leave your device except for the final saved result
+
 ### File Security
 - **🔍 MIME Type Validation** - Accurate file type detection
 - **🛡️ Malware Scanning** - Real-time threat detection

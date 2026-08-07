@@ -42,7 +42,7 @@ export default function LanguageSwitcher({
     () => languages[0]!,
   );
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
 
   useEffect(() => {
     // Detect current language from pathname
@@ -248,7 +248,7 @@ export default function LanguageSwitcher({
 
 // Hook for getting current language
 export function useCurrentLanguage() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const [currentLang, setCurrentLang] = useState<string>("en");
 
   useEffect(() => {

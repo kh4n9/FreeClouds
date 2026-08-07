@@ -64,6 +64,7 @@ export default function VersionHistoryModal({
   }, [fileId, onToast, t]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadVersions();
   }, [loadVersions]);
 
