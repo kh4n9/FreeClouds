@@ -16,6 +16,7 @@ import {
   RATE_LIMITS,
 } from "@/lib/ratelimit";
 import { logAction } from "@/lib/activity-log";
+import { getRequestBaseUrl } from "@/lib/url";
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
       {
         enabled: Boolean(userDoc.webdavTokenHash),
         createdAt: userDoc.webdavTokenCreatedAt || null,
-        webdavUrl: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/webdav`,
+        webdavUrl: `${getRequestBaseUrl(request)}/webdav`,
       },
       { status: 200 },
     );
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       request,
     });
 
-    return NextResponse.json({ token, webdavUrl: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/webdav` }, { status: 201 });
+    return NextResponse.json({ token, webdavUrl: `${getRequestBaseUrl(request)}/webdav` }, { status: 201 });
   } catch (error) {
     console.error("Create WebDAV token error:", error);
     if (error instanceof AuthError) return createAuthResponse(error);
