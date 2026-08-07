@@ -3,14 +3,53 @@ import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const method = request.method.toUpperCase();
+
+  const WEBDAV_METHODS = ["PROPFIND", "PROPPATCH", "MKCOL", "COPY", "MOVE", "LOCK", "UNLOCK", "PUT", "DELETE"];
 
   // Rewrite WebDAV requests to the pages API handler (which supports
   // non-standard methods like PROPFIND/MKCOL/COPY/MOVE that app router
   // route handlers reject with 400).
-  if (pathname.startsWith("/webdav")) {
-    let target = pathname === "/webdav" ? "/api/webdav" : `/api/webdav${pathname.slice("/webdav".length)}`;
+  //
+  // Clients mount either at /webdav or at the base origin. For base-origin
+  // mounts, traversal produces paths like /folder, /folder/file.txt — route
+  // any of those that use a DAV method to the handler. GET/HEAD/OPTIONS
+  // (and POST) keep serving the site, so ordinary pages and CORS preflights
+  // are untouched; OPTIONS on "/" is additionally proxied below as a
+  // discovery convenience for clients that probe the base origin.
+  if (
+    !pathname.startsWith("/webdav") &&
+    !pathname.startsWith("/api") &&
+    !pathname.startsWith("/_next") &&
+    WEBDAV_METHODS.includes(method)
+  ) {
+    let target = pathname === "/" ? "/api/webdav" : `/api/webdav${pathname}`;
     // Normalize a trailing slash: pages router redirects /api/webdav/ with
     // a 308, but WebDAV clients frequently request collection roots with one.
+    if (target.length > "/api/webdav".length && target.endsWith("/")) {
+      target = target.slice(0, -1);
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = target;
+    return NextResponse.rewrite(url);
+  }
+
+  // Some WebDAV clients (e.g. Windows "Map network drive", Davx5, rclone)
+  // probe the base origin with OPTIONS to detect DAV support before using
+  // /webdav. Route OPTIONS on "/" to the WebDAV handler so discovery works;
+  // keep genuine endpoints hitting the site normally.
+  if (pathname === "/" && method === "OPTIONS") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/api/webdav";
+    return NextResponse.rewrite(url);
+  }
+
+  // /webdav-prefixed paths: route every method (GET included, so files can
+  // be downloaded straight from the collection) to the handler.
+  if (pathname.startsWith("/webdav")) {
+    let target = pathname === "/webdav" ? "/api/webdav" : `/api/webdav${pathname.slice("/webdav".length)}`;
+    // Normalize a trailing slash: WebDAV clients frequently request
+    // collection roots with one.
     if (target.length > "/api/webdav".length && target.endsWith("/")) {
       target = target.slice(0, -1);
     }

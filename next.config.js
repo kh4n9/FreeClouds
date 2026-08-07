@@ -6,6 +6,13 @@ let nextConfig = {
   // it and normalize trailing slashes in proxy.ts instead (WebDAV paths keep
   // theirs, everything else gets rewritten to the canonical no-slash form).
   skipTrailingSlashRedirect: true,
+  // The Turbopack file-system cache (SST/RocksDB) fails on Windows/WSL paths
+  // ("Unable to write SST file", "Compaction failed", lock contention). Dev
+  // recompilation stays fast with an in-memory cache, so keep it off to
+  // avoid the noisy persistence errors and stale-lock lockups on restart.
+  experimental: {
+    turbopackFileSystemCacheForDev: false,
+  },
   images: {
     remotePatterns: [
       {

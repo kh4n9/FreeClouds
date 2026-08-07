@@ -58,9 +58,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Generate a strong random token (once; never shown again afterwards)
+    // Generate a strong random token (once; never shown again afterwards).
+    // bcrypt cost is lower than for passwords: the token is a 192-bit random
+    // secret, so it cannot be brute-forced; cost 7 keeps creation snappy.
     const token = crypto.randomBytes(24).toString("base64url");
-    userDoc.webdavTokenHash = await bcrypt.hash(token, 10);
+    userDoc.webdavTokenHash = await bcrypt.hash(token, 7);
     userDoc.webdavTokenCreatedAt = new Date();
     await userDoc.save();
 
