@@ -192,115 +192,115 @@ export default function RegisterPage() {
     <AuthShell>
       <div className="text-center mb-8">
         <div className="flex justify-center mb-4">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <div className="w-14 h-14 p-3 rounded-2xl bg-accent shadow-[0_12px_32px_-12px_rgba(37,99,235,0.5)]">
             <Cloud className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">Tạo Tài Khoản</h1>
-        <p className="text-slate-400">Tham gia Free Clouds và lưu trữ file an toàn ngay hôm nay</p>
+        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-2">Tạo Tài Khoản</h1>
+        <p className="text-sub">Tham gia Free Clouds và lưu trữ file an toàn ngay hôm nay</p>
       </div>
 
       <div className="modal-content p-8">
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && !error.field && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-300">{error.message}</p>
+            <div className="p-4 rounded-xl bg-error/10 border border-error/25 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-error">{error.message}</p>
             </div>
           )}
 
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
+            <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
               Họ và Tên
             </label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
               <input id="name" name="name" type="text" autoComplete="name" required
                 value={form.name} onChange={handleInputChange}
                 className={`input-modern w-full pl-10 pr-10 py-3 rounded-xl ${
                   error?.field === "name"
-                    ? "border-red-500/50 bg-red-500/5"
+                    ? "border-error/50 bg-error/5"
                     : validation.name && form.name
-                    ? "border-emerald-500/50"
+                    ? "border-success/50"
                     : ""
                 }`}
                 placeholder="Nhập họ và tên của bạn" disabled={loading} />
               {validation.name && form.name && (
-                <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
+                <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-success" />
               )}
             </div>
             {error?.field === "name" && (
-              <p className="mt-1 text-sm text-red-400">{error.message}</p>
+              <p className="mt-1.5 text-sm text-error">{error.message}</p>
             )}
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
               Địa chỉ Email
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
               <input id="email" name="email" type="email" autoComplete="email" required
                 value={form.email} onChange={handleInputChange}
                 className={`input-modern w-full pl-10 pr-10 py-3 rounded-xl ${
                   error?.field === "email"
-                    ? "border-red-500/50 bg-red-500/5"
+                    ? "border-error/50 bg-error/5"
                     : validation.email && form.email
-                    ? "border-emerald-500/50"
+                    ? "border-success/50"
                     : ""
                 }`}
                 placeholder="Nhập địa chỉ email của bạn" disabled={loading} />
               {validation.email && form.email && (
-                <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
+                <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-success" />
               )}
             </div>
             {error?.field === "email" && (
-              <p className="mt-1 text-sm text-red-400">{error.message}</p>
+              <p className="mt-1.5 text-sm text-error">{error.message}</p>
             )}
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
               Mật khẩu
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
               <input id="password" name="password" type={showPassword ? "text" : "password"}
                 autoComplete="new-password" required value={form.password} onChange={handleInputChange}
                 className={`input-modern w-full pl-10 pr-12 py-3 rounded-xl ${
                   error?.field === "password"
-                    ? "border-red-500/50 bg-red-500/5"
+                    ? "border-error/50 bg-error/5"
                     : validation.password && form.password
-                    ? "border-emerald-500/50"
+                    ? "border-success/50"
                     : ""
                 }`}
                 placeholder="Tạo mật khẩu" disabled={loading} />
               <button type="button" onClick={() => togglePasswordVisibility('password')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 
             {form.password && (
               <div className="mt-2">
-                <div className="flex justify-between text-xs text-slate-400 mb-1">
+                <div className="flex justify-between text-xs text-sub mb-1">
                   <span>Độ mạnh mật khẩu</span>
                   <span className={`font-medium ${
-                    passwordStrength.strength === 1 ? 'text-red-400' :
-                    passwordStrength.strength === 2 ? 'text-amber-400' :
-                    passwordStrength.strength === 3 ? 'text-sky-400' :
-                    passwordStrength.strength === 4 ? 'text-emerald-400' : ''
+                    passwordStrength.strength === 1 ? 'text-error' :
+                    passwordStrength.strength === 2 ? 'text-warning' :
+                    passwordStrength.strength === 3 ? 'text-accent' :
+                    passwordStrength.strength === 4 ? 'text-success' : ''
                   }`}>
                     {passwordStrength.label}
                   </span>
                 </div>
-                <div className="w-full bg-slate-800 rounded-full h-1">
+                <div className="w-full bg-line rounded-full h-1">
                   <div
                     className={`h-1 rounded-full transition-all duration-300 ${
-                      passwordStrength.strength === 1 ? 'bg-red-500 w-1/4' :
-                      passwordStrength.strength === 2 ? 'bg-amber-500 w-2/4' :
-                      passwordStrength.strength === 3 ? 'bg-sky-500 w-3/4' :
-                      passwordStrength.strength === 4 ? 'bg-emerald-500 w-full' : 'w-0'
+                      passwordStrength.strength === 1 ? 'bg-error w-1/4' :
+                      passwordStrength.strength === 2 ? 'bg-warning w-2/4' :
+                      passwordStrength.strength === 3 ? 'bg-accent w-3/4' :
+                      passwordStrength.strength === 4 ? 'bg-success w-full' : 'w-0'
                     }`}
                   />
                 </div>
@@ -308,36 +308,36 @@ export default function RegisterPage() {
             )}
 
             {error?.field === "password" && (
-              <p className="mt-1 text-sm text-red-400">{error.message}</p>
+              <p className="mt-1.5 text-sm text-error">{error.message}</p>
             )}
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-2">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-2">
               Xác nhận mật khẩu
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
               <input id="confirmPassword" name="confirmPassword" type={showConfirmPassword ? "text" : "password"}
                 autoComplete="new-password" required value={form.confirmPassword} onChange={handleInputChange}
                 className={`input-modern w-full pl-10 pr-12 py-3 rounded-xl ${
                   error?.field === "confirmPassword"
-                    ? "border-red-500/50 bg-red-500/5"
+                    ? "border-error/50 bg-error/5"
                     : validation.confirmPassword && form.confirmPassword
-                    ? "border-emerald-500/50"
+                    ? "border-success/50"
                     : ""
                 }`}
                 placeholder="Xác nhận mật khẩu của bạn" disabled={loading} />
               <button type="button" onClick={() => togglePasswordVisibility('confirmPassword')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
               {validation.confirmPassword && form.confirmPassword && (
-                <CheckCircle className="absolute right-12 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
+                <CheckCircle className="absolute right-12 top-1/2 -translate-y-1/2 w-5 h-5 text-success" />
               )}
             </div>
             {error?.field === "confirmPassword" && (
-              <p className="mt-1 text-sm text-red-400">{error.message}</p>
+              <p className="mt-1.5 text-sm text-error">{error.message}</p>
             )}
           </div>
 
@@ -356,9 +356,9 @@ export default function RegisterPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-sub">
             Đã có tài khoản?{" "}
-            <Link href="/vi/login" className="text-sky-400 hover:text-sky-300 font-medium">
+            <Link href="/vi/login" className="text-accent hover:text-accent-hover font-medium">
               Đăng nhập
             </Link>
           </p>
@@ -366,7 +366,7 @@ export default function RegisterPage() {
       </div>
 
       <div className="text-center mt-6">
-        <Link href="/vi" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
+        <Link href="/vi" className="text-sm text-muted hover:text-foreground transition-colors">
           ← Về trang chủ
         </Link>
       </div>

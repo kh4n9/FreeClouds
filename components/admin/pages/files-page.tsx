@@ -245,20 +245,20 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
   const hasActiveFilters = searchTerm || userFilter || includeDeleted;
   const stats = [
     { title: t.files.totalFiles, value: totals.totalFiles.toLocaleString(), icon: <FileText className="h-6 w-6 text-gray-400" /> },
-    { title: t.files.selectedFiles, value: selectedFiles.length.toLocaleString(), icon: <HardDrive className="h-6 w-6 text-blue-400" /> },
+    { title: t.files.selectedFiles, value: selectedFiles.length.toLocaleString(), icon: <HardDrive className="h-6 w-6 text-accent" /> },
     { title: t.files.activeFiles, value: files.filter((f) => !f.isDeleted).length.toLocaleString(), icon: <Users className="h-6 w-6 text-green-400" /> },
-    { title: t.files.deletedFiles, value: files.filter((f) => f.isDeleted).length.toLocaleString(), icon: <Trash2 className="h-6 w-6 text-red-400" /> },
+    { title: t.files.deletedFiles, value: files.filter((f) => f.isDeleted).length.toLocaleString(), icon: <Trash2 className="h-6 w-6 text-error" /> },
   ];
 
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title={t.files.title}
-        subtitle={<span className="mt-2 text-slate-300">{t.files.subtitle}</span>}
+        subtitle={<span className="mt-2 text-foreground">{t.files.subtitle}</span>}
         actions={
           <button
             onClick={() => fetchFiles()}
-            className="inline-flex items-center px-4 py-2 border border-slate-600/50 rounded-md shadow-sm text-sm font-medium text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-line-hover rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-card-hover/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             {t.files.refresh}
@@ -269,16 +269,16 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <div key={stat.title} className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
+          <div key={stat.title} className="bg-card overflow-hidden shadow rounded-lg">
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">{stat.icon}</div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-slate-400 truncate">
+                    <dt className="text-sm font-medium text-muted truncate">
                       {stat.title}
                     </dt>
-                    <dd className="text-lg font-medium text-white">
+                    <dd className="text-lg font-medium text-foreground">
                       {stat.value}
                     </dd>
                   </dl>
@@ -292,7 +292,7 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
       <ErrorBanner message={error} />
 
       {/* Filters */}
-      <div className="bg-slate-800/50 shadow rounded-lg p-6">
+      <div className="bg-card shadow rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
             <SearchInput
@@ -314,9 +314,9 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
                   setIncludeDeleted(e.target.checked);
                   setPagination((prev) => ({ ...prev, currentPage: 1 }));
                 }}
-                className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                className="h-4 w-4 text-accent focus:ring-accent border-line-hover rounded"
               />
-              <span className="ml-2 text-sm text-slate-200">
+              <span className="ml-2 text-sm text-foreground">
                 {t.files.includeDeleted}
               </span>
             </label>
@@ -326,7 +326,7 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                className="inline-flex items-center px-3 py-2 border border-slate-600/50 shadow-sm text-sm leading-4 font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-3 py-2 border border-line-hover shadow-sm text-sm leading-4 font-medium rounded-md text-foreground bg-card hover:bg-card-hover/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
               >
                 <X className="h-4 w-4 mr-2" />
                 {t.files.reset}
@@ -358,10 +358,10 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
 
       {/* Bulk Actions */}
       {selectedFiles.length > 0 && (
-        <div className="bg-blue-500/10 border border-blue-200 rounded-lg p-4">
+        <div className="bg-accent/10 border border-blue-200 rounded-lg p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-sky-400 mr-2" />
+              <CheckCircle className="h-5 w-5 text-accent mr-2" />
               <span className="text-sm font-medium text-blue-800">
                 {t.files.filesSelected.replace("{n}", selectedFiles.length.toString())}
               </span>
@@ -402,18 +402,18 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
       )}
 
       {/* Files Table */}
-      <div className="bg-slate-800/50 shadow overflow-hidden sm:rounded-md">
+      <div className="bg-card shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:p-6">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-700/50">
-              <thead className="bg-slate-800/50">
+              <thead className="bg-card">
                 <tr>
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
                       checked={selectedFiles.length === files.length && files.length > 0}
                       onChange={handleSelectAll}
-                      className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                      className="h-4 w-4 text-accent focus:ring-accent border-line-hover rounded"
                     />
                   </th>
                   {[
@@ -428,7 +428,7 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
                     h.field ? (
                       <th
                         key={h.label}
-                        className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50"
+                        className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider cursor-pointer hover:bg-card-hover"
                         onClick={() => handleSort(h.field as string)}
                       >
                         {h.label}
@@ -436,7 +436,7 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
                     ) : (
                       <th
                         key={h.label}
-                        className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider"
+                        className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider"
                       >
                         {h.label}
                       </th>
@@ -444,59 +444,59 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
                   )}
                 </tr>
               </thead>
-              <tbody className="bg-slate-800/50 divide-y divide-slate-700/50">
+              <tbody className="bg-card divide-y divide-slate-700/50">
                 {loading ? (
                   <TableLoading colSpan={8} />
                 ) : files.length === 0 ? (
                   <TableEmpty colSpan={8} message={t.files.noFiles} />
                 ) : (
                   files.map((file) => (
-                    <tr key={file.id} className={file.isDeleted ? "bg-red-500/10" : "hover:bg-slate-800/30"}>
+                    <tr key={file.id} className={file.isDeleted ? "bg-error/10" : "hover:bg-card-hover/30"}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="checkbox"
                           checked={selectedFiles.includes(file.id)}
                           onChange={() => handleSelectFile(file.id)}
-                          className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                          className="h-4 w-4 text-accent focus:ring-accent border-line-hover rounded"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="text-lg mr-3">{getFileTypeIcon(file.mime)}</div>
                           <div>
-                            <div className="text-sm font-medium text-white">
+                            <div className="text-sm font-medium text-foreground">
                               {file.name}
                             </div>
-                            <div className="text-sm text-slate-400">
+                            <div className="text-sm text-muted">
                               {file.mime}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {file.formattedSize}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-white">
+                          <div className="text-sm font-medium text-foreground">
                             {file.ownerName}
                           </div>
-                          <div className="text-sm text-slate-400">
+                          <div className="text-sm text-muted">
                             {file.ownerEmail}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {file.folderName ? (
                           <div className="flex items-center">
                             <FolderOpen className="h-4 w-4 mr-2 text-blue-500" />
                             {file.folderName}
                           </div>
                         ) : (
-                          <span className="text-slate-400">{t.files.root}</span>
+                          <span className="text-muted">{t.files.root}</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {formatDate(file.createdAt, lang)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -508,7 +508,7 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
                         <div className="flex items-center space-x-2">
                           <Link
                             href={`${base}/users/${file.owner}`}
-                            className="text-sky-400 hover:text-blue-900"
+                            className="text-accent hover:text-accent"
                           >
                             <Eye className="h-4 w-4" />
                           </Link>
@@ -540,10 +540,10 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
         open={showDeleteModal}
         onCancel={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteFiles}
-        icon={<Trash2 className="h-6 w-6 text-red-400" />}
+        icon={<Trash2 className="h-6 w-6 text-error" />}
         title={deleteType === "permanent" ? t.files.permanentDeleteTitle : t.files.deleteTitle}
         message={
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted">
             {(deleteType === "permanent"
               ? t.files.deleteConfirmPermanent
               : t.files.deleteConfirmSoft
@@ -562,7 +562,7 @@ export default function AdminFilesPage({ lang }: { lang: Lang }) {
         icon={<RotateCcw className="h-6 w-6 text-green-400" />}
         title={t.files.restoreTitle}
         message={
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted">
             {t.files.restoreConfirm.replace("{n}", selectedFiles.length.toString())}
           </p>
         }

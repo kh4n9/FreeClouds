@@ -45,7 +45,7 @@ const ACTION_COLORS: Record<string, string> = {
   "register": "bg-green-100 text-green-800",
   "register.blocked": "bg-red-100 text-red-800",
   "file.upload": "bg-green-100 text-green-800",
-  "trash.empty": "bg-gray-100 text-gray-800",
+  "trash.empty": "bg-card-hover text-gray-800",
   "admin.user.create": "bg-sky-100 text-sky-800",
   "admin.user.update": "bg-sky-100 text-sky-800",
   "admin.user.delete": "bg-red-100 text-red-800",
@@ -59,7 +59,7 @@ const ACTION_COLORS: Record<string, string> = {
 function actionColor(action: string): string {
   return (
     ACTION_COLORS[action] ||
-    "bg-slate-100 text-slate-700"
+    "bg-card-hover text-sub"
   );
 }
 
@@ -150,12 +150,12 @@ export default function AdminLogsPage({ lang }: { lang: Lang }) {
       <PageHeader
         title={t.logs.title}
         subtitle={
-          <span className="mt-2 text-slate-300">{t.logs.subtitle}</span>
+          <span className="mt-2 text-foreground">{t.logs.subtitle}</span>
         }
         actions={
           <button
             onClick={() => fetchLogs()}
-            className="inline-flex items-center px-4 py-2 border border-slate-600/50 rounded-md shadow-sm text-sm font-medium text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-line-hover rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-card-hover/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             {t.logs.refresh}
@@ -166,7 +166,7 @@ export default function AdminLogsPage({ lang }: { lang: Lang }) {
       <ErrorBanner message={error} />
 
       {/* Filters */}
-      <div className="bg-slate-800/50 shadow rounded-lg p-6">
+      <div className="bg-card shadow rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -180,7 +180,7 @@ export default function AdminLogsPage({ lang }: { lang: Lang }) {
                 setPagination((prev) => ({ ...prev, currentPage: 1 }));
               }}
               placeholder={t.logs.searchPlaceholder}
-              className="block w-full pl-10 pr-3 py-2 border border-slate-600/50 rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="block w-full pl-10 pr-3 py-2 border border-line-hover rounded-md leading-5 bg-card placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             />
           </div>
 
@@ -191,7 +191,7 @@ export default function AdminLogsPage({ lang }: { lang: Lang }) {
                 setActionFilter(e.target.value);
                 setPagination((prev) => ({ ...prev, currentPage: 1 }));
               }}
-              className="block w-full px-3 py-2 border border-slate-600/50 rounded-md bg-slate-800/80 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="block w-full px-3 py-2 border border-line-hover rounded-md bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             >
               <option value="">{t.logs.allActions}</option>
               {allActions.map((action) => (
@@ -207,7 +207,7 @@ export default function AdminLogsPage({ lang }: { lang: Lang }) {
           <div className="mt-4 flex justify-end">
             <button
               onClick={resetFilters}
-              className="inline-flex items-center px-3 py-2 border border-slate-600/50 shadow-sm text-sm leading-4 font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-3 py-2 border border-line-hover shadow-sm text-sm leading-4 font-medium rounded-md text-foreground bg-card hover:bg-card-hover/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
             >
               <X className="h-4 w-4 mr-2" />
               {t.common.resetFilters}
@@ -217,40 +217,40 @@ export default function AdminLogsPage({ lang }: { lang: Lang }) {
       </div>
 
       {/* Logs Table */}
-      <div className="bg-slate-800/50 shadow overflow-hidden sm:rounded-md">
+      <div className="bg-card shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:p-6">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-700/50">
-              <thead className="bg-slate-800/50">
+              <thead className="bg-card">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.logs.actionCol}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.logs.userCol}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.logs.entityCol}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.logs.ipCol}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.logs.timeCol}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.common.actions}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-slate-800/50 divide-y divide-slate-700/50">
+              <tbody className="bg-card divide-y divide-slate-700/50">
                 {loading ? (
                   <TableLoading colSpan={6} />
                 ) : logs.length === 0 ? (
                   <TableEmpty colSpan={6} message={t.logs.noLogs} />
                 ) : (
                   logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-800/30">
+                    <tr key={log.id} className="hover:bg-card-hover/30">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${actionColor(log.action)}`}
@@ -259,30 +259,30 @@ export default function AdminLogsPage({ lang }: { lang: Lang }) {
                           {log.action}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {log.email || (
-                          <span className="text-slate-500">
+                          <span className="text-muted">
                             {t.common.unknown}
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {log.entityType ? (
-                          <span className="text-slate-400">{log.entityType}</span>
+                          <span className="text-muted">{log.entityType}</span>
                         ) : (
-                          <span className="text-slate-600">—</span>
+                          <span className="text-muted">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                         {log.ip || "—"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {formatDate(log.createdAt, lang)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => setSelectedLog(log)}
-                          className="inline-flex items-center text-sky-400 hover:text-blue-600"
+                          className="inline-flex items-center text-accent hover:text-accent"
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           {t.logs.details}
@@ -328,26 +328,26 @@ export default function AdminLogsPage({ lang }: { lang: Lang }) {
             </div>
             <dl className="mt-6 space-y-3 text-sm">
               <div className="flex justify-between gap-4">
-                <dt className="text-slate-400">{t.logs.userCol}</dt>
-                <dd className="text-white text-right">
+                <dt className="text-muted">{t.logs.userCol}</dt>
+                <dd className="text-foreground text-right">
                   {selectedLog.email || t.common.unknown}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-slate-400">{t.logs.entityCol}</dt>
-                <dd className="text-white text-right break-all">
+                <dt className="text-muted">{t.logs.entityCol}</dt>
+                <dd className="text-foreground text-right break-all">
                   {selectedLog.entityId || "—"}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-slate-400">{t.logs.ipCol}</dt>
-                <dd className="text-white text-right">
+                <dt className="text-muted">{t.logs.ipCol}</dt>
+                <dd className="text-foreground text-right">
                   {selectedLog.ip || "—"}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-slate-400">{t.logs.timeCol}</dt>
-                <dd className="text-white text-right">
+                <dt className="text-muted">{t.logs.timeCol}</dt>
+                <dd className="text-foreground text-right">
                   {formatDate(selectedLog.createdAt, lang)}
                 </dd>
               </div>
@@ -355,10 +355,10 @@ export default function AdminLogsPage({ lang }: { lang: Lang }) {
             {selectedLog.metadata &&
               Object.keys(selectedLog.metadata).length > 0 && (
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium text-slate-300 mb-2">
+                  <h4 className="text-sm font-medium text-foreground mb-2">
                     {t.logs.metadataEmpty}
                   </h4>
-                  <pre className="p-3 bg-slate-900/60 rounded-md text-xs text-slate-300 overflow-x-auto">
+                  <pre className="p-3 bg-card rounded-md text-xs text-foreground overflow-x-auto">
                     {JSON.stringify(selectedLog.metadata, null, 2)}
                   </pre>
                 </div>

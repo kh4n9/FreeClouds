@@ -104,8 +104,8 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
   if (loading) {
     return (
       <div className="min-h-screen app-bg flex items-center justify-center">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mx-auto mb-4 animate-pulse">
-          <Cloud className="w-7 h-7 text-white" />
+        <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mx-auto mb-4 animate-pulse">
+          <Cloud className="w-7 h-7 text-foreground" />
         </div>
       </div>
     );
@@ -115,13 +115,13 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
     return (
       <div className="min-h-screen app-bg flex items-center justify-center p-4">
         <div className="modal-content p-8 max-w-md w-full text-center">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
-            <Bell className="w-6 h-6 text-amber-400" />
+          <div className="w-12 h-12 rounded-xl bg-warning/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+            <Bell className="w-6 h-6 text-warning" />
           </div>
-          <h2 className="text-lg font-semibold text-white mb-2">
+          <h2 className="text-lg font-semibold text-foreground mb-2">
             {t.nav.brand}
           </h2>
-          <p className="text-sm text-slate-400 mb-6">{t.common.authError}</p>
+          <p className="text-sm text-muted mb-6">{t.common.authError}</p>
           <button
             onClick={() => {
               setLoading(true);
@@ -151,21 +151,21 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-slate-900/80 border-r border-slate-800 transform transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} flex flex-col`}
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card border-r border-line transform transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} flex flex-col`}
       >
-        <div className="p-5 border-b border-slate-800">
+        <div className="p-5 border-b border-line">
           <div className="flex items-center justify-between">
             <Link href={base} className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center transition-transform group-hover:scale-110">
-                <Shield className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center transition-transform group-hover:scale-110">
+                <Shield className="w-5 h-5 text-foreground" />
               </div>
-              <span className="text-lg font-bold text-white">
+              <span className="text-lg font-bold text-foreground">
                 {t.nav.brand}
               </span>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-slate-400 hover:text-white"
+              className="lg:hidden text-muted hover:text-foreground"
             >
               <X className="w-5 h-5" />
             </button>
@@ -193,21 +193,21 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
           })}
         </nav>
 
-        <div className="p-3 border-t border-slate-800">
+        <div className="p-3 border-t border-line">
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-rose-600 flex items-center justify-center">
-              <Shield className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
+              <Shield className="w-4 h-4 text-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {user.name}
               </p>
-              <p className="text-xs text-slate-500">{t.nav.roleLabel}</p>
+              <p className="text-xs text-muted">{t.nav.roleLabel}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+            className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-sm text-error hover:bg-error/10 rounded-lg transition-all"
           >
             <LogOut className="w-4 h-4" /> {t.nav.logout}
           </button>
@@ -217,11 +217,11 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
       {/* Main */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="glass border-b border-slate-700/50 px-6 py-3">
+        <header className="glass border-b border-line px-6 py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-slate-400 hover:text-white"
+              className="lg:hidden text-muted hover:text-foreground"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -229,9 +229,9 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
               <button className="btn-ghost p-2 rounded-lg relative">
                 <Bell className="w-5 h-5" />
               </button>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                <Shield className="w-4 h-4 text-sky-400" />
-                <span className="text-xs font-medium text-blue-300">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/25">
+                <Shield className="w-4 h-4 text-accent" />
+                <span className="text-xs font-medium text-accent">
                   {t.nav.adminBadge}
                 </span>
               </div>

@@ -519,28 +519,28 @@ export default function UserProfile({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal-content w-full max-w-md max-h-[90vh] overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center">
               <Settings className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               {t("userSettings", commonTranslations.userSettings)}
             </h2>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-700/50">
+        <div className="flex border-b border-line">
           {(["profile", "password", "account", "webdav"] as const).map((tab) => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`flex-1 px-6 py-3 text-sm font-medium transition-all ${
                 activeTab === tab
-                  ? "text-sky-400 border-b-2 border-blue-500 bg-blue-500/5"
-                  : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/30"
+                  ? "text-accent border-b-2 border-blue-500 bg-blue-500/5"
+                  : "text-muted hover:text-foreground hover:bg-card-hover/30"
               }`}>
               {tab === "profile" ? t("profileTab", commonTranslations.profileTab)
                 : tab === "password" ? t("passwordTab", commonTranslations.passwordTab)
@@ -553,13 +553,13 @@ export default function UserProfile({
         {/* Content */}
         <div className="p-6 max-h-[55vh] overflow-y-auto">
           {success && (
-            <div className="mb-4 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-xl text-sm flex items-center gap-2">
+            <div className="mb-4 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 text-success rounded-xl text-sm flex items-center gap-2">
               <Shield className="w-4 h-4 flex-shrink-0" />
               {success}
             </div>
           )}
           {error && (
-            <div className="mb-4 px-4 py-3 bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl text-sm flex items-center gap-2">
+            <div className="mb-4 px-4 py-3 bg-error/10 border border-red-500/20 text-error rounded-xl text-sm flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               {error}
             </div>
@@ -573,26 +573,26 @@ export default function UserProfile({
                 <div className="flex items-start gap-3">
                   {userStats?.emailVerified ? (
                     <div className="w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-                      <BadgeCheck className="w-5 h-5 text-emerald-400" />
+                      <BadgeCheck className="w-5 h-5 text-success" />
                     </div>
                   ) : (
-                    <div className="w-10 h-10 shrink-0 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-amber-400" />
+                    <div className="w-10 h-10 shrink-0 rounded-xl bg-warning/10 border border-warning/30 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-warning" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium ${userStats?.emailVerified ? "text-emerald-300" : "text-amber-300"}`}>
+                    <p className={`text-sm font-medium ${userStats?.emailVerified ? "text-success" : "text-warning"}`}>
                       {userStats?.emailVerified
                         ? t("emailVerified", commonTranslations.emailVerified)
                         : t("emailNotVerified", commonTranslations.emailNotVerified)}
                     </p>
                     {userStats?.emailVerified ? (
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-muted mt-0.5">
                         {userStats.email}
                       </p>
                     ) : (
                       <>
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-muted mt-0.5">
                           {t("verifyEmailPrompt", commonTranslations.verifyEmailPrompt)}
                         </p>
                         {verifyStep === "code" ? (
@@ -609,19 +609,19 @@ export default function UserProfile({
                             <div className="flex items-center justify-between">
                               <button onClick={handleSendVerification}
                                 disabled={verifyCountdown > 0 || loading}
-                                className="text-sky-400 hover:text-sky-300 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                className="text-accent hover:text-accent text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                                 {verifyCountdown > 0 ? `Resend in ${verifyCountdown}s` : t("resendCode", commonTranslations.resendCode)}
                               </button>
                               <button onClick={handleVerifyEmail}
                                 disabled={verifying || verifyCode.length !== 6}
-                                className="px-4 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-blue-500 to-cyan-400 text-white disabled:opacity-50 transition-all">
+                                className="px-4 py-1.5 rounded-lg text-xs font-medium bg-accent text-white disabled:opacity-50 transition-all">
                                 {verifying ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : t("verifyEmail", commonTranslations.verifyEmail)}
                               </button>
                             </div>
                           </div>
                         ) : (
                           <button onClick={handleSendVerification} disabled={loading}
-                            className="mt-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all">
+                            className="mt-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-warning/10 border border-warning/30 text-warning hover:bg-amber-500/20 transition-all">
                             {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : t("verifyNow", commonTranslations.verifyNow)}
                           </button>
                         )}
@@ -632,9 +632,9 @@ export default function UserProfile({
               </div>
 
               {/* Avatar card */}
-              <div className="mb-5 rounded-xl border border-slate-700/50 bg-slate-800/40 p-4">
+              <div className="mb-5 rounded-xl border border-line bg-card/40 p-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shrink-0">
+                  <div className="w-16 h-16 rounded-full overflow-hidden bg-accent flex items-center justify-center shrink-0">
                     {avatarPreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
@@ -647,7 +647,7 @@ export default function UserProfile({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white">Profile picture</p>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-muted mt-0.5">
                       {avatarPreview ? "Preview of your new photo" : "PNG, JPG or WebP up to 5MB"}
                     </p>
                   </div>
@@ -655,7 +655,7 @@ export default function UserProfile({
                 <div className="mt-3 flex items-center gap-2">
                   <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleAvatarFile} className="hidden" />
                   <button type="button" onClick={() => fileInputRef.current?.click()} disabled={avatarSaving}
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-blue-500/10 border border-blue-500/30 text-sky-300 hover:bg-blue-500/20 transition-all disabled:opacity-50">
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 transition-all disabled:opacity-50">
                     <Camera className="w-3.5 h-3.5" />
                     Choose photo
                   </button>
@@ -667,14 +667,14 @@ export default function UserProfile({
                         Save
                       </button>
                       <button type="button" onClick={() => { setAvatarPreview(null); setError(null); }} disabled={avatarSaving}
-                        className="px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all disabled:opacity-50">
+                        className="px-3 py-2 rounded-lg text-xs font-medium text-muted hover:bg-card-hover hover:text-foreground transition-all disabled:opacity-50">
                         Cancel
                       </button>
                     </>
                   )}
                   {!avatarPreview && userStats?.avatar && (
                     <button type="button" onClick={handleRemoveAvatar} disabled={avatarSaving}
-                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50">
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-error hover:bg-error/10 transition-all disabled:opacity-50">
                       {avatarSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash className="w-3.5 h-3.5" />}
                       Remove
                     </button>
@@ -684,11 +684,11 @@ export default function UserProfile({
 
               <form onSubmit={handleProfileSubmit} className="space-y-5">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
                   {t("fullName", commonTranslations.fullName)}
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                   <input type="text" id="name" value={profileForm.name}
                     onChange={(e) => setProfileForm((p) => ({ ...p, name: e.target.value }))}
                     className="input-modern w-full pl-10 pr-4 py-2.5 rounded-xl"
@@ -696,11 +696,11 @@ export default function UserProfile({
                 </div>
               </div>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
                   {t("emailAddress", commonTranslations.emailAddress)}
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                   <input type="email" id="email" value={profileForm.email}
                     onChange={(e) => setProfileForm((p) => ({ ...p, email: e.target.value }))}
                     className="input-modern w-full pl-10 pr-4 py-2.5 rounded-xl"
@@ -709,40 +709,40 @@ export default function UserProfile({
               </div>
 
               {userStats && (
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-sm">
-                  <h4 className="font-medium text-slate-200 mb-3">Account Information</h4>
+                <div className="bg-card border border-line rounded-xl p-4 text-sm">
+                  <h4 className="font-medium text-foreground mb-3">Account Information</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-slate-500">Member since</p>
-                      <p className="font-medium text-slate-200">
+                      <p className="text-muted">Member since</p>
+                      <p className="font-medium text-foreground">
                         {new Date(userStats.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                     <div>
-                      <p className="text-slate-500">Last updated</p>
-                      <p className="font-medium text-slate-200">
+                      <p className="text-muted">Last updated</p>
+                      <p className="font-medium text-foreground">
                         {new Date(userStats.updatedAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   {userStats.stats && (
                     <>
-                      <hr className="my-3 border-slate-700/50" />
-                      <h5 className="font-medium text-slate-200 mb-3">Storage Usage</h5>
+                      <hr className="my-3 border-line" />
+                      <h5 className="font-medium text-foreground mb-3">Storage Usage</h5>
                       <div className="grid grid-cols-3 gap-4 text-center">
-                        <div className="bg-slate-800/80 rounded-xl p-3">
-                          <p className="text-lg font-semibold text-sky-400">{userStats.stats.totalFiles}</p>
-                          <p className="text-xs text-slate-500">Files</p>
+                        <div className="bg-card rounded-xl p-3">
+                          <p className="text-lg font-semibold text-accent">{userStats.stats.totalFiles}</p>
+                          <p className="text-xs text-muted">Files</p>
                         </div>
-                        <div className="bg-slate-800/80 rounded-xl p-3">
-                          <p className="text-lg font-semibold text-emerald-400">{userStats.stats.totalFolders}</p>
-                          <p className="text-xs text-slate-500">Folders</p>
+                        <div className="bg-card rounded-xl p-3">
+                          <p className="text-lg font-semibold text-success">{userStats.stats.totalFolders}</p>
+                          <p className="text-xs text-muted">Folders</p>
                         </div>
-                        <div className="bg-slate-800/80 rounded-xl p-3">
-                          <p className="text-lg font-semibold text-cyan-400">
+                        <div className="bg-card rounded-xl p-3">
+                          <p className="text-lg font-semibold text-accent">
                             {(userStats.stats.totalSize / (1024 * 1024)).toFixed(1)} MB
                           </p>
-                          <p className="text-xs text-slate-500">Used</p>
+                          <p className="text-xs text-muted">Used</p>
                         </div>
                       </div>
                     </>
@@ -767,16 +767,16 @@ export default function UserProfile({
                 const pwField = key === "currentPassword" ? "current" as const : key === "newPassword" ? "new" as const : "confirm" as const;
                 return (
                 <div key={key}>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">{label}</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <input type={showPasswords[pwField] ? "text" : "password"}
                       value={passwordForm[key]}
                       onChange={(e) => setPasswordForm((p) => ({ ...p, [key]: e.target.value }))}
                       className="input-modern w-full pl-10 pr-12 py-2.5 rounded-xl"
                       placeholder={label} required={key !== "newPassword"} minLength={key === "newPassword" ? 8 : undefined} />
                     <button type="button" onClick={() => togglePasswordVisibility(pwField)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300">
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
                       {showPasswords[pwField] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
@@ -784,8 +784,8 @@ export default function UserProfile({
                 );
               })}
 
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-sm text-slate-400">
-                <p className="font-medium text-slate-300 mb-1.5">Password Requirements:</p>
+              <div className="bg-card border border-line rounded-xl p-4 text-sm text-muted">
+                <p className="font-medium text-foreground mb-1.5">Password Requirements:</p>
                 <ul className="list-disc list-inside space-y-0.5">
                   <li>At least 8 characters long</li>
                   <li>Should be different from current password</li>
@@ -804,32 +804,32 @@ export default function UserProfile({
           {activeTab === "account" && (
             <div className="space-y-5">
               {userStats?.stats && (
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-                  <h4 className="font-medium text-slate-200 mb-3">Storage Overview</h4>
+                <div className="bg-card border border-line rounded-xl p-4">
+                  <h4 className="font-medium text-foreground mb-3">Storage Overview</h4>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-400">Total Files</span>
-                      <span className="font-medium text-slate-200">{userStats.stats.totalFiles}</span>
+                      <span className="text-sm text-muted">Total Files</span>
+                      <span className="font-medium text-foreground">{userStats.stats.totalFiles}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-400">Total Folders</span>
-                      <span className="font-medium text-slate-200">{userStats.stats.totalFolders}</span>
+                      <span className="text-sm text-muted">Total Folders</span>
+                      <span className="font-medium text-foreground">{userStats.stats.totalFolders}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-400">Storage Used</span>
-                      <span className="font-medium text-slate-200">
+                      <span className="text-sm text-muted">Storage Used</span>
+                      <span className="font-medium text-foreground">
                         {(userStats.stats.totalSize / (1024 * 1024)).toFixed(2)} MB
                       </span>
                     </div>
-                    <div className="w-full bg-slate-700/50 rounded-full h-2 overflow-hidden">
-                      <div className="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full"
+                    <div className="w-full bg-card-hover rounded-full h-2 overflow-hidden">
+                      <div className="bg-accent h-2 rounded-full"
                         style={{ width: `${Math.min((userStats.stats.totalSize / (userStats.storageLimit || 1)) * 100, 100)}%` }} />
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted">
                         {formatBytes(userStats.stats.totalSize)} of {formatBytes(userStats.storageLimit || 0)} used
                       </p>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${userStats.customStorageLimit ? "bg-sky-500/10 text-sky-400" : "bg-slate-700/50 text-slate-400"}`}>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${userStats.customStorageLimit ? "bg-accent/10 text-accent" : "bg-card-hover text-muted"}`}>
                         {userStats.customStorageLimit ? "Custom plan" : "System default"}
                       </span>
                     </div>
@@ -837,38 +837,38 @@ export default function UserProfile({
                 </div>
               )}
 
-              <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
-                <h4 className="font-medium text-red-400 mb-2 flex items-center gap-2">
+              <div className="bg-error/5 border border-red-500/20 rounded-xl p-4">
+                <h4 className="font-medium text-error mb-2 flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4" />
                   Danger Zone
                 </h4>
-                <p className="text-sm text-red-300/70 mb-4">
+                <p className="text-sm text-error/70 mb-4">
                   Permanently delete your account and all associated data. This action cannot be undone.
                 </p>
                 <button onClick={() => setShowDeletionModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-rose-700 text-white text-sm rounded-xl hover:shadow-lg hover:shadow-red-500/25 transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-error text-white text-sm rounded-xl hover:shadow-lg hover:shadow-error/25 transition-all"
                   disabled={loading}>
                   <Trash2 className="w-4 h-4" />
                   Delete Account
                 </button>
               </div>
 
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-                <h4 className="font-medium text-slate-200 mb-3">Account Details</h4>
+              <div className="bg-card border border-line rounded-xl p-4">
+                <h4 className="font-medium text-foreground mb-3">Account Details</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">User ID</span>
-                    <span className="font-mono text-xs text-slate-500">{userStats?.id}</span>
+                    <span className="text-muted">User ID</span>
+                    <span className="font-mono text-xs text-muted">{userStats?.id}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Account Created</span>
-                    <span className="text-slate-200">
+                    <span className="text-muted">Account Created</span>
+                    <span className="text-foreground">
                       {userStats ? new Date(userStats.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "-"}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Last Modified</span>
-                    <span className="text-slate-200">
+                    <span className="text-muted">Last Modified</span>
+                    <span className="text-foreground">
                       {userStats ? new Date(userStats.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "-"}
                     </span>
                   </div>
@@ -880,16 +880,16 @@ export default function UserProfile({
           {/* WebDAV Tab */}
           {activeTab === "webdav" && (
             <div className="space-y-5">
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+              <div className="bg-card border border-line rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 shrink-0 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
-                    <KeyRound className="w-5 h-5 text-blue-400" />
+                  <div className="w-10 h-10 shrink-0 rounded-xl bg-accent/10 border border-accent/30 flex items-center justify-center">
+                    <KeyRound className="w-5 h-5 text-accent" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-200 mb-1">
+                    <h4 className="font-medium text-foreground mb-1">
                       {t("webdavAccess", commonTranslations.webdavAccess)}
                     </h4>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-muted">
                       {t("webdavDescription", commonTranslations.webdavDescription)}
                     </p>
                   </div>
@@ -898,15 +898,15 @@ export default function UserProfile({
 
               {webdavToken && (
                 <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
-                  <p className="text-sm text-emerald-300 mb-3 font-medium">
+                  <p className="text-sm text-success mb-3 font-medium">
                     {t("webdavTokenGenerated", commonTranslations.webdavTokenGenerated)}
                   </p>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 break-all bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-sm text-emerald-300 font-mono">
+                    <code className="flex-1 break-all bg-card border border-line rounded-lg px-3 py-2 text-sm text-success font-mono">
                       {webdavToken}
                     </code>
                     <button onClick={handleCopyWebdavToken}
-                      className="flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-lg text-sm font-medium bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition-all"
+                      className="flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-lg text-sm font-medium bg-emerald-500/20 text-success hover:bg-emerald-500/30 transition-all"
                       title={t("webdavCopy", commonTranslations.webdavCopy)}>
                       {webdavCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                       {webdavCopied ? t("webdavTokenCopied", commonTranslations.webdavTokenCopied) : t("webdavCopy", commonTranslations.webdavCopy)}
@@ -916,15 +916,15 @@ export default function UserProfile({
               )}
 
               {webdav?.enabled && webdav.webdavUrl && (
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-                  <p className="text-sm text-slate-400 mb-2">
+                <div className="bg-card border border-line rounded-xl p-4">
+                  <p className="text-sm text-muted mb-2">
                     {t("webdavUrl", commonTranslations.webdavUrl)}
                   </p>
-                  <code className="block break-all bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-sm text-sky-300 font-mono">
+                  <code className="block break-all bg-card border border-line rounded-lg px-3 py-2 text-sm text-accent font-mono">
                     {webdav.webdavUrl}
                   </code>
                   {webdav.createdAt && (
-                    <p className="text-xs text-slate-500 mt-2">
+                    <p className="text-xs text-muted mt-2">
                       {t("webdavEnabledSince", commonTranslations.webdavEnabledSince)}{" "}
                       {new Date(webdav.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                     </p>
@@ -932,11 +932,11 @@ export default function UserProfile({
                 </div>
               )}
 
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-                <h4 className="font-medium text-slate-200 mb-2">
+              <div className="bg-card border border-line rounded-xl p-4">
+                <h4 className="font-medium text-foreground mb-2">
                   {t("webdavHowTo", commonTranslations.webdavHowTo)}
                 </h4>
-                <ol className="space-y-2 text-sm text-slate-400 list-decimal list-inside">
+                <ol className="space-y-2 text-sm text-muted list-decimal list-inside">
                   <li>{t("webdavHowToStep1", commonTranslations.webdavHowToStep1)}</li>
                   <li>{t("webdavHowToStep2", commonTranslations.webdavHowToStep2)}</li>
                   <li>{t("webdavHowToStep3", commonTranslations.webdavHowToStep3)}</li>
@@ -944,7 +944,7 @@ export default function UserProfile({
               </div>
 
               {!webdav?.enabled && !webdavToken && (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted">
                   {t("webdavNoTokenYet", commonTranslations.webdavNoTokenYet)}
                 </p>
               )}
@@ -952,8 +952,8 @@ export default function UserProfile({
               <button onClick={webdav?.enabled ? handleRevokeWebdavToken : handleGenerateWebdavToken}
                 className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-50 ${
                   webdav?.enabled
-                    ? "bg-gradient-to-r from-red-600 to-rose-700 text-white hover:shadow-lg hover:shadow-red-500/25"
-                    : "bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:shadow-lg hover:shadow-blue-500/25"
+                    ? "bg-error text-white hover:shadow-lg hover:shadow-error/25"
+                    : "bg-accent text-white hover:shadow-lg hover:shadow-accent/25"
                 }`}
                 disabled={webdavBusy}>
                 {webdavBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : webdav?.enabled ? <Trash className="w-4 h-4" /> : <KeyRound className="w-4 h-4" />}
@@ -971,16 +971,16 @@ export default function UserProfile({
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowDeletionModal(false); }}>
           <div className="modal-content w-full max-w-md p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-6 h-6 text-red-400" />
+              <div className="w-12 h-12 rounded-full bg-error/10 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-6 h-6 text-error" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-foreground">
                   {deletionStep === "confirm" ? "Delete Account"
                     : deletionStep === "code" ? "Verify Deletion"
                     : "Deleting Account"}
                 </h3>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-muted">
                   {deletionStep === "confirm" ? "This action cannot be undone"
                     : deletionStep === "code" ? "Check your email for verification code"
                     : "Please wait while we delete your account"}
@@ -989,30 +989,30 @@ export default function UserProfile({
             </div>
 
             {error && (
-              <div className="mb-4 px-4 py-3 bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl text-sm">
+              <div className="mb-4 px-4 py-3 bg-error/10 border border-red-500/20 text-error rounded-xl text-sm">
                 {error}
               </div>
             )}
             {success && (
-              <div className="mb-4 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-xl text-sm">
+              <div className="mb-4 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 text-success rounded-xl text-sm">
                 {success}
               </div>
             )}
 
             {deletionStep === "confirm" && (
               <div className="space-y-4">
-                <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
-                  <h4 className="font-medium text-red-400 mb-2">⚠️ Warning</h4>
-                  <p className="text-sm text-red-300/70 mb-3">
+                <div className="bg-error/5 border border-red-500/20 rounded-xl p-4">
+                  <h4 className="font-medium text-error mb-2">⚠️ Warning</h4>
+                  <p className="text-sm text-error/70 mb-3">
                     Deleting your account will permanently remove:
                   </p>
-                  <ul className="text-sm text-red-300/70 space-y-1 mb-3 list-disc list-inside">
+                  <ul className="text-sm text-error/70 space-y-1 mb-3 list-disc list-inside">
                     <li>All your uploaded files</li>
                     <li>All your folders and organization</li>
                     <li>Your account information</li>
                     <li>All activity history</li>
                   </ul>
-                  <p className="text-sm text-red-400 font-medium">This action cannot be reversed!</p>
+                  <p className="text-sm text-error font-medium">This action cannot be reversed!</p>
                 </div>
                 <div className="flex gap-3">
                   <button onClick={() => setShowDeletionModal(false)}
@@ -1020,7 +1020,7 @@ export default function UserProfile({
                     Cancel
                   </button>
                   <button onClick={handleRequestDeletion}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-red-600 to-rose-700 text-white hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-50 transition-all"
+                    className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-error text-white hover:shadow-lg hover:shadow-error/25 disabled:opacity-50 transition-all"
                     disabled={loading}>
                     {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Send Verification Code"}
                   </button>
@@ -1031,17 +1031,17 @@ export default function UserProfile({
             {deletionStep === "code" && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Verification Code</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Verification Code</label>
                   <input type="text" maxLength={6} value={deletionCode}
                     onChange={(e) => { setDeletionCode(e.target.value); setError(null); }}
                     className="input-modern w-full px-4 py-3 rounded-xl text-center text-lg font-mono tracking-widest"
                     placeholder="000000" disabled={loading} />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-slate-400 mb-2">Didn&apos;t receive the code?</p>
+                  <p className="text-sm text-muted mb-2">Didn&apos;t receive the code?</p>
                   <button onClick={handleResendDeletionCode}
                     disabled={deletionCountdown > 0 || loading}
-                    className="text-sky-400 hover:text-sky-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="text-accent hover:text-accent text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                     {deletionCountdown > 0 ? `Resend in ${deletionCountdown}s` : "Resend Code"}
                   </button>
                 </div>
@@ -1051,7 +1051,7 @@ export default function UserProfile({
                     Cancel
                   </button>
                   <button onClick={handleConfirmDeletion}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-red-600 to-rose-700 text-white hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-50 transition-all"
+                    className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-error text-white hover:shadow-lg hover:shadow-error/25 disabled:opacity-50 transition-all"
                     disabled={loading || !deletionCode || deletionCode.length !== 6}>
                     {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Delete Account"}
                   </button>
@@ -1061,12 +1061,12 @@ export default function UserProfile({
 
             {deletionStep === "deleting" && (
               <div className="text-center space-y-4 py-4">
-                <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
-                  <Loader2 className="w-8 h-8 text-red-400 animate-spin" />
+                <div className="w-16 h-16 rounded-full bg-error/10 flex items-center justify-center mx-auto">
+                  <Loader2 className="w-8 h-8 text-error animate-spin" />
                 </div>
                 <div>
-                  <p className="text-lg font-medium text-white mb-2">Deleting your account...</p>
-                  <p className="text-sm text-slate-400">Please wait while we permanently delete all your data.</p>
+                  <p className="text-lg font-medium text-foreground mb-2">Deleting your account...</p>
+                  <p className="text-sm text-muted">Please wait while we permanently delete all your data.</p>
                 </div>
               </div>
             )}

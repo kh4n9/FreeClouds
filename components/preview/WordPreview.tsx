@@ -104,7 +104,7 @@ export default function WordPreview({
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-4 p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center gap-2 min-w-0">
-          <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+          <FileText className="w-5 h-5 text-accent flex-shrink-0" />
           <span className="font-medium truncate">{file.name}</span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -112,7 +112,7 @@ export default function WordPreview({
             href={googleDocsUrl || "#"}
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm border border-blue-600 text-blue-600 rounded-lg transition-colors ${
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm border border-accent text-accent rounded-lg transition-colors ${
               googleDocsUrl ? "hover:bg-blue-50" : "opacity-50 pointer-events-none"
             }`}
           >
@@ -121,7 +121,7 @@ export default function WordPreview({
           </a>
           <button
             onClick={onDownload}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors"
           >
             <Download className="w-4 h-4" />
             {t("download", commonTranslations.download)}
@@ -133,7 +133,7 @@ export default function WordPreview({
       {loading ? (
         <div className="flex items-center justify-center flex-1">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+            <Loader2 className="w-12 h-12 text-accent animate-spin mx-auto mb-4" />
             <p className="text-gray-600">
               {t("loadingWordDoc", commonTranslations.loadingWordDoc)}
             </p>
@@ -142,13 +142,13 @@ export default function WordPreview({
       ) : error ? (
         <div className="flex items-center justify-center flex-1">
           <div className="text-center max-w-md p-8">
-            <FileText className="w-24 h-24 text-red-500 mx-auto mb-4" />
+            <FileText className="w-24 h-24 text-error mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900 mb-2">
               {t("wordParseError", commonTranslations.wordParseError)}
             </p>
             <button
               onClick={onDownload}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+              className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors mx-auto"
             >
               <Download className="w-4 h-4" />
               {t("download", commonTranslations.download)}

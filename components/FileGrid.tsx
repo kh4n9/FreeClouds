@@ -277,7 +277,7 @@ function FileItem({
     { divider: true },
     {
       label: file.favorite ? "Remove from Favorites" : "Add to Favorites",
-      icon: <Star className={`w-4 h-4 ${file.favorite ? "text-amber-400" : ""}`} />,
+      icon: <Star className={`w-4 h-4 ${file.favorite ? "text-warning" : ""}`} />,
       onClick: handleToggleFavorite,
     },
     ...(file.folderId && onOpenFolder
@@ -303,7 +303,7 @@ function FileItem({
     return (
       <ContextMenu items={contextMenuItems}>
         <div data-context-menu="true"
-          className={`group relative bg-white/5 border border-white/10 rounded-xl p-4 hover:border-blue-500/30 hover:bg-white/[0.07] transition-all cursor-pointer ${selected ? "ring-2 ring-blue-500/50 border-blue-500/30" : ""}`}
+          className={`group relative bg-white/5 border border-white/10 rounded-xl p-4 hover:border-accent/30 hover:bg-white/[0.07] transition-all cursor-pointer ${selected ? "ring-2 ring-blue-500/50 border-accent/30" : ""}`}
           onClick={handlePreview}
         >
           {/* Selection checkbox (top-left) */}
@@ -313,7 +313,7 @@ function FileItem({
               checked={!!selected}
               onClick={handleCheckboxClick}
               onChange={() => {}}
-              className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-blue-500/50"
+              className="h-4 w-4 rounded border-line bg-accent text-white focus:ring-accent/50"
               aria-label={`Select ${file.displayName || file.name}`}
             />
           </div>
@@ -325,11 +325,11 @@ function FileItem({
                 <img src={imageUrl} alt={file.displayName || file.name} className="w-full h-full object-cover" />
               </div>
             ) : isImage ? (
-              <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10 bg-card flex items-center justify-center">
                 {imageLoading ? (
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-sky-400 border-t-transparent" />
                 ) : (
-                  <Image className="w-8 h-8 text-sky-400" />
+                  <Image className="w-8 h-8 text-accent" />
                 )}
               </div>
             ) : (
@@ -339,18 +339,18 @@ function FileItem({
 
           {/* File Type Badge */}
           <div className="absolute top-2.5 left-8">
-            <span className="text-[10px] px-2 py-0.5 bg-slate-800/80 backdrop-blur-sm rounded-full font-medium text-slate-400 border border-slate-700/50">
+            <span className="text-[10px] px-2 py-0.5 bg-card backdrop-blur-sm rounded-full font-medium text-muted border border-line">
               {fileInfo.description}
             </span>
           </div>
 
           {/* File Name */}
-          <h3 className="text-sm font-medium text-slate-200 truncate mb-1" title={file.displayName || file.name}>
+          <h3 className="text-sm font-medium text-foreground truncate mb-1" title={file.displayName || file.name}>
             {file.displayName || file.name}
           </h3>
 
           {/* File Info */}
-          <div className="text-xs text-slate-500 space-y-0.5">
+          <div className="text-xs text-muted space-y-0.5">
             <div className="flex items-center justify-between">
               <span>{formatFileSize(file.size)}</span>
             </div>
@@ -362,7 +362,7 @@ function FileItem({
             {onToggleFavorite && (
               <button
                 onClick={(e) => { e.stopPropagation(); handleToggleFavorite(); }}
-                className={`p-1.5 rounded-lg transition-all border border-white/5 ${file.favorite ? "bg-amber-500/15 text-amber-400" : "bg-slate-800/80 backdrop-blur-sm text-slate-500 hover:text-amber-400 hover:bg-slate-700/80 sm:opacity-0 sm:group-hover:opacity-100"}`}
+                className={`p-1.5 rounded-lg transition-all border border-line ${file.favorite ? "bg-amber-500/15 text-warning" : "bg-card backdrop-blur-sm text-muted hover:text-warning hover:bg-card-hover sm:opacity-0 sm:group-hover:opacity-100"}`}
                 title={file.favorite ? "Remove from Favorites" : "Add to Favorites"}
               >
                 <Star className={`w-3.5 h-3.5 ${file.favorite ? "fill-amber-400" : ""}`} />
@@ -370,19 +370,19 @@ function FileItem({
             )}
             <button
               onClick={handleMenuToggle}
-              className="sm:opacity-0 sm:group-hover:opacity-100 p-1.5 bg-slate-800/80 backdrop-blur-sm rounded-lg hover:bg-slate-700/80 border border-white/5 transition-all"
+              className="sm:opacity-0 sm:group-hover:opacity-100 p-1.5 bg-card backdrop-blur-sm rounded-lg hover:bg-card-hover border border-line transition-all"
             >
-              <MoreVertical className="w-3.5 h-3.5 text-slate-400" />
+              <MoreVertical className="w-3.5 h-3.5 text-muted" />
             </button>
 
             {isMenuOpen && (
-              <div className="absolute right-0 top-full mt-1 w-40 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-10 py-1 backdrop-blur-xl">
+              <div className="absolute right-0 top-full mt-1 w-40 bg-card border border-line rounded-xl shadow-xl z-10 py-1 backdrop-blur-xl">
                     {contextMenuItems.map((item, i) => (
                   item.divider ? (
-                    <div key={i} className="my-1 border-t border-slate-700/50" />
+                    <div key={i} className="my-1 border-t border-line" />
                   ) : (
                     <button key={i} onClick={(e) => { e.stopPropagation(); item.onClick?.(); setIsMenuOpen(false); }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${item.danger ? "text-red-400 hover:bg-red-500/10" : "text-slate-200 hover:bg-slate-700/50"}`}>
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${item.danger ? "text-error hover:bg-error/10" : "text-foreground hover:bg-card-hover"}`}>
                       {item.icon}{item.label}
                     </button>
                   )
@@ -399,7 +399,7 @@ function FileItem({
   return (
     <ContextMenu items={contextMenuItems}>
       <div
-        className={`group flex items-center gap-3 p-3 border-b border-white/5 hover:bg-white/[0.03] transition-colors cursor-pointer ${selected ? "bg-blue-500/5" : ""}`}
+        className={`group flex items-center gap-3 p-3 border-b border-line hover:bg-white/[0.03] transition-colors cursor-pointer ${selected ? "bg-blue-500/5" : ""}`}
         onClick={handlePreview}
       >
         {/* Selection checkbox */}
@@ -409,7 +409,7 @@ function FileItem({
             checked={!!selected}
             onClick={(e) => { e.stopPropagation(); handleCheckboxClick(e); }}
             onChange={() => {}}
-            className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-blue-500/50"
+            className="h-4 w-4 rounded border-line bg-accent text-white focus:ring-accent/50"
             aria-label={`Select ${file.displayName || file.name}`}
           />
         </div>
@@ -421,11 +421,11 @@ function FileItem({
               <img src={imageUrl} alt={file.displayName || file.name} className="w-full h-full object-cover" />
             </div>
           ) : isImage ? (
-            <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 bg-card flex items-center justify-center">
               {imageLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-sky-400 border-t-transparent" />
               ) : (
-                <Image className="w-6 h-6 text-sky-400" />
+                <Image className="w-6 h-6 text-accent" />
               )}
             </div>
           ) : (
@@ -436,14 +436,14 @@ function FileItem({
         {/* File Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium text-slate-200 truncate flex-1" title={file.displayName || file.name}>
+            <h3 className="text-sm font-medium text-foreground truncate flex-1" title={file.displayName || file.name}>
               {file.displayName || file.name}
             </h3>
           </div>
-          <div className="flex items-center gap-4 text-xs text-slate-500 mt-0.5">
+          <div className="flex items-center gap-4 text-xs text-muted mt-0.5">
             <span>{formatFileSize(file.size)}</span>
             <span>{formatDate(file.createdAt)}</span>
-            {file.folderName && <span className="text-sky-400">in {file.folderName}</span>}
+            {file.folderName && <span className="text-accent">in {file.folderName}</span>}
           </div>
         </div>
 
@@ -451,21 +451,21 @@ function FileItem({
         <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           {onToggleFavorite && (
             <button onClick={(e) => { e.stopPropagation(); handleToggleFavorite(); }}
-              className={`p-2 rounded-lg transition-all ${file.favorite ? "text-amber-400 hover:bg-slate-800/50" : "text-slate-500 hover:text-amber-400 hover:bg-slate-800/50"}`}
+              className={`p-2 rounded-lg transition-all ${file.favorite ? "text-warning hover:bg-card-hover" : "text-muted hover:text-warning hover:bg-card-hover"}`}
               title={file.favorite ? "Remove from Favorites" : "Add to Favorites"}>
               <Star className={`w-4 h-4 ${file.favorite ? "fill-amber-400" : ""}`} />
             </button>
           )}
           <button onClick={(e) => { e.stopPropagation(); handlePreview(); }}
-            className="p-2 text-slate-500 hover:text-sky-400 hover:bg-slate-800/50 rounded-lg transition-all">
+            className="p-2 text-muted hover:text-accent hover:bg-card-hover rounded-lg transition-all">
             <Eye className="w-4 h-4" />
           </button>
           <button onClick={(e) => { e.stopPropagation(); onDownload(file.id, file.name); }}
-            className="p-2 text-slate-500 hover:text-blue-400 hover:bg-slate-800/50 rounded-lg transition-all">
+            className="p-2 text-muted hover:text-accent hover:bg-card-hover rounded-lg transition-all">
             <Download className="w-4 h-4" />
           </button>
           <button onClick={(e) => { e.stopPropagation(); onDelete(file.id); }}
-            className="p-2 text-slate-500 hover:text-red-400 hover:bg-slate-800/50 rounded-lg transition-all">
+            className="p-2 text-muted hover:text-error hover:bg-card-hover rounded-lg transition-all">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -793,7 +793,7 @@ export default function FileGrid({
     return (
       <div className="flex-1 p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-slate-700/50 rounded mb-4"></div>
+          <div className="h-8 bg-card-hover rounded mb-4"></div>
           <div
             className={
               viewMode === "grid"
@@ -806,8 +806,8 @@ export default function FileGrid({
                 key={i}
                 className={
                   viewMode === "grid"
-                    ? "h-32 bg-slate-700/50 rounded-lg"
-                    : "h-16 bg-slate-700/50 rounded"
+                    ? "h-32 bg-card-hover rounded-lg"
+                    : "h-16 bg-card-hover rounded"
                 }
               ></div>
             ))}
@@ -820,26 +820,26 @@ export default function FileGrid({
   return (
     <div className="flex-1 flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-slate-700/50">
+      <div className="p-6 border-b border-line">
         <div className="flex items-center justify-between gap-4">
           {/* Search */}
           <div className="flex-1 max-w-md relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted" />
             <input
               type="text"
               placeholder="Search files..."
               value={localSearchQuery}
               onChange={(e) => setLocalSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-800/70 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-200 placeholder-slate-500"
+              className="w-full pl-10 pr-4 py-2 bg-card/70 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-foreground placeholder-slate-500"
             />
           </div>
 
           {/* Sort Dropdown */}
           <div className="relative">
-            <div className="flex items-center border border-slate-700 bg-slate-800/70 rounded-lg">
+            <div className="flex items-center border border-line bg-card/70 rounded-lg">
               <button
                 onClick={() => setShowSortDropdown(!showSortDropdown)}
-                className="flex items-center gap-2 px-3 py-2 rounded-l-lg hover:bg-slate-700/70 transition-colors text-slate-200"
+                className="flex items-center gap-2 px-3 py-2 rounded-l-lg hover:bg-card-hover transition-colors text-foreground"
               >
                 <ArrowUpDown className="w-4 h-4" />
                 <span className="text-sm font-medium">
@@ -848,7 +848,7 @@ export default function FileGrid({
               </button>
               <button
                 onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                className="p-2 rounded-r-lg border-l border-slate-700 text-slate-400 hover:text-sky-400 transition-colors"
+                className="p-2 rounded-r-lg border-l border-line text-muted hover:text-accent transition-colors"
                 title={sortOrder === "asc" ? "Ascending" : "Descending"}
               >
                 {sortOrder === "asc" ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
@@ -856,7 +856,7 @@ export default function FileGrid({
             </div>
 
             {showSortDropdown && (
-              <div className="absolute right-0 top-full mt-1 w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10 py-1 backdrop-blur-xl">
+              <div className="absolute right-0 top-full mt-1 w-40 bg-card border border-line rounded-lg shadow-xl z-10 py-1 backdrop-blur-xl">
                 {sortOptions.map((option) => (
                   <button
                     key={option.value}
@@ -864,10 +864,10 @@ export default function FileGrid({
                       setSortBy(option.value);
                       setShowSortDropdown(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-slate-700/50 first:rounded-t-lg last:rounded-b-lg ${
+                    className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-card-hover first:rounded-t-lg last:rounded-b-lg ${
                       sortBy === option.value
-                        ? "bg-blue-500/15 text-blue-300"
-                        : "text-slate-300"
+                        ? "bg-blue-500/15 text-accent"
+                        : "text-foreground"
                     }`}
                   >
                     <span>{option.label}</span>
@@ -881,7 +881,7 @@ export default function FileGrid({
           <div className="relative">
             <button
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className="flex items-center gap-2 px-3 py-2 border border-slate-700 bg-slate-800/70 rounded-lg hover:bg-slate-700/70 transition-colors text-slate-200"
+              className="flex items-center gap-2 px-3 py-2 border border-line bg-card/70 rounded-lg hover:bg-card-hover transition-colors text-foreground"
             >
               <Filter className="w-4 h-4" />
               <span className="text-sm font-medium">
@@ -904,7 +904,7 @@ export default function FileGrid({
             </button>
 
             {showFilterDropdown && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10 py-1 backdrop-blur-xl">
+              <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-line rounded-lg shadow-xl z-10 py-1 backdrop-blur-xl">
                 {filterOptions.map((option) => (
                   <button
                     key={option.value}
@@ -912,14 +912,14 @@ export default function FileGrid({
                       setSelectedFilter(option.value);
                       setShowFilterDropdown(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-slate-700/50 first:rounded-t-lg last:rounded-b-lg ${
+                    className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-card-hover first:rounded-t-lg last:rounded-b-lg ${
                       selectedFilter === option.value
-                        ? "bg-blue-500/15 text-blue-300"
-                        : "text-slate-300"
+                        ? "bg-blue-500/15 text-accent"
+                        : "text-foreground"
                     }`}
                   >
                     <span>{option.label}</span>
-                    <span className="text-xs text-slate-400 bg-slate-700/60 px-2 py-0.5 rounded-full">
+                    <span className="text-xs text-muted bg-card-hover px-2 py-0.5 rounded-full">
                       {option.count}
                     </span>
                   </button>
@@ -931,13 +931,13 @@ export default function FileGrid({
           {/* View Mode Toggle + Bulk Download */}
           {onViewModeChange && (
             <div className="flex items-center gap-3">
-              <div className="flex items-center bg-slate-800 rounded-lg p-1">
+              <div className="flex items-center bg-card rounded-lg p-1">
                 <button
                   onClick={() => onViewModeChange("grid")}
                   className={`p-2 rounded-md transition-colors ${
                     viewMode === "grid"
-                      ? "bg-blue-500/20 text-blue-300"
-                      : "text-slate-500 hover:text-slate-300"
+                      ? "bg-blue-500/20 text-accent"
+                      : "text-muted hover:text-foreground"
                   }`}
                   title="Grid view"
                 >
@@ -947,8 +947,8 @@ export default function FileGrid({
                   onClick={() => onViewModeChange("list")}
                   className={`p-2 rounded-md transition-colors ${
                     viewMode === "list"
-                      ? "bg-blue-500/20 text-blue-300"
-                      : "text-slate-500 hover:text-slate-300"
+                      ? "bg-blue-500/20 text-accent"
+                      : "text-muted hover:text-foreground"
                   }`}
                   title="List view"
                 >
@@ -969,8 +969,8 @@ export default function FileGrid({
                   disabled={selectedFiles.length === 0}
                   className={`inline-flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
                     selectedFiles.length > 0 && onScan
-                      ? "bg-sky-600 text-white hover:bg-sky-700"
-                      : "bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700"
+                      ? "bg-accent text-white hover:bg-accent-hover"
+                      : "bg-card text-muted cursor-not-allowed border border-line"
                   }`}
                   title="Scan selected images"
                 >
@@ -982,8 +982,8 @@ export default function FileGrid({
                   disabled={selectedFiles.length === 0}
                   className={`inline-flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
                     selectedFiles.length > 0
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700"
+                      ? "bg-accent text-white hover:bg-accent-hover"
+                      : "bg-card text-muted cursor-not-allowed border border-line"
                   }`}
                 >
                   <Download className="w-4 h-4" />
@@ -994,8 +994,8 @@ export default function FileGrid({
                   disabled={selectedFiles.length === 0}
                   className={`inline-flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
                     selectedFiles.length > 0
-                      ? "bg-red-600 text-white hover:bg-red-700"
-                      : "bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700"
+                      ? "bg-error text-white hover:bg-error/90"
+                      : "bg-card text-muted cursor-not-allowed border border-line"
                   }`}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -1003,7 +1003,7 @@ export default function FileGrid({
                 </button>
                 <button
                   onClick={handleSelectAll}
-                  className="px-2 py-1 rounded text-sm bg-slate-800 text-slate-300 hover:bg-slate-700/70 border border-slate-700"
+                  className="px-2 py-1 rounded text-sm bg-card text-foreground hover:bg-card-hover border border-line"
                   title="Select all"
                 >
                   {selectedFiles.length === files.length && files.length > 0
@@ -1021,11 +1021,11 @@ export default function FileGrid({
         {sortedFiles.length === 0 ? (
           <div className="flex-1 flex items-center justify-center p-12">
             <div className="text-center">
-              <File className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-200 mb-2">
+              <File className="w-12 h-12 text-muted mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 No files found
               </h3>
-              <p className="text-slate-500">
+              <p className="text-muted">
                 {localSearchQuery
                   ? `No files match "${localSearchQuery}"`
                   : selectedFilter !== "all"
@@ -1058,7 +1058,7 @@ export default function FileGrid({
                 ))}
               </ListStagger>
             ) : (
-              <ListStagger className="bg-white/5 border border-slate-700/50 rounded-lg overflow-hidden">
+              <ListStagger className="bg-white/5 border border-line rounded-lg overflow-hidden">
                 {sortedFiles.map((file) => (
                   <ListStaggerItem key={file.id}>
                     <FileItem
@@ -1119,32 +1119,32 @@ export default function FileGrid({
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-medium text-white mb-1">
+                <h3 className="text-lg font-medium text-foreground mb-1">
                   Preparing download
                 </h3>
-                <p className="text-sm text-slate-400 mb-3">{progressMessage}</p>
+                <p className="text-sm text-muted mb-3">{progressMessage}</p>
 
-                <div className="w-full bg-slate-700/50 rounded h-3 overflow-hidden">
+                <div className="w-full bg-card-hover rounded h-3 overflow-hidden">
                   {downloadProgress !== null ? (
                     <div
-                      className="h-3 bg-gradient-to-r from-blue-500 to-cyan-400 transition-all"
+                      className="h-3 bg-accent transition-all"
                       style={{ width: `${downloadProgress}%` }}
                     />
                   ) : (
                     <div
-                      className="h-3 bg-gradient-to-r from-blue-500 to-cyan-400 animate-pulse"
+                      className="h-3 bg-accent animate-pulse"
                       style={{ width: "40%" }}
                     />
                   )}
                 </div>
 
                 {downloadTotalBytes ? (
-                  <div className="text-xs text-slate-400 mt-2">
+                  <div className="text-xs text-muted mt-2">
                     {(downloadedBytes / 1024 / 1024).toFixed(2)} MB /{" "}
                     {(downloadTotalBytes / 1024 / 1024).toFixed(2)} MB
                   </div>
                 ) : (
-                  <div className="text-xs text-slate-400 mt-2">
+                  <div className="text-xs text-muted mt-2">
                     {(downloadedBytes / 1024 / 1024).toFixed(2)} MB received
                   </div>
                 )}
@@ -1158,7 +1158,7 @@ export default function FileGrid({
                   // but keep the downloading state (they can re-open by re-initiating)
                   setProgressVisible(false);
                 }}
-                className="px-4 py-2 bg-slate-800 rounded-xl hover:bg-slate-700 text-sm text-slate-200 border border-slate-700"
+                className="px-4 py-2 bg-card rounded-xl hover:bg-card-hover text-sm text-foreground border border-line"
               >
                 Close
               </button>

@@ -134,14 +134,14 @@ export default function VideoConverter({
     <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
       {status === "failed" ? (
         <div className="text-center">
-          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <AlertTriangle className="w-16 h-16 text-error mx-auto mb-4" />
           <p className="text-lg font-medium text-gray-900 mb-2">
             {t("convertFailed", commonTranslations.convertFailed)}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={handleRetry}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors"
             >
               <Loader2 className="w-4 h-4" />
               {t("retry", commonTranslations.retry)}
@@ -158,7 +158,7 @@ export default function VideoConverter({
       ) : (
         <div className="text-center">
           <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
-            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+            <Loader2 className="w-8 h-8 text-accent animate-spin" />
           </div>
           <p className="text-lg font-medium text-gray-900 mb-2">
             {status === "loading"
@@ -167,7 +167,7 @@ export default function VideoConverter({
           </p>
           <div className="bg-gray-100 rounded-full h-2.5 mb-2 overflow-hidden">
             <div
-              className="h-full bg-blue-600 rounded-full transition-all duration-300"
+              className="h-full bg-accent rounded-full transition-all duration-300"
               style={{ width: `${Math.round(progress * 100)}%` }}
             />
           </div>

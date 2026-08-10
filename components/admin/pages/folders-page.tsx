@@ -209,7 +209,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
     {
       title: t.folders.selectedFolders,
       value: selectedFolders.length.toLocaleString(),
-      icon: <CheckCircle className="h-6 w-6 text-blue-400" />,
+      icon: <CheckCircle className="h-6 w-6 text-accent" />,
     },
     {
       title: t.folders.totalFiles,
@@ -221,7 +221,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
       value: folders
         .reduce((sum, f) => sum + f.subfolderCount, 0)
         .toLocaleString(),
-      icon: <Folder className="h-6 w-6 text-cyan-400" />,
+      icon: <Folder className="h-6 w-6 text-accent" />,
     },
   ];
 
@@ -229,11 +229,11 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title={t.folders.title}
-        subtitle={<span className="mt-2 text-slate-300">{t.folders.subtitle}</span>}
+        subtitle={<span className="mt-2 text-foreground">{t.folders.subtitle}</span>}
         actions={
           <button
             onClick={() => fetchFolders()}
-            className="inline-flex items-center px-4 py-2 border border-slate-600/50 rounded-md shadow-sm text-sm font-medium text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-line-hover rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-card-hover/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             {t.folders.refresh}
@@ -244,16 +244,16 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <div key={stat.title} className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
+          <div key={stat.title} className="bg-card overflow-hidden shadow rounded-lg">
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">{stat.icon}</div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-slate-400 truncate">
+                    <dt className="text-sm font-medium text-muted truncate">
                       {stat.title}
                     </dt>
-                    <dd className="text-lg font-medium text-white">
+                    <dd className="text-lg font-medium text-foreground">
                       {stat.value}
                     </dd>
                   </dl>
@@ -267,7 +267,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
       <ErrorBanner message={error} />
 
       {/* Filters */}
-      <div className="bg-slate-800/50 shadow rounded-lg p-6">
+      <div className="bg-card shadow rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
             <SearchInput
@@ -284,7 +284,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                className="inline-flex items-center px-3 py-2 border border-slate-600/50 shadow-sm text-sm leading-4 font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-3 py-2 border border-line-hover shadow-sm text-sm leading-4 font-medium rounded-md text-foreground bg-card hover:bg-card-hover/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
               >
                 <X className="h-4 w-4 mr-2" />
                 {t.folders.reset}
@@ -311,10 +311,10 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
 
       {/* Bulk Actions */}
       {selectedFolders.length > 0 && (
-        <div className="bg-blue-500/10 border border-blue-200 rounded-lg p-4">
+        <div className="bg-accent/10 border border-blue-200 rounded-lg p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-sky-400 mr-2" />
+              <CheckCircle className="h-5 w-5 text-accent mr-2" />
               <span className="text-sm font-medium text-blue-800">
                 {t.folders.foldersSelected.replace("{n}", selectedFolders.length.toString())}
               </span>
@@ -333,18 +333,18 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
       )}
 
       {/* Folders Table */}
-      <div className="bg-slate-800/50 shadow overflow-hidden sm:rounded-md">
+      <div className="bg-card shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:p-6">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-700/50">
-              <thead className="bg-slate-800/50">
+              <thead className="bg-card">
                 <tr>
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
                       checked={selectedFolders.length === folders.length && folders.length > 0}
                       onChange={handleSelectAll}
-                      className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                      className="h-4 w-4 text-accent focus:ring-accent border-line-hover rounded"
                     />
                   </th>
                   {[
@@ -358,7 +358,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
                     h.field ? (
                       <th
                         key={h.label}
-                        className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50"
+                        className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider cursor-pointer hover:bg-card-hover"
                         onClick={() => handleSort(h.field as string)}
                       >
                         {h.label}
@@ -366,7 +366,7 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
                     ) : (
                       <th
                         key={h.label}
-                        className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider"
+                        className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider"
                       >
                         {h.label}
                       </th>
@@ -374,38 +374,38 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
                   )}
                 </tr>
               </thead>
-              <tbody className="bg-slate-800/50 divide-y divide-slate-700/50">
+              <tbody className="bg-card divide-y divide-slate-700/50">
                 {loading ? (
                   <TableLoading colSpan={7} />
                 ) : folders.length === 0 ? (
                   <TableEmpty colSpan={7} message={t.folders.noFolders} />
                 ) : (
                   folders.map((folder) => (
-                    <tr key={folder.id} className="hover:bg-slate-800/30">
+                    <tr key={folder.id} className="hover:bg-card-hover/30">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="checkbox"
                           checked={selectedFolders.includes(folder.id)}
                           onChange={() => handleSelectFolder(folder.id)}
-                          className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                          className="h-4 w-4 text-accent focus:ring-accent border-line-hover rounded"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <FolderOpen className="h-5 w-5 text-blue-500 mr-3" />
-                          <div className="text-sm font-medium text-white">
+                          <div className="text-sm font-medium text-foreground">
                             {folder.name}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         <div className="flex items-center">
                           {folder.isRootFolder || !folder.parentName ? (
-                            <span className="text-slate-400 italic">
+                            <span className="text-muted italic">
                               {t.folders.root}
                             </span>
                           ) : (
-                            <span className="text-slate-200">
+                            <span className="text-foreground">
                               {folder.parentName}
                             </span>
                           )}
@@ -413,15 +413,15 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-white">
+                          <div className="text-sm font-medium text-foreground">
                             {folder.ownerName}
                           </div>
-                          <div className="text-sm text-slate-400">
+                          <div className="text-sm text-muted">
                             {folder.ownerEmail}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center">
                             <FileText className="h-4 w-4 text-green-500 mr-1" />
@@ -430,21 +430,21 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
                             </span>
                           </div>
                           <div className="flex items-center">
-                            <Folder className="h-4 w-4 text-cyan-500 mr-1" />
+                            <Folder className="h-4 w-4 text-accent mr-1" />
                             <span>
                               {t.folders.foldersLabel.replace("{n}", folder.subfolderCount.toString())}
                             </span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {formatDate(folder.createdAt, lang)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <Link
                             href={`${base}/users/${folder.owner}`}
-                            className="text-sky-400 hover:text-blue-900"
+                            className="text-accent hover:text-accent"
                           >
                             <Eye className="h-4 w-4" />
                           </Link>
@@ -476,10 +476,10 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
         open={showDeleteModal}
         onCancel={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteFolders}
-        icon={<Trash2 className="h-6 w-6 text-red-400" />}
+        icon={<Trash2 className="h-6 w-6 text-error" />}
         title={t.folders.deleteTitle}
         message={
-          <div className="text-sm text-slate-400">
+          <div className="text-sm text-muted">
             <p>
               {t.folders.deleteConfirm.replace("{n}", selectedFolders.length.toString())}
             </p>
@@ -488,9 +488,9 @@ export default function AdminFoldersPage({ lang }: { lang: Lang }) {
                 type="checkbox"
                 checked={deleteRecursive}
                 onChange={(e) => setDeleteRecursive(e.target.checked)}
-                className="h-4 w-4 text-red-400 focus:ring-red-500 border-slate-600/50 rounded"
+                className="h-4 w-4 text-error focus:ring-red-500 border-line-hover rounded"
               />
-              <span className="ml-2 text-sm text-slate-200">
+              <span className="ml-2 text-sm text-foreground">
                 {t.folders.deleteRecursive}
               </span>
             </label>

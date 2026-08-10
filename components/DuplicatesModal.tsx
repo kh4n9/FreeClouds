@@ -109,17 +109,17 @@ export default function DuplicatesModal({ onClose, onToast, onChanged, onOpenFol
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative modal-content w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 flex items-center justify-center">
               <Copy className="w-5 h-5 text-orange-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">{t("duplicates", { en: "Duplicates", vi: "Tệp trùng lặp" })}</h3>
-              <p className="text-xs text-slate-400">{t("duplicatesHint", { en: "Files with the same name and size. Keep one, delete the rest.", vi: "Các tệp có cùng tên và kích thước. Giữ một bản, xóa phần còn lại." })}</p>
+              <h3 className="text-lg font-semibold text-foreground">{t("duplicates", { en: "Duplicates", vi: "Tệp trùng lặp" })}</h3>
+              <p className="text-xs text-muted">{t("duplicatesHint", { en: "Files with the same name and size. Keep one, delete the rest.", vi: "Các tệp có cùng tên và kích thước. Giữ một bản, xóa phần còn lại." })}</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all">
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground hover:text-foreground hover:bg-card-hover transition-all">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -131,18 +131,18 @@ export default function DuplicatesModal({ onClose, onToast, onChanged, onOpenFol
             </div>
           ) : groups.length === 0 ? (
             <div className="text-center py-10">
-              <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-              <p className="text-sm text-slate-400">{t("noDuplicates", { en: "No duplicate files found.", vi: "Không tìm thấy tệp trùng lặp." })}</p>
+              <FileText className="w-10 h-10 text-muted mx-auto mb-3" />
+              <p className="text-sm text-muted">{t("noDuplicates", { en: "No duplicate files found.", vi: "Không tìm thấy tệp trùng lặp." })}</p>
             </div>
           ) : (
             <>
               <div className="flex items-center justify-between gap-3 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
                 <div>
-                  <p className="text-sm font-medium text-slate-200">{t("duplicatesSummary", { en: `${groups.length} duplicate group(s) found`, vi: `Tìm thấy ${groups.length} nhóm trùng lặp` })}</p>
-                  <p className="text-xs text-slate-400">{t("wastedSpace", { en: `Up to ${formatFileSize(totalWasted)} can be freed`, vi: `Có thể giải phóng tới ${formatFileSize(totalWasted)}` })}</p>
+                  <p className="text-sm font-medium text-foreground">{t("duplicatesSummary", { en: `${groups.length} duplicate group(s) found`, vi: `Tìm thấy ${groups.length} nhóm trùng lặp` })}</p>
+                  <p className="text-xs text-muted">{t("wastedSpace", { en: `Up to ${formatFileSize(totalWasted)} can be freed`, vi: `Có thể giải phóng tới ${formatFileSize(totalWasted)}` })}</p>
                 </div>
                 <button onClick={handleCleanup} disabled={cleaning || groups.length === 0}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-orange-500 to-red-600 text-white hover:shadow-lg hover:shadow-orange-500/25 disabled:opacity-50 transition-all shrink-0">
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-warning text-white hover:shadow-lg hover:shadow-warning/25 disabled:opacity-50 transition-all shrink-0">
                   {cleaning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   {t("deleteDuplicates", { en: "Delete Duplicates", vi: "Xóa tệp trùng lặp" })}
                 </button>
@@ -156,30 +156,30 @@ export default function DuplicatesModal({ onClose, onToast, onChanged, onOpenFol
                   const keepId = keepMap[groupKey];
                   return (
                     <div key={groupKey} className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
-                      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-slate-800/40">
+                      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-card/40">
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-slate-200 truncate">{first.displayName || group._id.name}</p>
-                          <p className="text-xs text-slate-500">{formatFileSize(group._id.size)} · {group.count} {t("copies", { en: "copies", vi: "bản sao" })}</p>
+                          <p className="text-sm font-medium text-foreground truncate">{first.displayName || group._id.name}</p>
+                          <p className="text-xs text-muted">{formatFileSize(group._id.size)} · {group.count} {t("copies", { en: "copies", vi: "bản sao" })}</p>
                         </div>
                         <span className="text-[10px] px-2 py-0.5 bg-orange-500/20 text-orange-300 rounded-full font-medium shrink-0">{group.count}x</span>
                       </div>
                       <div className="p-3 space-y-2">
                         {group.files.map((f) => (
-                          <div key={f._id} className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border transition-all ${keepId === f._id ? "border-emerald-500/40 bg-emerald-500/10" : "border-slate-700/40 bg-slate-900/30"}`}>
+                          <div key={f._id} className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border transition-all ${keepId === f._id ? "border-emerald-500/40 bg-emerald-500/10" : "border-line/40 bg-card"}`}>
                             <div className="flex items-center gap-3 min-w-0">
                               <input type="radio" checked={keepId === f._id} onChange={() => setKeepMap((prev) => ({ ...prev, [groupKey]: f._id }))}
-                                className="h-4 w-4 rounded-full border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500/50 shrink-0" />
+                                className="h-4 w-4 rounded-full border-line bg-accent text-white focus:ring-accent/50 shrink-0" />
                               <div className="min-w-0">
-                                <p className="text-sm text-slate-300 truncate">{f.displayName}</p>
-                                <p className="text-xs text-slate-500">{formatDate(f.createdAt)} · {formatFileSize(f.size)}</p>
+                                <p className="text-sm text-foreground truncate">{f.displayName}</p>
+                                <p className="text-xs text-muted">{formatDate(f.createdAt)} · {formatFileSize(f.size)}</p>
                               </div>
                             </div>
                             {keepId === f._id && (
-                              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full font-medium shrink-0">{t("keep", { en: "Keep", vi: "Giữ" })}</span>
+                              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-success rounded-full font-medium shrink-0">{t("keep", { en: "Keep", vi: "Giữ" })}</span>
                             )}
                             {f.folderId && onOpenFolder && (
                               <button onClick={() => { onOpenFolder(f.folderId!); onClose(); }}
-                                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all shrink-0" title={t("openFolder", { en: "Open folder", vi: "Mở thư mục" })}>
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all shrink-0" title={t("openFolder", { en: "Open folder", vi: "Mở thư mục" })}>
                                 <Folder className="w-4 h-4" />
                               </button>
                             )}

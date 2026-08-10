@@ -266,16 +266,16 @@ export default function AdminUserEditPage({
         <div className="flex items-center">
           <Link
             href={`${base}/users`}
-            className="flex items-center text-sm text-slate-400 hover:text-slate-200"
+            className="flex items-center text-sm text-muted hover:text-foreground"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             {t.userDetail.backToList}
           </Link>
         </div>
-        <div className="bg-red-500/10 border border-red-200 rounded-lg p-6">
+        <div className="bg-error/10 border border-red-200 rounded-lg p-6">
           <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-            <span className="text-red-300">{error}</span>
+            <AlertTriangle className="h-5 w-5 text-error mr-2" />
+            <span className="text-error">{error}</span>
           </div>
         </div>
       </div>
@@ -289,13 +289,13 @@ export default function AdminUserEditPage({
         <div className="flex items-center space-x-4">
           <Link
             href={`${base}/users/${userId}`}
-            className="flex items-center text-sm text-slate-400 hover:text-slate-200"
+            className="flex items-center text-sm text-muted hover:text-foreground"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             {t.userEdit.backToDetail}
           </Link>
           <div className="text-gray-300">|</div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             {t.userEdit.title}
           </h1>
         </div>
@@ -313,10 +313,10 @@ export default function AdminUserEditPage({
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/10 border border-red-200 rounded-lg p-4">
+        <div className="bg-error/10 border border-red-200 rounded-lg p-4">
           <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-            <span className="text-red-300">{error}</span>
+            <AlertTriangle className="h-5 w-5 text-error mr-2" />
+            <span className="text-error">{error}</span>
           </div>
         </div>
       )}
@@ -325,8 +325,8 @@ export default function AdminUserEditPage({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* User Info Card */}
           <div className="lg:col-span-1">
-            <div className="bg-slate-800/50 shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-white mb-4">
+            <div className="bg-card shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-foreground mb-4">
                 {t.userEdit.currentInfo}
               </h3>
 
@@ -338,22 +338,22 @@ export default function AdminUserEditPage({
                     }`}
                   >
                     {user.role === "admin" ? (
-                      <Shield className="h-6 w-6 text-red-400" />
+                      <Shield className="h-6 w-6 text-error" />
                     ) : (
-                      <User className="h-6 w-6 text-sky-400" />
+                      <User className="h-6 w-6 text-accent" />
                     )}
                   </div>
                   <div className="ml-4">
-                    <div className="text-sm font-medium text-white">
+                    <div className="text-sm font-medium text-foreground">
                       {user.name}
                     </div>
-                    <div className="text-sm text-slate-400">{user.email}</div>
+                    <div className="text-sm text-muted">{user.email}</div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700/50">
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-line">
                   <div>
-                    <dt className="text-sm font-medium text-slate-400">
+                    <dt className="text-sm font-medium text-muted">
                       {t.userEdit.roleLabel}
                     </dt>
                     <dd className="mt-1">
@@ -371,7 +371,7 @@ export default function AdminUserEditPage({
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-slate-400">
+                    <dt className="text-sm font-medium text-muted">
                       {t.userEdit.statusLabel}
                     </dt>
                     <dd className="mt-1">
@@ -379,7 +379,7 @@ export default function AdminUserEditPage({
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           user.isActive
                             ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-slate-100"
+                            : "bg-card-hover text-sub"
                         }`}
                       >
                         {user.isActive ? t.common.active : t.common.inactive}
@@ -387,18 +387,18 @@ export default function AdminUserEditPage({
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-slate-400">
+                    <dt className="text-sm font-medium text-muted">
                       {t.userEdit.totalFiles}
                     </dt>
-                    <dd className="mt-1 text-sm text-white">
+                    <dd className="mt-1 text-sm text-foreground">
                       {(user.totalFilesUploaded || 0).toLocaleString()}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-slate-400">
+                    <dt className="text-sm font-medium text-muted">
                       {t.userEdit.storage}
                     </dt>
-                    <dd className="mt-1 text-sm text-white">
+                    <dd className="mt-1 text-sm text-foreground">
                       {formatFileSize(user.totalStorageUsed || 0)}
                     </dd>
                   </div>
@@ -409,8 +409,8 @@ export default function AdminUserEditPage({
 
           {/* Edit Form */}
           <div className="lg:col-span-2">
-            <div className="bg-slate-800/50 shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-white mb-6">
+            <div className="bg-card shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-foreground mb-6">
                 {t.userEdit.editInfo}
               </h3>
 
@@ -419,7 +419,7 @@ export default function AdminUserEditPage({
                 <div>
                   <label
                     htmlFor="name"
-                    className="block text-sm font-medium text-slate-200 mb-2"
+                    className="block text-sm font-medium text-foreground mb-2"
                   >
                     {t.userEdit.fullName}
                   </label>
@@ -434,16 +434,16 @@ export default function AdminUserEditPage({
                       required
                       value={form.name}
                       onChange={handleInputChange}
-                      className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-card placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
                         getFieldError("name")
                           ? "border-red-500/50 text-red-900 placeholder-red-300"
-                          : "border-slate-600/50"
+                          : "border-line-hover"
                       }`}
                       placeholder={t.userEdit.fullNamePlaceholder}
                     />
                   </div>
                   {getFieldError("name") && (
-                    <p className="mt-1 text-sm text-red-400">
+                    <p className="mt-1 text-sm text-error">
                       {getFieldError("name")}
                     </p>
                   )}
@@ -453,7 +453,7 @@ export default function AdminUserEditPage({
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-slate-200 mb-2"
+                    className="block text-sm font-medium text-foreground mb-2"
                   >
                     {t.userEdit.email}
                   </label>
@@ -468,16 +468,16 @@ export default function AdminUserEditPage({
                       required
                       value={form.email}
                       onChange={handleInputChange}
-                      className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-card placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
                         getFieldError("email")
                           ? "border-red-500/50 text-red-900 placeholder-red-300"
-                          : "border-slate-600/50"
+                          : "border-line-hover"
                       }`}
                       placeholder={t.userEdit.emailPlaceholder}
                     />
                   </div>
                   {getFieldError("email") && (
-                    <p className="mt-1 text-sm text-red-400">
+                    <p className="mt-1 text-sm text-error">
                       {getFieldError("email")}
                     </p>
                   )}
@@ -487,7 +487,7 @@ export default function AdminUserEditPage({
                 <div>
                   <label
                     htmlFor="role"
-                    className="block text-sm font-medium text-slate-200 mb-2"
+                    className="block text-sm font-medium text-foreground mb-2"
                   >
                     {t.userEdit.roleField}
                   </label>
@@ -496,7 +496,7 @@ export default function AdminUserEditPage({
                     name="role"
                     value={form.role}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-slate-600/50 rounded-md bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="block w-full px-3 py-2 border border-line-hover rounded-md bg-card focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                   >
                     <option value="user">{t.common.user}</option>
                     <option value="admin">{t.common.administrator}</option>
@@ -505,7 +505,7 @@ export default function AdminUserEditPage({
 
                 {/* Status Field */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     {t.userEdit.accountStatus}
                   </label>
                   <div className="flex items-center">
@@ -515,11 +515,11 @@ export default function AdminUserEditPage({
                       type="checkbox"
                       checked={form.isActive}
                       onChange={handleInputChange}
-                      className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                      className="h-4 w-4 text-accent focus:ring-accent border-line-hover rounded"
                     />
                     <label
                       htmlFor="isActive"
-                      className="ml-2 flex items-center text-sm text-white"
+                      className="ml-2 flex items-center text-sm text-foreground"
                     >
                       {form.isActive ? (
                         <>
@@ -528,7 +528,7 @@ export default function AdminUserEditPage({
                         </>
                       ) : (
                         <>
-                          <UserX className="mr-1 h-4 w-4 text-red-500" />
+                          <UserX className="mr-1 h-4 w-4 text-error" />
                           {t.userEdit.inactiveDesc}
                         </>
                       )}
@@ -540,7 +540,7 @@ export default function AdminUserEditPage({
                 <div>
                   <label
                     htmlFor="storageLimit"
-                    className="block text-sm font-medium text-slate-200 mb-2"
+                    className="block text-sm font-medium text-foreground mb-2"
                   >
                     {t.userEdit.storageLimit}
                   </label>
@@ -556,27 +556,27 @@ export default function AdminUserEditPage({
                       step="0.1"
                       value={form.storageLimit}
                       onChange={handleInputChange}
-                      className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-card placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
                         getFieldError("storageLimit")
                           ? "border-red-500/50 text-red-900 placeholder-red-300"
-                          : "border-slate-600/50"
+                          : "border-line-hover"
                       }`}
                       placeholder={t.userEdit.storageLimitPlaceholder}
                     />
                   </div>
                   {getFieldError("storageLimit") && (
-                    <p className="mt-1 text-sm text-red-400">
+                    <p className="mt-1 text-sm text-error">
                       {getFieldError("storageLimit")}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-muted">
                     {t.userEdit.storageLimitHint}
                   </p>
                 </div>
 
                 {/* Password Section */}
-                <div className="pt-6 border-t border-slate-700/50">
-                  <h4 className="text-md font-medium text-white mb-4">
+                <div className="pt-6 border-t border-line">
+                  <h4 className="text-md font-medium text-foreground mb-4">
                     {t.userEdit.changePassword}
                   </h4>
 
@@ -584,7 +584,7 @@ export default function AdminUserEditPage({
                   <div className="mb-4">
                     <label
                       htmlFor="password"
-                      className="block text-sm font-medium text-slate-200 mb-2"
+                      className="block text-sm font-medium text-foreground mb-2"
                     >
                       {t.userEdit.newPassword}
                     </label>
@@ -598,10 +598,10 @@ export default function AdminUserEditPage({
                         type={showPassword ? "text" : "password"}
                         value={form.password}
                         onChange={handleInputChange}
-                        className={`block w-full pl-10 pr-12 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`block w-full pl-10 pr-12 py-2 border rounded-md leading-5 bg-card placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
                           getFieldError("password")
                             ? "border-red-500/50 text-red-900 placeholder-red-300"
-                            : "border-slate-600/50"
+                            : "border-line-hover"
                         }`}
                         placeholder={t.userEdit.newPasswordPlaceholder}
                       />
@@ -618,7 +618,7 @@ export default function AdminUserEditPage({
                       </button>
                     </div>
                     {getFieldError("password") && (
-                      <p className="mt-1 text-sm text-red-400">
+                      <p className="mt-1 text-sm text-error">
                         {getFieldError("password")}
                       </p>
                     )}
@@ -628,7 +628,7 @@ export default function AdminUserEditPage({
                   <div>
                     <label
                       htmlFor="confirmPassword"
-                      className="block text-sm font-medium text-slate-200 mb-2"
+                      className="block text-sm font-medium text-foreground mb-2"
                     >
                       {t.userEdit.confirmPassword}
                     </label>
@@ -642,10 +642,10 @@ export default function AdminUserEditPage({
                         type={showConfirmPassword ? "text" : "password"}
                         value={form.confirmPassword}
                         onChange={handleInputChange}
-                        className={`block w-full pl-10 pr-12 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`block w-full pl-10 pr-12 py-2 border rounded-md leading-5 bg-card placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
                           getFieldError("confirmPassword")
                             ? "border-red-500/50 text-red-900 placeholder-red-300"
-                            : "border-slate-600/50"
+                            : "border-line-hover"
                         }`}
                         placeholder={t.userEdit.confirmPlaceholder}
                       />
@@ -664,29 +664,29 @@ export default function AdminUserEditPage({
                       </button>
                     </div>
                     {getFieldError("confirmPassword") && (
-                      <p className="mt-1 text-sm text-red-400">
+                      <p className="mt-1 text-sm text-error">
                         {getFieldError("confirmPassword")}
                       </p>
                     )}
                   </div>
 
-                  <p className="mt-2 text-sm text-slate-400">
+                  <p className="mt-2 text-sm text-muted">
                     {t.userEdit.passwordHint}
                   </p>
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex justify-end space-x-3 pt-6 border-t border-slate-700/50">
+                <div className="flex justify-end space-x-3 pt-6 border-t border-line">
                   <Link
                     href={`${base}/users/${userId}`}
-                    className="px-4 py-2 border border-slate-600/50 rounded-md shadow-sm shadow-black/10 text-sm font-medium text-slate-200 bg-slate-800/50 hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-4 py-2 border border-line-hover rounded-md shadow-sm shadow-black/10 text-sm font-medium text-foreground bg-card hover:bg-card-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
                   >
                     {t.userEdit.cancel}
                   </Link>
                   <button
                     type="submit"
                     disabled={saving || success}
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm shadow-black/10 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm shadow-black/10 text-sm font-medium text-foreground bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {saving ? (
                       <>

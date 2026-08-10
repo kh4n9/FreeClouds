@@ -50,12 +50,12 @@ export function PageHeader({
   return (
     <div className="md:flex md:items-center md:justify-between">
       <div className="min-w-0 flex-1">
-        <h2 className="text-2xl font-bold leading-7 text-white sm:truncate sm:text-3xl sm:tracking-tight">
+        <h2 className="text-2xl font-bold leading-7 text-foreground sm:truncate sm:text-3xl sm:tracking-tight">
           {title}
         </h2>
         {subtitle && (
           <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
-            <div className="mt-2 flex items-center text-sm text-slate-400">
+            <div className="mt-2 flex items-center gap-2 text-sm text-sub">
               {icon}
               {subtitle}
             </div>
@@ -70,10 +70,10 @@ export function PageHeader({
 export function ErrorBanner({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <div className="bg-red-500/10 border border-red-200 rounded-lg p-4">
+    <div className="bg-error/10 border border-error/30 rounded-xl p-4">
       <div className="flex items-center">
-        <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
-        <span className="text-red-700">{message}</span>
+        <AlertTriangle className="h-5 w-5 text-error mr-2 flex-shrink-0" />
+        <span className="text-sm text-error font-medium">{message}</span>
       </div>
     </div>
   );
@@ -81,9 +81,9 @@ export function ErrorBanner({ message }: { message: string | null }) {
 
 export function LoadingSpinner({ label }: { label?: string }) {
   return (
-    <div className="flex items-center justify-center h-64 flex-col gap-3">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      {label && <p className="text-sm text-slate-400">{label}</p>}
+    <div className="flex items-center justify-center h-64 flex-col gap-4">
+      <div className="w-8 h-8 rounded-full border-2 border-line border-t-accent animate-spin"></div>
+      {label && <p className="text-sm text-sub">{label}</p>}
     </div>
   );
 }
@@ -93,7 +93,7 @@ export function TableLoading({ colSpan }: { colSpan: number }) {
     <tr>
       <td colSpan={colSpan} className="px-6 py-12 text-center">
         <div className="flex justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="w-7 h-7 rounded-full border-2 border-line border-t-accent animate-spin"></div>
         </div>
       </td>
     </tr>
@@ -103,7 +103,7 @@ export function TableLoading({ colSpan }: { colSpan: number }) {
 export function TableEmpty({ colSpan, message }: { colSpan: number; message: string }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="px-6 py-12 text-center text-slate-400">
+      <td colSpan={colSpan} className="px-6 py-12 text-center text-sub">
         {message}
       </td>
     </tr>
@@ -118,15 +118,15 @@ export function Badge({
   tone?: "default" | "admin" | "active" | "inactive" | "info";
 }) {
   const tones: Record<string, string> = {
-    default: "bg-slate-800/50 text-slate-100",
-    admin: "bg-red-100 text-red-800",
-    active: "bg-green-100 text-green-800",
-    inactive: "bg-slate-800/50 text-slate-100",
-    info: "bg-blue-100 text-blue-800",
+    default: "bg-sub/10 text-sub border border-line",
+    admin: "bg-error/10 text-error border border-error/25",
+    active: "bg-success/10 text-success border border-success/25",
+    inactive: "bg-sub/10 text-sub border border-line",
+    info: "bg-accent/10 text-accent border border-accent/25",
   };
   return (
     <span
-      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${tones[tone]}`}
+      className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${tones[tone]}`}
     >
       {children}
     </span>
@@ -145,14 +145,14 @@ export function SearchInput({
   return (
     <div className="relative">
       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <Search className="h-5 w-5 text-gray-400" />
+        <Search className="h-5 w-5 text-muted" />
       </div>
       <input
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="block w-full pl-10 pr-3 py-2 border border-slate-600/50 rounded-md leading-5 bg-slate-800/80 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        className="block w-full pl-10 pr-3 py-2 border border-line rounded-lg leading-5 bg-card placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
       />
     </div>
   );
@@ -171,7 +171,7 @@ export function SelectFilter({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="block w-full px-3 py-2 border border-slate-600/50 rounded-md bg-slate-800/80 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+      className="block w-full px-3 py-2 border border-line rounded-lg bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
     >
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>
@@ -196,7 +196,7 @@ export function ResetFiltersButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center px-3 py-2 border border-slate-600/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="inline-flex items-center px-3.5 py-2 border border-line rounded-lg text-sm leading-4 font-medium text-foreground bg-card hover:bg-card-hover focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <Filter className="mr-2 h-4 w-4" />
       {t.common.resetFilters}
@@ -215,20 +215,20 @@ export function ActiveFilterChips({
 }) {
   const t = getDict(lang);
   return (
-    <div className="px-6 py-3 border-t border-slate-700/50 bg-slate-800/30">
+    <div className="px-6 py-3 border-t border-line bg-background/50">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-slate-200">
+        <span className="text-sm font-medium text-foreground">
           {t.common.activeFilters}
         </span>
         {searchTerm && (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent border border-accent/25">
             {`${t.common.searchBy} "${searchTerm}"`}
           </span>
         )}
         {chips.map((chip, i) => (
           <span
             key={i}
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${chip.className}`}
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${chip.className}`}
           >
             {chip.label}
           </span>
@@ -262,38 +262,38 @@ export function Pagination({
   const to = Math.min(currentPage * pageSize, totalItems);
 
   return (
-    <div className="bg-slate-800/50 px-4 py-3 flex items-center justify-between border-t border-slate-700/50 sm:px-6">
+    <div className="bg-card px-4 py-3 flex items-center justify-between border-t border-line sm:px-6">
       <div className="flex-1 flex justify-between sm:hidden">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={!hasPrev}
-          className="relative inline-flex items-center px-4 py-2 border border-slate-600/50 text-sm font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative inline-flex items-center px-4 py-2 border border-line text-sm font-medium rounded-lg text-foreground bg-card hover:bg-card-hover disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {t.common.previous}
         </button>
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={!hasNext}
-          className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-600/50 text-sm font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="ml-3 relative inline-flex items-center px-4 py-2 border border-line text-sm font-medium rounded-lg text-foreground bg-card hover:bg-card-hover disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {t.common.next}
         </button>
       </div>
       <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm text-slate-200">
+          <p className="text-sm text-sub">
             {t.common.showing}{" "}
-            <span className="font-medium">{from}</span> {t.common.to}{" "}
-            <span className="font-medium">{to}</span> {t.common.of}{" "}
-            <span className="font-medium">{totalItems}</span> {label}
+            <span className="font-medium text-foreground">{from}</span> {t.common.to}{" "}
+            <span className="font-medium text-foreground">{to}</span> {t.common.of}{" "}
+            <span className="font-medium text-foreground">{totalItems}</span> {label}
           </p>
         </div>
         <div>
-          <nav className="relative z-0 inline-flex rounded-md shadow-sm shadow-black/10 -space-x-px">
+          <nav className="relative z-0 inline-flex rounded-lg border border-line -space-x-px overflow-hidden">
             <button
               onClick={() => onPageChange(currentPage - 1)}
               disabled={!hasPrev}
-              className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-600/50 bg-slate-800/50 text-sm font-medium text-slate-400 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center px-2.5 py-2 bg-card text-sm font-medium text-sub hover:bg-card-hover disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -305,10 +305,10 @@ export function Pagination({
                 <button
                   key={pageNum}
                   onClick={() => onPageChange(pageNum)}
-                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                  className={`relative inline-flex items-center px-4 py-2 text-sm font-medium border-l border-line ${
                     pageNum === currentPage
-                      ? "z-10 bg-blue-500/10 border-blue-500 text-sky-400"
-                      : "bg-slate-800/50 border-slate-600/50 text-slate-400 hover:bg-slate-800/30"
+                      ? "bg-accent/10 text-accent"
+                      : "bg-card text-sub hover:bg-card-hover"
                   }`}
                 >
                   {pageNum}
@@ -319,7 +319,7 @@ export function Pagination({
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={!hasNext}
-              className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-600/50 bg-slate-800/50 text-sm font-medium text-slate-400 hover:bg-slate-800/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center px-2.5 py-2 border-l border-line bg-card text-sm font-medium text-sub hover:bg-card-hover disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
@@ -345,20 +345,23 @@ export function Modal({
 }) {
   if (!open) return null;
   return (
-    <div className="modal-overlay fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div
-        className={`relative top-10 mx-auto p-6 border w-full ${maxWidth} shadow-lg shadow-black/20 rounded-md bg-slate-800/50`}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-white">{title}</h3>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="min-h-full flex items-start justify-center p-6">
+        <div
+          className={`relative w-full ${maxWidth} border border-line rounded-xl bg-card shadow-xl`}
+        >
+          <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="px-6 py-5">{children}</div>
         </div>
-        {children}
       </div>
     </div>
   );
@@ -387,33 +390,36 @@ export function ConfirmDialog({
 }) {
   if (!open) return null;
   return (
-    <div className="modal-overlay fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 max-w-[90vw] shadow-lg shadow-black/20 rounded-md bg-slate-800/50">
-        <div className="mt-3 text-center">
-          <div
-            className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full ${
-              danger ? "bg-red-100" : "bg-blue-100"
-            }`}
-          >
-            {icon}
-          </div>
-          <h3 className="text-lg font-medium text-white mt-5">{title}</h3>
-          <div className="mt-2 px-7 py-3">
-            <div className="text-sm text-slate-400">{message}</div>
-          </div>
-          <div className="items-center px-4 py-3">
-            <div className="flex space-x-3 justify-center">
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" onClick={onCancel} />
+      <div className="min-h-full flex items-center justify-center p-6">
+        <div className="relative w-full max-w-sm border border-line rounded-xl bg-card shadow-xl p-6">
+          <div className="text-center">
+            <div
+              className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full border ${
+                danger
+                  ? "bg-error/10 border-error/25 text-error"
+                  : "bg-accent/10 border-accent/25 text-accent"
+              }`}
+            >
+              {icon}
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mt-4">{title}</h3>
+            <div className="mt-2 px-2">
+              <div className="text-sm text-sub">{message}</div>
+            </div>
+            <div className="flex justify-center gap-3 mt-6">
               <button
                 onClick={onConfirm}
-                className={`px-4 py-2 ${
-                  danger ? "bg-red-500 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"
-                } text-white text-base font-medium rounded-md shadow-sm shadow-black/10 focus:outline-none focus:ring-2 focus:ring-red-300`}
+                className={`px-5 py-2.5 ${
+                  danger ? "btn-danger" : "btn-primary"
+                } text-sm font-medium rounded-lg`}
               >
                 {confirmLabel}
               </button>
               <button
                 onClick={onCancel}
-                className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md shadow-sm shadow-black/10 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                className="px-5 py-2.5 btn-secondary text-sm font-medium rounded-lg"
               >
                 {cancelLabel}
               </button>

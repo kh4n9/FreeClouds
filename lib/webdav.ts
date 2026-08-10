@@ -101,10 +101,12 @@ export async function authenticateWebDav(req: IncomingMessage): Promise<IUser> {
   const user = await User.findByEmail(email);
   const hash = user?.webdavTokenHash;
   if (!user || !hash) {
+    console.error(`WebDAV auth failed for ${email}: no webdav token configured`);
     throw new DavError("Authentication failed", 401);
   }
   const valid = await bcrypt.compare(token, hash);
   if (!valid) {
+    console.error(`WebDAV auth failed for ${email}: token mismatch (client may hold a revoked/rotated token)`);
     throw new DavError("Authentication failed", 401);
   }
   return user;

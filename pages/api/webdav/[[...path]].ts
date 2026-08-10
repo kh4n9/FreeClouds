@@ -206,6 +206,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const name = segments[segments.length - 1]!;
         if (!name) throw new DavError("No file name provided", 400);
 
+        // Some WebDAV clients (Windows Map Drive, curl >= 7.20) send
+        // `Expect: 100-continue` and refuse to stream the body until the
+        // server acknowledges. Without an explicit continue, uploads deadlock.
+        if (typeof req.headers.expect === "string" && req.headers.expect.toLowerCase().includes("100-continue")) {
+          if (typeof (res as unknown as { writeContinue?: () => void }).writeContinue === "function") {
+            (res as unknown as { writeContinue: () => void }).writeContinue();
+          }
+        }
+
         if (resolved.kind === "folder") {
           throw new DavError("A collection exists at this path", 409);
         }

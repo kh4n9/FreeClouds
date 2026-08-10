@@ -56,13 +56,13 @@ export default function ContextMenu({ items, children, className = "" }: Context
       {menu && (
         <div
           ref={menuRef}
-          className="fixed z-[100] min-w-[180px] py-1.5 rounded-xl bg-slate-800 border border-slate-700 shadow-2xl shadow-black/30 backdrop-blur-xl"
+          className="fixed z-[100] min-w-[180px] py-1.5 rounded-xl bg-card border border-line shadow-xl backdrop-blur-xl"
           style={{ left: menu.x, top: menu.y }}
           onClick={(e) => e.stopPropagation()}
         >
           {items.map((item, i) => (
             item.divider ? (
-              <div key={i} className="my-1 border-t border-slate-700/50" />
+              <div key={i} className="my-1 border-t border-line" />
             ) : (
               <button
                 key={i}
@@ -70,8 +70,8 @@ export default function ContextMenu({ items, children, className = "" }: Context
                 disabled={item.disabled}
                 className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors ${
                   item.danger
-                    ? "text-red-400 hover:bg-red-500/10"
-                    : "text-slate-200 hover:bg-slate-700/50"
+                    ? "text-error hover:bg-error/10"
+                    : "text-foreground hover:bg-card-hover"
                 } ${item.disabled ? "opacity-40 cursor-not-allowed" : ""}`}
               >
                 {item.icon && <span className="w-4 h-4 flex items-center justify-center">{item.icon}</span>}

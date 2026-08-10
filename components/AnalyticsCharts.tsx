@@ -91,7 +91,7 @@ function LineChart({
 
   if (points.length === 0) {
     return (
-      <div className="flex items-center justify-center h-40 text-sm text-slate-500">
+      <div className="flex items-center justify-center h-40 text-sm text-muted">
         No data
       </div>
     );
@@ -217,7 +217,7 @@ function BarChart({
 
   if (points.length === 0) {
     return (
-      <div className="flex items-center justify-center h-40 text-sm text-slate-500">
+      <div className="flex items-center justify-center h-40 text-sm text-muted">
         No data
       </div>
     );
@@ -330,7 +330,7 @@ function PieChart({
 
   if (total === 0) {
     return (
-      <div className="flex items-center justify-center h-40 text-sm text-slate-500">
+      <div className="flex items-center justify-center h-40 text-sm text-muted">
         No data
       </div>
     );
@@ -470,18 +470,18 @@ export default function AnalyticsCharts({ lang = "en" }: { lang?: Lang }) {
   }, [data]);
 
   return (
-    <section className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
+    <section className="bg-card border border-line rounded-lg p-4">
       <header className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-foreground">
             {t.analytics.title}
           </h3>
-          <p className="text-sm text-slate-400">{t.analytics.subtitle}</p>
+          <p className="text-sm text-muted">{t.analytics.subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-slate-300">{t.analytics.range}</label>
+          <label className="text-sm text-foreground">{t.analytics.range}</label>
           <select
-            className="px-2 py-1 border border-slate-600/50 rounded bg-slate-800 text-sm text-white"
+            className="px-2 py-1 border border-line-hover rounded bg-card text-sm text-foreground"
             value={rangeDays}
             onChange={(e) => setRangeDays(Number(e.target.value))}
           >
@@ -493,7 +493,7 @@ export default function AnalyticsCharts({ lang = "en" }: { lang?: Lang }) {
 
           <button
             onClick={() => setRefreshKey((k) => k + 1)}
-            className="px-3 py-1 border border-slate-600/50 rounded text-sm text-slate-200 bg-slate-800/50 hover:bg-slate-700/50"
+            className="px-3 py-1 border border-line-hover rounded text-sm text-foreground bg-card hover:bg-card-hover"
           >
             {t.analytics.refresh}
           </button>
@@ -501,13 +501,13 @@ export default function AnalyticsCharts({ lang = "en" }: { lang?: Lang }) {
       </header>
 
       {loading && (
-        <div className="p-6 text-center text-slate-400">
+        <div className="p-6 text-center text-muted">
           {t.common.loading}
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/50 text-red-300 rounded">
+        <div className="p-4 bg-error/10 border border-red-500/50 text-error rounded">
           <strong>{t.analytics.errorLabel}:</strong> {error}
         </div>
       )}
@@ -516,27 +516,27 @@ export default function AnalyticsCharts({ lang = "en" }: { lang?: Lang }) {
         <div className="space-y-6">
           {/* summary cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 border border-slate-700/50 rounded flex flex-col">
-              <span className="text-sm text-slate-400">
+            <div className="p-4 border border-line rounded flex flex-col">
+              <span className="text-sm text-muted">
                 {t.analytics.totalUsers}
               </span>
-              <span className="text-2xl font-semibold text-white">
+              <span className="text-2xl font-semibold text-foreground">
                 {totals.totalUsers}
               </span>
             </div>
-            <div className="p-4 border border-slate-700/50 rounded flex flex-col">
-              <span className="text-sm text-slate-400">
+            <div className="p-4 border border-line rounded flex flex-col">
+              <span className="text-sm text-muted">
                 {t.analytics.totalFiles}
               </span>
-              <span className="text-2xl font-semibold text-white">
+              <span className="text-2xl font-semibold text-foreground">
                 {totals.totalFiles}
               </span>
             </div>
-            <div className="p-4 border border-slate-700/50 rounded flex flex-col">
-              <span className="text-sm text-slate-400">
+            <div className="p-4 border border-line rounded flex flex-col">
+              <span className="text-sm text-muted">
                 {t.analytics.totalStorage}
               </span>
-              <span className="text-2xl font-semibold text-white">
+              <span className="text-2xl font-semibold text-foreground">
                 {formatFileSize(totals.totalStorage)}
               </span>
             </div>
@@ -544,23 +544,23 @@ export default function AnalyticsCharts({ lang = "en" }: { lang?: Lang }) {
 
           {/* charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="p-4 border border-slate-700/50 rounded">
-              <h4 className="text-sm font-medium text-white mb-2">
+            <div className="p-4 border border-line rounded">
+              <h4 className="text-sm font-medium text-foreground mb-2">
                 {t.analytics.activeUsersChart}
               </h4>
               <LineChart data={data.activeUsers ?? []} />
             </div>
 
-            <div className="p-4 border border-slate-700/50 rounded">
-              <h4 className="text-sm font-medium text-white mb-2">
+            <div className="p-4 border border-line rounded">
+              <h4 className="text-sm font-medium text-foreground mb-2">
                 {t.analytics.uploadsPerDayChart}
               </h4>
               <BarChart data={data.uploadsByDay ?? []} />
             </div>
           </div>
 
-          <div className="p-4 border border-slate-700/50 rounded">
-            <h4 className="text-sm font-medium text-white mb-2">
+          <div className="p-4 border border-line rounded">
+            <h4 className="text-sm font-medium text-foreground mb-2">
               {t.analytics.storageByTypeChart}
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
@@ -599,11 +599,11 @@ export default function AnalyticsCharts({ lang = "en" }: { lang?: Lang }) {
                               ],
                           }}
                         />
-                        <span className="text-sm text-slate-200">
+                        <span className="text-sm text-foreground">
                           {s.type}
                         </span>
                       </div>
-                      <div className="text-sm text-slate-400">
+                      <div className="text-sm text-muted">
                         {formatFileSize(s.bytes)}
                       </div>
                     </li>
@@ -616,7 +616,7 @@ export default function AnalyticsCharts({ lang = "en" }: { lang?: Lang }) {
       )}
 
       {!loading && !error && !data && (
-        <div className="p-4 text-sm text-slate-400">
+        <div className="p-4 text-sm text-muted">
           {t.common.noResults}
         </div>
       )}

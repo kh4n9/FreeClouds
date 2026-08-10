@@ -305,6 +305,9 @@ export default function FilePreview({
       try {
         const response = await fetch(`/api/files/${file.id}/download`);
         if (!response.ok) {
+          console.error(
+            `[preview] Download failed: ${response.status} ${response.statusText} for file ${file.id} (${file.name})`,
+          );
           throw new Error(
             t("failedToLoadFile", commonTranslations.failedToLoadFile),
           );
@@ -698,7 +701,7 @@ export default function FilePreview({
             {/* Common Controls */}
             <button
               onClick={handleDownload}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors"
             >
               <Download className="w-4 h-4" />
               Download
@@ -725,7 +728,7 @@ export default function FilePreview({
 
           {securityWarning && (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center text-orange-600 max-w-md">
+              <div className="text-center text-warning max-w-md">
                 <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <ExternalLink className="w-8 h-8" />
                 </div>
@@ -733,7 +736,7 @@ export default function FilePreview({
                 <p className="text-sm mb-4">{securityWarning}</p>
                 <button
                   onClick={handleDownload}
-                  className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors mx-auto"
+                  className="flex items-center gap-2 px-4 py-2 bg-warning text-white rounded-lg hover:bg-orange-700 transition-colors mx-auto"
                 >
                   <Download className="w-4 h-4" />
                   Download (Use Caution)
@@ -744,7 +747,7 @@ export default function FilePreview({
 
           {error && !securityWarning && (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center text-red-600">
+              <div className="text-center text-error">
                 <Eye className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium mb-2">
                   Preview not available
@@ -810,7 +813,7 @@ export default function FilePreview({
                     {file.size <= 150 * 1024 * 1024 && (
                       <button
                         onClick={() => setConverting(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors"
                       >
                         <RefreshCw className="w-4 h-4" />
                         {t("convertToView", commonTranslations.convertToView)}
@@ -859,7 +862,7 @@ export default function FilePreview({
             <div className="flex items-center justify-center h-full p-4">
               <div className="bg-white rounded-lg p-8 shadow-lg max-w-md w-full">
                 <div className="text-center mb-6">
-                  <Music className="w-16 h-16 text-cyan-500 mx-auto mb-4" />
+                  <Music className="w-16 h-16 text-accent mx-auto mb-4" />
                   <h4
                     className="text-lg font-medium text-gray-900 truncate"
                     title={file.name}
@@ -889,7 +892,7 @@ export default function FilePreview({
           )}
 
           {!loading && !error && !securityWarning && fileContent && isPDF && (
-            <div className="h-full overflow-auto bg-slate-800/40 flex items-start justify-center p-4">
+            <div className="h-full overflow-auto bg-card/40 flex items-start justify-center p-4">
               <canvas ref={pdfCanvasRef} className="shadow-2xl" />
             </div>
           )}
@@ -1007,7 +1010,7 @@ export default function FilePreview({
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <button
                       onClick={handleDownload}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors"
                     >
                       <Download className="w-4 h-4" />
                       Download
@@ -1054,7 +1057,7 @@ export default function FilePreview({
                   </p>
                   <button
                     onClick={handleDownload}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+                    className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors mx-auto"
                   >
                     <Download className="w-4 h-4" />
                     Download to view

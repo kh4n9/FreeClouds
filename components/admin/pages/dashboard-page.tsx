@@ -142,9 +142,9 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-200 rounded-lg p-4">
+      <div className="bg-error/10 border border-red-200 rounded-lg p-4">
         <div className="flex items-center">
-          <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
+          <AlertTriangle className="h-5 w-5 text-error mr-2" />
           <span className="text-red-700">{error}</span>
         </div>
       </div>
@@ -154,7 +154,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
   if (!stats) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-400">{t.dashboard.noStatsData}</p>
+        <p className="text-muted">{t.dashboard.noStatsData}</p>
       </div>
     );
   }
@@ -208,11 +208,11 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
       {/* Page Header */}
       <div className="md:flex md:items-center md:justify-between">
         <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-bold leading-7 text-white sm:truncate sm:text-3xl sm:tracking-tight">
+          <h2 className="text-2xl font-bold leading-7 text-foreground sm:truncate sm:text-3xl sm:tracking-tight">
             {t.dashboard.title}
           </h2>
           <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
-            <div className="mt-2 flex items-center text-sm text-slate-400">
+            <div className="mt-2 flex items-center text-sm text-muted">
               <Calendar className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" />
               {t.dashboard.lastUpdate} {formatDate(stats.system.timestamp, lang)}
             </div>
@@ -221,7 +221,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
         <div className="mt-4 flex md:ml-4 md:mt-0">
           <button
             onClick={fetchStats}
-            className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-black/10 hover:bg-blue-500"
+            className="inline-flex items-center rounded-md bg-accent px-3 py-2 text-sm font-semibold text-foreground shadow-sm shadow-black/10 hover:bg-accent"
           >
             <Activity className="mr-2 h-4 w-4" />
             {t.dashboard.refreshData}
@@ -233,23 +233,23 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {quickStats.map((stat, index) => (
           <Link key={index} href={stat.href}>
-            <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer">
+            <div className="bg-card overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div
                       className={`w-8 h-8 ${stat.color} rounded-md flex items-center justify-center`}
                     >
-                      <stat.icon className="h-5 w-5 text-white" />
+                      <stat.icon className="h-5 w-5 text-foreground" />
                     </div>
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-slate-400 truncate">
+                      <dt className="text-sm font-medium text-muted truncate">
                         {stat.title}
                       </dt>
                       <dd className="flex items-baseline">
-                        <div className="text-2xl font-semibold text-white">
+                        <div className="text-2xl font-semibold text-foreground">
                           {typeof stat.value === "string"
                             ? stat.value
                             : stat.value.toLocaleString()}
@@ -257,7 +257,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                         {stat.change !== 0 && (
                           <div
                             className={`ml-2 flex items-baseline text-sm font-semibold ${
-                              stat.change > 0 ? "text-green-400" : "text-red-400"
+                              stat.change > 0 ? "text-green-400" : "text-error"
                             }`}
                           >
                             <TrendingUp className="h-4 w-4 mr-1" />
@@ -277,15 +277,15 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
 
       {/* Today's Activity and Storage Overview */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="bg-slate-800/50 shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-white mb-4">
+        <div className="bg-card shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-foreground mb-4">
             {t.dashboard.todayActivity}
           </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Users className="h-5 w-5 text-blue-500 mr-2" />
-                <span className="text-sm text-slate-300">
+                <span className="text-sm text-foreground">
                   {t.dashboard.newUsers}
                 </span>
               </div>
@@ -294,7 +294,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <FileText className="h-5 w-5 text-green-500 mr-2" />
-                <span className="text-sm text-slate-300">
+                <span className="text-sm text-foreground">
                   {t.dashboard.newFiles}
                 </span>
               </div>
@@ -302,8 +302,8 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <FolderOpen className="h-5 w-5 text-cyan-500 mr-2" />
-                <span className="text-sm text-slate-300">
+                <FolderOpen className="h-5 w-5 text-accent mr-2" />
+                <span className="text-sm text-foreground">
                   {t.dashboard.newFolders}
                 </span>
               </div>
@@ -315,38 +315,38 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
         </div>
 
         {/* Storage Overview */}
-        <div className="bg-slate-800/50 shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-white mb-4 flex items-center">
+        <div className="bg-card shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
             <HardDrive className="h-5 w-5 text-orange-500 mr-2" />
             {t.dashboard.storageOverview}
           </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-300">
+              <div className="text-sm text-foreground">
                 {t.dashboard.totalStorage}
               </div>
-              <div className="text-lg font-semibold text-white">
+              <div className="text-lg font-semibold text-foreground">
                 {formatFileSize(stats.system.totalStorage)}
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-300">
+              <div className="text-sm text-foreground">
                 {t.dashboard.avgPerUser}
               </div>
-              <div className="text-lg font-semibold text-sky-400">
+              <div className="text-lg font-semibold text-accent">
                 {formatFileSize(stats.users.storage.averageStorage)}
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-300">
+              <div className="text-sm text-foreground">
                 {t.dashboard.maxUserUsage}
               </div>
-              <div className="text-lg font-semibold text-red-400">
+              <div className="text-lg font-semibold text-error">
                 {formatFileSize(stats.users.storage.maxStorage)}
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-300">
+              <div className="text-sm text-foreground">
                 {t.dashboard.avgFileSize}
               </div>
               <div className="text-lg font-semibold text-green-400">
@@ -357,8 +357,8 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
         </div>
 
         {/* File Type Distribution */}
-        <div className="bg-slate-800/50 shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-white mb-4">
+        <div className="bg-card shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-foreground mb-4">
             {t.dashboard.fileTypeDistribution}
           </h3>
           <div className="space-y-3">
@@ -376,20 +376,20 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                       ][index % 5]
                     }`}
                   ></div>
-                  <span className="text-sm text-slate-300 capitalize">
+                  <span className="text-sm text-foreground capitalize">
                     {type._id || t.dashboard.other}
                   </span>
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-semibold">{type.count}</div>
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs text-muted">
                     {formatFileSize(type.totalSize)}
                   </div>
                 </div>
               </div>
             ))}
             {stats.files.typeDistribution.length === 0 && (
-              <div className="text-center py-4 text-sm text-slate-400">
+              <div className="text-center py-4 text-sm text-muted">
                 {t.dashboard.noStatsData}
               </div>
             )}
@@ -397,8 +397,8 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
         </div>
 
         {/* System Health */}
-        <div className="bg-slate-800/50 shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-white mb-4">
+        <div className="bg-card shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-foreground mb-4">
             {t.dashboard.systemHealth}
           </h3>
           <div className="space-y-4">
@@ -407,7 +407,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                 <div key={service} className="flex items-center justify-between">
                   <div className="flex items-center">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span className="text-sm text-slate-300">{service}</span>
+                    <span className="text-sm text-foreground">{service}</span>
                   </div>
                   <span className="text-sm text-green-400 font-medium">
                     {t.dashboard.operational}
@@ -415,24 +415,24 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                 </div>
               ),
             )}
-            <div className="mt-4 p-3 bg-slate-800/30 rounded-md space-y-2">
-              <div className="text-sm text-slate-300">
+            <div className="mt-4 p-3 bg-card rounded-md space-y-2">
+              <div className="text-sm text-foreground">
                 <strong>{t.dashboard.totalEntities}</strong>{" "}
                 {stats.system.totalEntities.toLocaleString()}
               </div>
-              <div className="text-sm text-slate-300">
+              <div className="text-sm text-foreground">
                 <strong>{t.dashboard.totalStorage}</strong>{" "}
                 {formatFileSize(stats.system.totalStorage)}
               </div>
-              <div className="text-sm text-slate-300">
+              <div className="text-sm text-foreground">
                 <strong>{t.dashboard.largestFile}</strong>{" "}
                 {formatFileSize(stats.files.size.maxSize)}
               </div>
-              <div className="text-sm text-slate-300">
+              <div className="text-sm text-foreground">
                 <strong>{t.dashboard.mostActiveUser}</strong>{" "}
                 {formatFileSize(stats.users.storage.maxStorage)}
               </div>
-              <div className="text-sm text-slate-300">
+              <div className="text-sm text-foreground">
                 <strong>{t.dashboard.topFileType}</strong>{" "}
                 {stats.files.typeDistribution[0]?._id || t.dashboard.none}
               </div>
@@ -442,9 +442,9 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
       </div>
 
       {/* Storage Usage by Users */}
-      <div className="bg-slate-800/50 shadow rounded-lg">
-        <div className="px-6 py-4 border-b border-slate-700/50">
-          <h3 className="text-lg font-medium text-white flex items-center">
+      <div className="bg-card shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-line">
+          <h3 className="text-lg font-medium text-foreground flex items-center">
             <HardDrive className="h-5 w-5 text-orange-500 mr-2" />
             {t.dashboard.storageByUser}
           </h3>
@@ -463,22 +463,22 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                   <div className="flex items-center flex-1">
                     <div className="flex-shrink-0 mr-3">
                       <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-sky-400">
+                        <span className="text-sm font-medium text-accent">
                           {index + 1}
                         </span>
                       </div>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-white">
+                        <span className="text-sm font-medium text-foreground">
                           {user.name}
                         </span>
-                        <span className="text-sm text-slate-400">
+                        <span className="text-sm text-muted">
                           {formatFileSize(user.totalStorageUsed)} ({percentage}
                           %)
                         </span>
                       </div>
-                      <div className="w-full bg-slate-700 rounded-full h-2">
+                      <div className="w-full bg-card-hover rounded-full h-2">
                         <div
                           className={`h-2 rounded-full ${
                             index === 0
@@ -492,7 +492,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                           style={{ width: `${Math.min(percentage, 100)}%` }}
                         ></div>
                       </div>
-                      <div className="text-xs text-slate-400 mt-1">
+                      <div className="text-xs text-muted mt-1">
                         {user.totalFilesUploaded} {t.dashboard.filesLabel} •{" "}
                         {user.email}
                       </div>
@@ -502,7 +502,7 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
               );
             })}
             {stats.topUsers.length === 0 && (
-              <div className="text-center py-8 text-slate-400">
+              <div className="text-center py-8 text-muted">
                 {t.dashboard.noUserData}
               </div>
             )}
@@ -513,9 +513,9 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
       {/* Recent Activity Tables */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Users */}
-        <div className="bg-slate-800/50 shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-slate-700/50">
-            <h3 className="text-lg font-medium text-white">
+        <div className="bg-card shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-line">
+            <h3 className="text-lg font-medium text-foreground">
               {t.dashboard.recentUsers}
             </h3>
           </div>
@@ -536,30 +536,30 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                           <Users
                             className={`w-4 h-4 ${
                               user.role === "admin"
-                                ? "text-red-400"
-                                : "text-sky-400"
+                                ? "text-error"
+                                : "text-accent"
                             }`}
                           />
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-foreground">
                           {user.name}
                         </div>
-                        <div className="text-sm text-slate-400">
+                        <div className="text-sm text-muted">
                           {user.email}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-white">
+                      <div className="text-sm text-foreground">
                         {formatDate(user.createdAt, lang)}
                       </div>
                       <div
                         className={`text-xs ${
                           user.role === "admin"
-                            ? "text-red-400"
-                            : "text-sky-400"
+                            ? "text-error"
+                            : "text-accent"
                         }`}
                       >
                         {user.role === "admin"
@@ -571,10 +571,10 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                 </li>
               ))}
             </ul>
-            <div className="px-6 py-3 border-t border-slate-700/50">
+            <div className="px-6 py-3 border-t border-line">
               <Link
                 href={`${base}/users`}
-                className="text-sm text-sky-400 hover:text-blue-500 font-medium"
+                className="text-sm text-accent hover:text-accent font-medium"
               >
                 {t.dashboard.viewAllUsers}
               </Link>
@@ -583,9 +583,9 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
         </div>
 
         {/* Recent Files */}
-        <div className="bg-slate-800/50 shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-slate-700/50">
-            <h3 className="text-lg font-medium text-white">
+        <div className="bg-card shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-line">
+            <h3 className="text-lg font-medium text-foreground">
               {t.dashboard.recentFiles}
             </h3>
           </div>
@@ -601,20 +601,20 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-white truncate max-w-48">
+                        <div className="text-sm font-medium text-foreground truncate max-w-48">
                           {file.name}
                         </div>
-                        <div className="text-sm text-slate-400">
+                        <div className="text-sm text-muted">
                           {t.dashboard.byUser} {file.userId.name} •{" "}
                           {formatFileSize(file.size)}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-white">
+                      <div className="text-sm text-foreground">
                         {formatDate(file.createdAt, lang)}
                       </div>
-                      <div className="text-xs text-slate-400 capitalize">
+                      <div className="text-xs text-muted capitalize">
                         {file.type}
                       </div>
                     </div>
@@ -622,10 +622,10 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                 </li>
               ))}
             </ul>
-            <div className="px-6 py-3 border-t border-slate-700/50">
+            <div className="px-6 py-3 border-t border-line">
               <Link
                 href={`${base}/files`}
-                className="text-sm text-sky-400 hover:text-blue-500 font-medium"
+                className="text-sm text-accent hover:text-accent font-medium"
               >
                 {t.dashboard.viewAllFiles}
               </Link>
@@ -635,15 +635,15 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
       </div>
 
       {/* Top Users by Storage */}
-      <div className="bg-slate-800/50 shadow rounded-lg">
-        <div className="px-6 py-4 border-b border-slate-700/50">
-          <h3 className="text-lg font-medium text-white">
+      <div className="bg-card shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-line">
+          <h3 className="text-lg font-medium text-foreground">
             {t.dashboard.topUsersByStorage}
           </h3>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-700/50">
-            <thead className="bg-slate-800/50">
+            <thead className="bg-card">
               <tr>
                 {[
                   t.dashboard.userCol,
@@ -654,50 +654,50 @@ export default function AdminDashboardPage({ lang }: { lang: Lang }) {
                 ].map((h) => (
                   <th
                     key={h}
-                    className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider"
                   >
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="bg-slate-800/50 divide-y divide-slate-700/50">
+            <tbody className="bg-card divide-y divide-slate-700/50">
               {stats.topUsers.slice(0, 10).map((user, index) => (
                 <tr
                   key={user._id}
                   className={
-                    index % 2 === 0 ? "bg-slate-800/50" : "bg-slate-800/30"
+                    index % 2 === 0 ? "bg-card" : "bg-card"
                   }
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-8 w-8">
                         <div className="h-8 w-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-sky-400">
+                          <span className="text-sm font-medium text-accent">
                             {user.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-foreground">
                           {user.name}
                         </div>
-                        <div className="text-sm text-slate-400">
+                        <div className="text-sm text-muted">
                           {user.email}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                     {formatFileSize(user.totalStorageUsed || 0)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                     {(user.totalFilesUploaded || 0).toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                     {formatDate(user.createdAt, lang)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                     {user.lastLoginAt
                       ? formatDate(user.lastLoginAt, lang)
                       : t.common.never}

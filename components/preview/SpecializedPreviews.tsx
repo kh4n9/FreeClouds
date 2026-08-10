@@ -55,12 +55,12 @@ export function ArchivePreview({ file, onDownload }: SpecializedPreviewProps) {
     "application/x-rar-compressed": {
       name: "RAR Archive",
       icon: Archive,
-      color: "text-red-600",
+      color: "text-error",
     },
     "application/x-7z-compressed": {
       name: "7-Zip Archive",
       icon: Archive,
-      color: "text-blue-600",
+      color: "text-accent",
     },
     "application/x-tar": {
       name: "TAR Archive",
@@ -70,7 +70,7 @@ export function ArchivePreview({ file, onDownload }: SpecializedPreviewProps) {
     "application/gzip": {
       name: "GZIP Archive",
       icon: Archive,
-      color: "text-cyan-500",
+      color: "text-accent",
     },
   };
 
@@ -109,7 +109,7 @@ export function ArchivePreview({ file, onDownload }: SpecializedPreviewProps) {
         </div>
         <button
           onClick={onDownload}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+          className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors mx-auto"
         >
           <Download className="w-5 h-5" />
           Download Archive
@@ -122,9 +122,9 @@ export function ArchivePreview({ file, onDownload }: SpecializedPreviewProps) {
 // 3D Model Preview (OBJ, STL, GLTF, etc.)
 export function Model3DPreview({ file, onDownload }: SpecializedPreviewProps) {
   const modelTypes = {
-    "model/obj": { name: "OBJ 3D Model", color: "text-blue-600" },
+    "model/obj": { name: "OBJ 3D Model", color: "text-accent" },
     "model/stl": { name: "STL 3D Model", color: "text-green-600" },
-    "model/gltf+json": { name: "GLTF 3D Model", color: "text-cyan-500" },
+    "model/gltf+json": { name: "GLTF 3D Model", color: "text-accent" },
     "application/octet-stream": { name: "3D Model", color: "text-gray-600" },
   };
 
@@ -161,7 +161,7 @@ export function Model3DPreview({ file, onDownload }: SpecializedPreviewProps) {
         </div>
         <button
           onClick={onDownload}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+          className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors mx-auto"
         >
           <Download className="w-5 h-5" />
           Download Model
@@ -226,7 +226,7 @@ export function DataPreview({
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <Database className="w-16 h-16 text-blue-600 mx-auto mb-4 opacity-50" />
+          <Database className="w-16 h-16 text-accent mx-auto mb-4 opacity-50" />
           <p className="text-gray-600">Unable to load data file content</p>
         </div>
       </div>
@@ -238,7 +238,7 @@ export function DataPreview({
       {/* Header Controls */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center gap-2">
-          <Database className="w-5 h-5 text-blue-600" />
+          <Database className="w-5 h-5 text-accent" />
           <span className="font-medium">Data File</span>
         </div>
         <div className="flex items-center gap-2">
@@ -246,7 +246,7 @@ export function DataPreview({
             onClick={() => setViewMode("preview")}
             className={`px-3 py-1 text-sm rounded ${
               viewMode === "preview"
-                ? "bg-blue-600 text-white"
+                ? "bg-accent text-white"
                 : "bg-gray-200 text-gray-700"
             }`}
           >
@@ -256,7 +256,7 @@ export function DataPreview({
             onClick={() => setViewMode("raw")}
             className={`px-3 py-1 text-sm rounded ${
               viewMode === "raw"
-                ? "bg-blue-600 text-white"
+                ? "bg-accent text-white"
                 : "bg-gray-200 text-gray-700"
             }`}
           >
@@ -326,7 +326,7 @@ export function DataPreview({
                   {JSON.stringify(jsonData, null, 2)}
                 </pre>
               ) : (
-                <div className="text-center text-red-600">
+                <div className="text-center text-error">
                   <p>Invalid JSON format</p>
                 </div>
               );
@@ -358,7 +358,7 @@ export function FontPreview({ file, onDownload }: SpecializedPreviewProps) {
   return (
     <div className="flex items-center justify-center h-full">
       <div className="text-center max-w-lg p-8">
-        <div className="text-sky-600 mb-4">
+        <div className="text-accent mb-4">
           <Palette className="w-24 h-24 mx-auto" />
         </div>
         <h3 className="text-xl font-semibold text-gray-900 mb-2">{fontType}</h3>
@@ -386,7 +386,7 @@ export function FontPreview({ file, onDownload }: SpecializedPreviewProps) {
 
         <button
           onClick={onDownload}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+          className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors mx-auto"
         >
           <Download className="w-5 h-5" />
           Download Font
@@ -405,7 +405,7 @@ export function ExecutablePreview({
     "application/x-msdownload": {
       name: "Windows Executable",
       icon: HardDrive,
-      color: "text-blue-600",
+      color: "text-accent",
     },
     "application/x-executable": {
       name: "Linux Executable",
@@ -420,17 +420,17 @@ export function ExecutablePreview({
     "application/java-archive": {
       name: "Java Archive",
       icon: Code,
-      color: "text-orange-600",
+      color: "text-warning",
     },
     "application/x-deb": {
       name: "Debian Package",
       icon: Box,
-      color: "text-red-600",
+      color: "text-error",
     },
     "application/x-rpm": {
       name: "RPM Package",
       icon: Box,
-      color: "text-blue-600",
+      color: "text-accent",
     },
   };
 
@@ -453,11 +453,11 @@ export function ExecutablePreview({
         </h3>
 
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center gap-2 text-red-800 mb-2">
+          <div className="flex items-center gap-2 text-error mb-2">
             <Hash className="w-5 h-5" />
             <span className="font-medium">Security Warning</span>
           </div>
-          <p className="text-sm text-red-700">
+          <p className="text-sm text-error">
             This file may contain executable code. Only run files from trusted
             sources. Scan with antivirus before executing.
           </p>
@@ -480,7 +480,7 @@ export function ExecutablePreview({
 
         <button
           onClick={onDownload}
-          className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors mx-auto"
+          className="flex items-center gap-2 px-6 py-3 bg-error text-white rounded-lg hover:bg-red-700 transition-colors mx-auto"
         >
           <Download className="w-5 h-5" />
           Download (Use Caution)
@@ -631,7 +631,7 @@ export function SpreadsheetPreview({
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center max-w-md p-8">
-          <div className="text-red-500 mb-4">
+          <div className="text-error mb-4">
             <BarChart3 className="w-24 h-24 mx-auto" />
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -643,7 +643,7 @@ export function SpreadsheetPreview({
           </p>
           <button
             onClick={onDownload}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+            className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors mx-auto"
           >
             <Download className="w-5 h-5" />
             Download
@@ -673,7 +673,7 @@ export function SpreadsheetPreview({
           </a>
           <button
             onClick={onDownload}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors"
           >
             <Download className="w-4 h-4" />
             Download
@@ -690,7 +690,7 @@ export function SpreadsheetPreview({
               onClick={() => handleSheetChange(name)}
               className={`px-3 py-1 text-sm rounded whitespace-nowrap transition-colors ${
                 name === activeSheet
-                  ? "bg-green-600 text-white"
+                  ? "bg-success text-white"
                   : "text-gray-700 hover:bg-gray-200"
               }`}
             >
@@ -772,7 +772,7 @@ export function CADPreview({ file, onDownload }: SpecializedPreviewProps) {
   return (
     <div className="flex items-center justify-center h-full">
       <div className="text-center max-w-md p-8">
-        <div className="text-blue-600 mb-4">
+        <div className="text-accent mb-4">
           <Layers className="w-24 h-24 mx-auto" />
         </div>
         <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -796,7 +796,7 @@ export function CADPreview({ file, onDownload }: SpecializedPreviewProps) {
 
         <button
           onClick={onDownload}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+          className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors mx-auto"
         >
           <Download className="w-5 h-5" />
           Download CAD File
@@ -870,7 +870,7 @@ export function EmailPreview({
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-2 p-4 border-b border-gray-200 bg-gray-50">
         <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-          <Globe className="w-5 h-5 text-blue-600" />
+          <Globe className="w-5 h-5 text-accent" />
         </div>
         <span className="font-medium">Email Message</span>
       </div>
@@ -929,11 +929,11 @@ export function EmailPreview({
       ) : (
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <Globe className="w-16 h-16 text-blue-600 mx-auto mb-4 opacity-50" />
+            <Globe className="w-16 h-16 text-accent mx-auto mb-4 opacity-50" />
             <p className="text-gray-600 mb-4">Unable to parse email content</p>
             <button
               onClick={onDownload}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+              className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors mx-auto"
             >
               <Download className="w-4 h-4" />
               Download Email
@@ -1120,7 +1120,7 @@ export function CalendarPreview({
               <p className="text-gray-600 mb-4">No calendar events found</p>
               <button
                 onClick={onDownload}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+                className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors mx-auto"
               >
                 <Download className="w-4 h-4" />
                 Download Calendar

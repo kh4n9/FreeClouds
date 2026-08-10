@@ -85,7 +85,7 @@ export default function PreviewIndicator({
 
   const getIndicatorColor = () => {
     if (!isSecure) {
-      return "text-red-500 bg-red-50 border-red-200";
+      return "text-error bg-red-50 border-red-200";
     }
 
     if (!canPreview) {
@@ -96,30 +96,30 @@ export default function PreviewIndicator({
       case "image":
         return "text-blue-500 bg-blue-50 border-blue-200";
       case "video":
-        return "text-cyan-500 bg-cyan-50 border-cyan-200";
+        return "text-accent bg-cyan-50 border-cyan-200";
       case "audio":
         return "text-pink-500 bg-pink-50 border-pink-200";
       case "text":
       case "pdf":
         return "text-green-500 bg-green-50 border-green-200";
       case "data":
-        return "text-sky-500 bg-sky-50 border-sky-200";
+        return "text-accent bg-sky-50 border-sky-200";
       case "archive":
         return "text-yellow-500 bg-yellow-50 border-yellow-200";
       case "model3d":
-        return "text-cyan-500 bg-cyan-50 border-cyan-200";
+        return "text-accent bg-cyan-50 border-cyan-200";
       case "font":
         return "text-blue-500 bg-blue-50 border-blue-200";
       case "calendar":
         return "text-emerald-500 bg-emerald-50 border-emerald-200";
       case "email":
-        return "text-blue-600 bg-blue-50 border-blue-200";
+        return "text-accent bg-blue-50 border-blue-200";
       case "spreadsheet":
         return "text-green-600 bg-green-50 border-green-200";
       case "cad":
         return "text-orange-500 bg-orange-50 border-orange-200";
       case "executable":
-        return "text-red-500 bg-red-50 border-red-200";
+        return "text-error bg-red-50 border-red-200";
       default:
         return "text-gray-500 bg-gray-50 border-gray-200";
     }
@@ -207,7 +207,7 @@ export function PreviewStatusBadge({
 
   if (!isSecure) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-red-100 text-error rounded-full">
         <AlertTriangle className="w-3 h-3" />
         {!compact && "Risk"}
       </span>
@@ -255,7 +255,7 @@ export function PreviewStatusBadge({
     email: "bg-blue-100 text-blue-800",
     spreadsheet: "bg-green-100 text-green-800",
     cad: "bg-orange-100 text-orange-800",
-    executable: "bg-red-100 text-red-800",
+    executable: "bg-red-100 text-error",
     office: "bg-teal-100 text-teal-800",
     unsupported: "bg-gray-100 text-gray-600",
   };

@@ -135,12 +135,12 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
     {
       title: t.trash.totalFiles,
       value: pagination.total.toLocaleString(),
-      icon: <Trash2 className="h-6 w-6 text-red-400" />,
+      icon: <Trash2 className="h-6 w-6 text-error" />,
     },
     {
       title: t.trash.selectedFiles,
       value: selectedFiles.length.toLocaleString(),
-      icon: <CheckCircle className="h-6 w-6 text-blue-400" />,
+      icon: <CheckCircle className="h-6 w-6 text-accent" />,
     },
   ];
 
@@ -149,12 +149,12 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
       <PageHeader
         title={t.trash.title}
         subtitle={
-          <span className="mt-2 text-slate-300">{t.trash.subtitle}</span>
+          <span className="mt-2 text-foreground">{t.trash.subtitle}</span>
         }
         actions={
           <button
             onClick={() => fetchTrash()}
-            className="inline-flex items-center px-4 py-2 border border-slate-600/50 rounded-md shadow-sm text-sm font-medium text-slate-200 bg-slate-800/50 hover:bg-slate-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-line-hover rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-card-hover/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             {t.trash.refresh}
@@ -165,16 +165,16 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <div key={stat.title} className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
+          <div key={stat.title} className="bg-card overflow-hidden shadow rounded-lg">
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">{stat.icon}</div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-slate-400 truncate">
+                    <dt className="text-sm font-medium text-muted truncate">
                       {stat.title}
                     </dt>
-                    <dd className="text-lg font-medium text-white">
+                    <dd className="text-lg font-medium text-foreground">
                       {stat.value}
                     </dd>
                   </dl>
@@ -189,11 +189,11 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
 
       {/* Bulk Actions */}
       {selectedFiles.length > 0 && (
-        <div className="bg-blue-500/10 border border-blue-200 rounded-lg p-4">
+        <div className="bg-accent/10 border border-accent/25 rounded-lg p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-sky-400 mr-2" />
-              <span className="text-sm font-medium text-blue-200">
+              <CheckCircle className="h-5 w-5 text-accent mr-2" />
+              <span className="text-sm font-medium text-accent">
                 {t.trash.filesSelected.replace(
                   "{n}",
                   selectedFiles.length.toString(),
@@ -210,7 +210,7 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
               </button>
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-300 bg-red-600/20 hover:bg-red-600/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-error bg-error/20 hover:bg-error/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 {t.trash.permanentDelete}
@@ -221,60 +221,60 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
       )}
 
       {/* Files Table */}
-      <div className="bg-slate-800/50 shadow overflow-hidden sm:rounded-md">
+      <div className="bg-card shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:p-6">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-700/50">
-              <thead className="bg-slate-800/50">
+              <thead className="bg-card">
                 <tr>
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
                       checked={selectedFiles.length === files.length && files.length > 0}
                       onChange={handleSelectAll}
-                      className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                      className="h-4 w-4 text-accent focus:ring-accent border-line-hover rounded"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.trash.fileCol}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.trash.sizeCol}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.trash.typeCol}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.trash.ownerCol}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.trash.deletedCol}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     {t.trash.expiresCol}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-slate-800/50 divide-y divide-slate-700/50">
+              <tbody className="bg-card divide-y divide-slate-700/50">
                 {loading ? (
                   <TableLoading colSpan={7} />
                 ) : files.length === 0 ? (
                   <TableEmpty colSpan={7} message={t.trash.noFiles} />
                 ) : (
                   files.map((file) => (
-                    <tr key={file.id} className="hover:bg-slate-800/30">
+                    <tr key={file.id} className="hover:bg-card-hover/30">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="checkbox"
                           checked={selectedFiles.includes(file.id)}
                           onChange={() => handleSelectFile(file.id)}
-                          className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                          className="h-4 w-4 text-accent focus:ring-accent border-line-hover rounded"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <FileText className="h-5 w-5 text-red-500 mr-3 shrink-0" />
-                          <div className="text-sm font-medium text-white truncate max-w-56">
+                          <FileText className="h-5 w-5 text-error mr-3 shrink-0" />
+                          <div className="text-sm font-medium text-foreground truncate max-w-56">
                             {file.name}
                           </div>
                           {file.chunked && (
@@ -285,26 +285,26 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {formatFileSize(file.size)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                         {file.mime || "—"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-foreground">
                           {file.owner.name}
                         </div>
                         {file.owner.email && (
-                          <div className="text-xs text-slate-400">
+                          <div className="text-xs text-muted">
                             {file.owner.email}
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {formatDate(file.deletedAt, lang)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                         {file.trashExpiresAt
                           ? formatDate(file.trashExpiresAt, lang)
                           : t.trash.never}
@@ -338,7 +338,7 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
         icon={<RotateCcw className="h-6 w-6 text-green-400" />}
         title={t.trash.restoreTitle}
         message={
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted">
             {t.trash.restoreConfirm.replace(
               "{n}",
               selectedFiles.length.toString(),
@@ -356,10 +356,10 @@ export default function AdminTrashPage({ lang }: { lang: Lang }) {
         open={showDeleteModal}
         onCancel={() => setShowDeleteModal(false)}
         onConfirm={() => handleAction("delete")}
-        icon={<Trash2 className="h-6 w-6 text-red-400" />}
+        icon={<Trash2 className="h-6 w-6 text-error" />}
         title={t.trash.deleteTitle}
         message={
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted">
             {t.trash.deleteConfirm.replace(
               "{n}",
               selectedFiles.length.toString(),

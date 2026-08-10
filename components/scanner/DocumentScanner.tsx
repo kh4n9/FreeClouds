@@ -583,16 +583,16 @@ export default function DocumentScanner({
       />
       <div className="relative modal-content w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-400 flex items-center justify-center">
-              <Scan className="w-4.5 h-4.5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center">
+              <Scan className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-white leading-tight">
+              <h3 className="text-base font-semibold text-foreground leading-tight">
                 {tr("Document Scanner", "Quét tài liệu")}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted">
                 {tr(
                   "Scan photos of paper into clean images or PDF",
                   "Quét ảnh giấy tờ thành ảnh hoặc PDF sạch",
@@ -603,7 +603,7 @@ export default function DocumentScanner({
           <button
             onClick={onClose}
             disabled={isWorking}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all disabled:opacity-40"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground hover:text-foreground hover:bg-card-hover transition-all disabled:opacity-40"
           >
             <X className="w-4 h-4" />
           </button>
@@ -614,8 +614,8 @@ export default function DocumentScanner({
           <span
             className={`text-xs font-medium px-3 py-1 rounded-full ${
               step === "edit"
-                ? "bg-sky-500/20 text-sky-300"
-                : "bg-slate-700/40 text-slate-400"
+                ? "bg-sky-500/20 text-accent"
+                : "bg-card-hover text-muted"
             }`}
           >
             {tr("1. Adjust pages", "1. Chỉnh trang")}
@@ -624,8 +624,8 @@ export default function DocumentScanner({
           <span
             className={`text-xs font-medium px-3 py-1 rounded-full ${
               step === "save"
-                ? "bg-sky-500/20 text-sky-300"
-                : "bg-slate-700/40 text-slate-400"
+                ? "bg-sky-500/20 text-accent"
+                : "bg-card-hover text-muted"
             }`}
           >
             {tr("2. Save", "2. Lưu")}
@@ -677,13 +677,13 @@ export default function DocumentScanner({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-700/50 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-line shrink-0">
           {step === "edit" ? (
             <>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isWorking}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-600/60 text-slate-300 hover:bg-slate-700/40 disabled:opacity-40 transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-line/60 text-foreground hover:bg-card-hover disabled:opacity-40 transition-all"
               >
                 <ImagePlus className="w-4 h-4" />
                 {tr("Add photos", "Thêm ảnh")}
@@ -702,7 +702,7 @@ export default function DocumentScanner({
               <button
                 onClick={() => setStep("edit")}
                 disabled={isWorking}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-600/60 text-slate-300 hover:bg-slate-700/40 disabled:opacity-40 transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-line/60 text-foreground hover:bg-card-hover disabled:opacity-40 transition-all"
               >
                 <ArrowLeft className="w-4 h-4" />
                 {tr("Back", "Quay lại")}
@@ -710,7 +710,7 @@ export default function DocumentScanner({
               <button
                 onClick={() => void handleSave()}
                 disabled={isWorking || saving.state === "done"}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:shadow-lg hover:shadow-sky-500/25 disabled:opacity-50 transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-accent text-white hover:shadow-lg hover:shadow-accent/25 disabled:opacity-50 transition-all"
               >
                 {isWorking ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -754,17 +754,17 @@ function EmptyState({
   const tr = (en: string, vi: string) => t(en, { en, vi });
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center mb-5">
+      <div className="w-16 h-16 rounded-2xl bg-card border border-line/60 flex items-center justify-center mb-5">
         {adding ? (
-          <Loader2 className="w-8 h-8 text-sky-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-accent animate-spin" />
         ) : (
-          <Scan className="w-8 h-8 text-sky-400" />
+          <Scan className="w-8 h-8 text-accent" />
         )}
       </div>
-      <h4 className="text-lg font-semibold text-white mb-2">
+      <h4 className="text-lg font-semibold text-foreground mb-2">
         {tr("Add photos of your documents", "Thêm ảnh chụp giấy tờ của bạn")}
       </h4>
-      <p className="text-sm text-slate-400 max-w-md mb-6">
+      <p className="text-sm text-muted max-w-md mb-6">
         {tr(
           "Select one or multiple photos of paper documents. We will detect the paper edges, straighten and enhance them automatically.",
           "Chọn một hoặc nhiều ảnh chụp giấy tờ. Chúng tôi sẽ tự động nhận diện mép giấy, căn chỉnh và làm rõ ảnh.",
@@ -773,7 +773,7 @@ function EmptyState({
       <button
         onClick={onAdd}
         disabled={adding}
-        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:shadow-lg hover:shadow-sky-500/25 disabled:opacity-50 transition-all"
+        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium bg-accent text-white hover:shadow-lg hover:shadow-accent/25 disabled:opacity-50 transition-all"
       >
         {adding ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -834,12 +834,12 @@ function EditView({
       {/* Page list */}
       <div className="lg:w-56 shrink-0">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+          <p className="text-xs font-medium text-muted uppercase tracking-wider">
             {tr("Pages", "Trang")} ({pages.length})
           </p>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-sky-300 hover:bg-slate-700/50 transition-colors"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted hover:text-accent hover:bg-card-hover transition-colors"
             title={tr("Add photos", "Thêm ảnh")}
           >
             <ImagePlus className="w-4 h-4" />
@@ -852,11 +852,11 @@ function EditView({
               onClick={() => onSelect(page.id)}
               className={`group relative flex items-center gap-3 p-2 rounded-xl border transition-all cursor-pointer ${
                 selectedPage?.id === page.id
-                  ? "border-sky-500/50 bg-sky-500/10"
-                  : "border-slate-700/50 bg-slate-800/40 hover:border-slate-600/60"
+                  ? "border-sky-500/50 bg-accent/10"
+                  : "border-line bg-card/40 hover:border-line/60"
               }`}
             >
-              <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-900 shrink-0 flex items-center justify-center">
+              <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-card shrink-0 flex items-center justify-center">
                 {page.processedUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -865,22 +865,22 @@ function EditView({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <FileImage className="w-5 h-5 text-slate-500" />
+                  <FileImage className="w-5 h-5 text-muted" />
                 )}
                 {(page.processing || page.detection) && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                    <Loader2 className="w-4 h-4 text-sky-300 animate-spin" />
+                    <Loader2 className="w-4 h-4 text-accent animate-spin" />
                   </div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-slate-200 truncate">
+                <p className="text-xs font-medium text-foreground truncate">
                   {index + 1}. {page.name}
                 </p>
                 {page.error ? (
-                  <p className="text-[10px] text-red-400 truncate">{page.error}</p>
+                  <p className="text-[10px] text-error truncate">{page.error}</p>
                 ) : (
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-[10px] text-muted">
                     {page.width}×{page.height}
                   </p>
                 )}
@@ -891,7 +891,7 @@ function EditView({
                     e.stopPropagation();
                     onMove(page.id, -1);
                   }}
-                  className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white rounded"
+                  className="w-5 h-5 flex items-center justify-center text-muted hover:text-foreground rounded"
                 >
                   <ArrowUp className="w-3 h-3" />
                 </button>
@@ -900,7 +900,7 @@ function EditView({
                     e.stopPropagation();
                     onMove(page.id, 1);
                   }}
-                  className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white rounded"
+                  className="w-5 h-5 flex items-center justify-center text-muted hover:text-foreground rounded"
                 >
                   <ArrowDown className="w-3 h-3" />
                 </button>
@@ -910,7 +910,7 @@ function EditView({
                   e.stopPropagation();
                   onRemove(page.id);
                 }}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-error text-white flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -918,7 +918,7 @@ function EditView({
           ))}
         </div>
         {addWarn && (
-          <p className="mt-2 text-xs text-amber-400 flex items-center gap-1.5">
+          <p className="mt-2 text-xs text-warning flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5" /> {addWarn}
           </p>
         )}
@@ -932,8 +932,8 @@ function EditView({
             onClick={() => setViewTab("source")}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               viewTab === "source"
-                ? "bg-sky-500/20 text-sky-300"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-sky-500/20 text-accent"
+                : "text-muted hover:text-foreground"
             }`}
           >
             {tr("Source", "Ảnh gốc")}
@@ -942,8 +942,8 @@ function EditView({
             onClick={() => setViewTab("result")}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               viewTab === "result"
-                ? "bg-sky-500/20 text-sky-300"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-sky-500/20 text-accent"
+                : "text-muted hover:text-foreground"
             }`}
           >
             {tr("Result", "Kết quả")}
@@ -954,7 +954,7 @@ function EditView({
         </div>
 
         {/* Canvas area */}
-        <div className="rounded-xl border border-slate-700/50 bg-slate-900/60 p-3 relative overflow-hidden">
+        <div className="rounded-xl border border-line bg-card p-3 relative overflow-hidden">
           {selectedPage ? (
             <div className="relative flex items-center justify-center min-h-[280px]">
               {viewTab === "source" ? (
@@ -1017,14 +1017,14 @@ function EditView({
                   className="max-w-full max-h-[420px] object-contain"
                 />
               ) : (
-                <div className="flex items-center gap-2 text-sm text-slate-500 py-24">
+                <div className="flex items-center gap-2 text-sm text-muted py-24">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   {tr("Processing...", "Đang xử lý...")}
                 </div>
               )}
             </div>
           ) : (
-            <div className="py-24 text-center text-sm text-slate-500">
+            <div className="py-24 text-center text-sm text-muted">
               {tr("Select a page to edit", "Chọn một trang để chỉnh sửa")}
             </div>
           )}
@@ -1032,7 +1032,7 @@ function EditView({
 
         {/* Engine status */}
         {engineState === "failed" && (
-          <p className="mt-2 text-xs text-amber-400 flex items-center gap-1.5">
+          <p className="mt-2 text-xs text-warning flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5" />
             {tr(
               "Auto edge detection unavailable. You can still adjust corners manually.",
@@ -1049,14 +1049,14 @@ function EditView({
               <button
                 onClick={onAutoDetect}
                 disabled={engineState === "failed"}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-600/60 text-slate-300 hover:bg-slate-700/40 disabled:opacity-40 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-line/60 text-foreground hover:bg-card-hover disabled:opacity-40 transition-colors"
               >
                 <Scan className="w-3.5 h-3.5" />
                 {tr("Auto detect", "Tự nhận diện")}
               </button>
               <button
                 onClick={onResetCorners}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-600/60 text-slate-300 hover:bg-slate-700/40 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-line/60 text-foreground hover:bg-card-hover transition-colors"
               >
                 {tr("Reset corners", "Đặt lại góc")}
               </button>
@@ -1067,7 +1067,7 @@ function EditView({
                     rotate90: (s.rotate90 + 1) % 4,
                   }))
                 }
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-600/60 text-slate-300 hover:bg-slate-700/40 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-line/60 text-foreground hover:bg-card-hover transition-colors"
               >
                 <RotateCw className="w-3.5 h-3.5" />
                 {tr("Rotate", "Xoay")}
@@ -1076,10 +1076,10 @@ function EditView({
 
             {/* Filter */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-slate-400 w-20 shrink-0">
+              <span className="text-xs text-muted w-20 shrink-0">
                 {tr("Filter", "Bộ lọc")}
               </span>
-              <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+              <div className="flex items-center gap-1 bg-card rounded-lg p-1">
                 {FILTER_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
@@ -1088,8 +1088,8 @@ function EditView({
                     }
                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                       settings.filter === opt.value
-                        ? "bg-sky-500/25 text-sky-200"
-                        : "text-slate-400 hover:text-slate-200"
+                        ? "bg-accent/10 text-accent"
+                        : "text-muted hover:text-foreground"
                     }`}
                   >
                     {tr(opt.en, opt.vi)}
@@ -1145,8 +1145,8 @@ function Slider({
   return (
     <label className="block">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-slate-400">{label}</span>
-        <span className="text-xs text-slate-500 font-mono">
+        <span className="text-xs text-muted">{label}</span>
+        <span className="text-xs text-muted font-mono">
           {value > 0 ? `+${value}` : value}
         </span>
       </div>
@@ -1202,14 +1202,14 @@ function SaveView({
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Pages summary */}
       <div className="lg:col-span-2">
-        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">
+        <p className="text-xs font-medium text-muted uppercase tracking-wider mb-3">
           {tr("Pages to save", "Các trang sẽ lưu")} ({pages.length})
         </p>
         <div className="grid grid-cols-3 gap-2">
           {pages.map((page, i) => (
             <div
               key={page.id}
-              className="relative rounded-lg overflow-hidden bg-slate-900 border border-slate-700/50 aspect-[3/4]"
+              className="relative rounded-lg overflow-hidden bg-card border border-line aspect-[3/4]"
             >
               {page.processedUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -1220,7 +1220,7 @@ function SaveView({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 text-slate-500 animate-spin" />
+                  <Loader2 className="w-5 h-5 text-muted animate-spin" />
                 </div>
               )}
               <span className="absolute bottom-1 left-1 text-[10px] font-medium bg-black/60 text-white px-1.5 py-0.5 rounded">
@@ -1234,7 +1234,7 @@ function SaveView({
       {/* Options */}
       <div className="lg:col-span-3 space-y-5">
         <div>
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">
+          <p className="text-xs font-medium text-muted uppercase tracking-wider mb-2">
             {tr("Output format", "Định dạng xuất")}
           </p>
           <div className="grid grid-cols-3 gap-2">
@@ -1250,8 +1250,8 @@ function SaveView({
                 onClick={() => setFormat(opt.value)}
                 className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
                   format === opt.value
-                    ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-                    : "border-slate-700/50 bg-slate-800/40 text-slate-400 hover:border-slate-600/60"
+                    ? "border-accent/60 bg-accent/10 text-accent"
+                    : "border-line bg-card/40 text-muted hover:border-line/60"
                 }`}
               >
                 <opt.icon className="w-5 h-5" />
@@ -1260,7 +1260,7 @@ function SaveView({
             ))}
           </div>
           {format === "images" || format === "both" ? (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-muted">
               {tr(
                 `Each page is saved as a separate JPG file`,
                 `Mỗi trang được lưu thành một file JPG riêng`,
@@ -1268,7 +1268,7 @@ function SaveView({
             </p>
           ) : null}
           {format === "pdf" || format === "both" ? (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-muted">
               {tr(
                 `All pages are combined into one multi-page PDF`,
                 `Tất cả trang được gộp thành một file PDF nhiều trang`,
@@ -1278,7 +1278,7 @@ function SaveView({
         </div>
 
         <div>
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">
+          <p className="text-xs font-medium text-muted uppercase tracking-wider mb-2">
             {tr("Resolution (DPI)", "Độ phân giải (DPI)")}
           </p>
           <div className="flex items-center gap-2">
@@ -1288,8 +1288,8 @@ function SaveView({
                 onClick={() => setDpi(v)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
                   dpi === v
-                    ? "border-sky-500/60 bg-sky-500/10 text-sky-200"
-                    : "border-slate-700/50 bg-slate-800/40 text-slate-400 hover:border-slate-600/60"
+                    ? "border-accent/60 bg-accent/10 text-accent"
+                    : "border-line bg-card/40 text-muted hover:border-line/60"
                 }`}
               >
                 {v}
@@ -1299,7 +1299,7 @@ function SaveView({
         </div>
 
         <div>
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">
+          <p className="text-xs font-medium text-muted uppercase tracking-wider mb-2">
             {tr("File name prefix", "Tiền tố tên file")}
           </p>
           <input
@@ -1310,7 +1310,7 @@ function SaveView({
             className="input-modern w-full px-4 py-2.5 rounded-xl text-sm"
             maxLength={100}
           />
-          <p className="mt-2 text-xs text-slate-500 font-mono break-all">
+          <p className="mt-2 text-xs text-muted font-mono break-all">
             {format === "pdf"
               ? `${sanitizePrefix(prefix)}.pdf`
               : format === "images"
@@ -1324,28 +1324,28 @@ function SaveView({
           <div
             className={`rounded-xl p-4 border ${
               saving.state === "error"
-                ? "border-red-500/40 bg-red-500/10"
+                ? "border-red-500/40 bg-error/10"
                 : saving.state === "done"
                   ? "border-emerald-500/40 bg-emerald-500/10"
-                  : "border-slate-700/50 bg-slate-800/40"
+                  : "border-line bg-card/40"
             }`}
           >
             {saving.state === "working" && (
               <>
-                <div className="flex items-center gap-2 text-sm text-slate-200 mb-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-sky-300" />
+                <div className="flex items-center gap-2 text-sm text-foreground mb-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-accent" />
                   {saving.message}
                 </div>
                 <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 rounded-full transition-all duration-300"
+                    className="h-full bg-accent rounded-full transition-all duration-300"
                     style={{ width: `${saving.progress}%` }}
                   />
                 </div>
               </>
             )}
             {saving.state === "done" && (
-              <div className="flex items-center gap-2 text-sm text-emerald-300">
+              <div className="flex items-center gap-2 text-sm text-success">
                 <CheckCircle2 className="w-5 h-5" />
                 {tr("Saved to cloud successfully!", "Đã lưu lên cloud thành công!")}
                 <span className="ml-auto">
@@ -1359,12 +1359,12 @@ function SaveView({
               </div>
             )}
             {saving.state === "error" && (
-              <div className="flex items-center gap-2 text-sm text-red-300">
+              <div className="flex items-center gap-2 text-sm text-error">
                 <AlertCircle className="w-5 h-5" />
                 <span className="flex-1">{saving.error}</span>
                 <button
                   onClick={onSave}
-                  className="px-4 py-1.5 rounded-lg text-xs font-medium bg-red-500/20 text-red-200 hover:bg-red-500/30 transition-colors"
+                  className="px-4 py-1.5 rounded-lg text-xs font-medium bg-error/10 text-error hover:bg-error/20 transition-colors"
                 >
                   {tr("Retry", "Thử lại")}
                 </button>
@@ -1373,7 +1373,7 @@ function SaveView({
           </div>
         )}
 
-        <div className="flex items-center gap-2 text-xs text-slate-500">
+        <div className="flex items-center gap-2 text-xs text-muted">
           <AlertCircle className="w-4 h-4" />
           {tr(
             "The result will be saved into your current folder as a new file.",

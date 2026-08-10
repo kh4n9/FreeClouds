@@ -53,7 +53,7 @@ export async function buildDownloadResponse(
     try {
       const cachedPath = file.telegramFilePath;
       const result = await telegramAPI.getFileStream(file.fileId, cachedPath || undefined);
-      if (!cachedPath && result.filePath) {
+      if (result.filePath !== cachedPath) {
         File.updateOne({ _id: file._id }, { telegramFilePath: result.filePath }).catch(() => {});
       }
       fileStream = result.stream;
@@ -126,7 +126,7 @@ export async function buildDownloadResponse(
       const t0 = Date.now();
       const cachedPath = c.telegramFilePath;
       const result = await telegramAPI.getFileStream(c.fileId, cachedPath || undefined);
-      if (!cachedPath && result.filePath) {
+      if (result.filePath !== cachedPath) {
         File.updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
       }
       const reader = result.stream.getReader();

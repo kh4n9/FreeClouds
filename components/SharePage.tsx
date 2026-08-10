@@ -133,12 +133,12 @@ export default function SharePage({ token, lang = "en" }: SharePageProps) {
     return (
       <div className="min-h-screen app-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-500/20 animate-pulse">
+          <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-5 shadow-lg animate-pulse">
             <Cloud className="w-8 h-8 text-white" />
           </div>
           <div className="flex gap-1.5 justify-center">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="w-2.5 h-2.5 rounded-full bg-blue-500/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+              <div key={i} className="w-2.5 h-2.5 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
             ))}
           </div>
         </div>
@@ -148,13 +148,13 @@ export default function SharePage({ token, lang = "en" }: SharePageProps) {
 
   return (
     <div className="min-h-screen app-bg flex flex-col">
-      <nav className="flex-shrink-0 border-b border-slate-800/50 bg-slate-950/40 backdrop-blur-xl">
+      <nav className="flex-shrink-0 border-b border-line bg-card/70 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center shadow-sm">
               <Cloud className="w-5 h-5 text-white" />
             </div>
-            <span className="text-lg font-bold text-white">Free<span className="text-cyan-400">Clouds</span></span>
+            <span className="text-lg font-bold text-foreground">Free<span className="text-accent">Clouds</span></span>
           </Link>
         </div>
       </nav>
@@ -166,15 +166,15 @@ export default function SharePage({ token, lang = "en" }: SharePageProps) {
               initial={{ opacity: 0, y: 16, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="rounded-2xl bg-slate-800/50 border border-slate-700/50 p-10 text-center"
+              className="rounded-2xl bg-card border border-line p-10 text-center"
             >
-              <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto mb-5">
-                <ShieldAlert className="w-8 h-8 text-red-400" />
+              <div className="w-16 h-16 rounded-2xl bg-error/10 border border-error/30 flex items-center justify-center mx-auto mb-5">
+                <ShieldAlert className="w-8 h-8 text-error" />
               </div>
-              <h1 className="text-xl font-bold text-white mb-2">
+              <h1 className="text-xl font-bold text-foreground mb-2">
                 {vi ? "Liên kết không hợp lệ" : "Invalid share link"}
               </h1>
-              <p className="text-sm text-slate-400 mb-6">{error}</p>
+              <p className="text-sm text-muted mb-6">{error}</p>
               <Link href="/" className="btn-primary px-6 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
                 <Globe className="w-4 h-4" /> {vi ? "Về trang chủ" : "Go to homepage"}
               </Link>
@@ -184,21 +184,21 @@ export default function SharePage({ token, lang = "en" }: SharePageProps) {
               initial={{ opacity: 0, y: 16, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="rounded-2xl bg-slate-800/50 border border-slate-700/50 overflow-hidden"
+              className="rounded-2xl bg-card border border-line overflow-hidden"
             >
               {/* Header */}
-              <div className="p-6 border-b border-slate-700/50">
-                <div className="text-xs text-slate-400 mb-4 flex items-center gap-2">
-                  <Globe className="w-3.5 h-3.5 text-cyan-400" />
+              <div className="p-6 border-b border-line">
+                <div className="text-xs text-muted mb-4 flex items-center gap-2">
+                  <Globe className="w-3.5 h-3.5 text-accent" />
                   {vi ? `Được chia sẻ bởi ${meta.ownerName}` : `Shared by ${meta.ownerName}`}
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center">
-                    <FileIcon className="w-7 h-7 text-cyan-400" />
+                  <div className="w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-accent/30 flex items-center justify-center">
+                    <FileIcon className="w-7 h-7 text-accent" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h1 className="text-lg font-bold text-white break-all leading-snug">{meta.displayName}</h1>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-400">
+                    <h1 className="text-lg font-bold text-foreground break-all leading-snug">{meta.displayName}</h1>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-muted">
                       <span className="flex items-center gap-1.5"><HardDrive className="w-3.5 h-3.5" /> {formatSize(meta.size)}</span>
                       <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {formatDate(meta.createdAt)}</span>
                       {meta.maxDownloads && (
@@ -213,21 +213,21 @@ export default function SharePage({ token, lang = "en" }: SharePageProps) {
               <div className="p-6">
                 {meta.hasPassword && (
                   <div className="mb-5">
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       {vi ? "Mật khẩu bảo vệ" : "Protected by password"}
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => { setPassword(e.target.value); setPasswordError(null); }}
                         onKeyDown={(e) => e.key === "Enter" && handleDownloadClick()}
                         placeholder={vi ? "Nhập mật khẩu để tải xuống" : "Enter password to download"}
-                        className="input-modern w-full pl-10 pr-4 py-3 rounded-xl text-sm bg-slate-900/60 border-slate-700/50 focus:border-cyan-500/50 transition-all"
+                        className="input-modern w-full pl-10 pr-4 py-3 rounded-xl text-sm bg-card border-line focus:border-accent/50 transition-all"
                       />
                     </div>
-                    {passwordError && <p className="text-xs text-red-400 mt-2">{passwordError}</p>}
+                    {passwordError && <p className="text-xs text-error mt-2">{passwordError}</p>}
                   </div>
                 )}
 
@@ -246,7 +246,7 @@ export default function SharePage({ token, lang = "en" }: SharePageProps) {
                     : (vi ? "Tải xuống file" : "Download File")}
                 </button>
 
-                <p className="text-xs text-slate-500 text-center mt-4">
+                <p className="text-xs text-muted text-center mt-4">
                   {vi
                     ? "File được lưu trữ an toàn trên hạ tầng Telegram"
                     : "File securely stored on Telegram infrastructure"}

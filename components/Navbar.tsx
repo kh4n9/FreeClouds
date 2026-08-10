@@ -56,14 +56,14 @@ export default function Navbar({
   };
 
   return (
-    <nav className="glass border-b border-slate-700/50 px-4 py-3 relative z-50">
+    <nav className="glass border-b border-line px-4 py-3 relative z-50">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
               <Cloud className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-xl font-bold text-foreground">
               {t("brand", { en: "Free Clouds", vi: "Free Clouds" })}
             </h1>
           </div>
@@ -75,7 +75,7 @@ export default function Navbar({
           {user?.role === "admin" && (
             <a
               href={adminPath}
-              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-300 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-all"
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-accent bg-accent/10 border border-accent/25 rounded-lg hover:bg-accent/20 transition-all"
               title="Admin"
             >
               <Shield className="w-4 h-4" />
@@ -87,9 +87,9 @@ export default function Navbar({
             <div className="relative user-dropdown">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-2 py-2 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all min-h-[44px]"
+                className="flex items-center gap-2 px-2 py-2 text-sm text-foreground hover:bg-card-hover rounded-lg transition-all min-h-[44px]"
               >
-                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-400">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-accent">
                   {user.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
@@ -98,18 +98,18 @@ export default function Navbar({
                   )}
                 </div>
                 <div className="hidden md:block text-left">
-                  <div className="font-medium text-white">{user.name}</div>
-                  <div className="text-xs text-slate-500 truncate max-w-32">
+                  <div className="font-medium text-foreground">{user.name}</div>
+                  <div className="text-xs text-muted truncate max-w-32">
                     {user.email}
                   </div>
                 </div>
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl z-50 animate-scale-in">
-                  <div className="px-4 py-3 border-b border-slate-700">
-                    <div className="font-medium text-white">{user.name}</div>
-                    <div className="text-sm text-slate-400 break-all">
+                <div className="absolute right-0 mt-2 w-64 bg-card border border-line rounded-xl shadow-lg z-50 animate-scale-in">
+                  <div className="px-4 py-3 border-b border-line">
+                    <div className="font-medium text-foreground">{user.name}</div>
+                    <div className="text-sm text-muted break-all">
                       {user.email}
                     </div>
                   </div>
@@ -119,14 +119,14 @@ export default function Navbar({
                         setIsDropdownOpen(false);
                         onOpenUserProfile?.();
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-slate-700 rounded-lg transition-all"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-card-hover rounded-lg transition-all"
                     >
-                      <Settings className="w-4 h-4 text-slate-400" />
+                      <Settings className="w-4 h-4 text-muted" />
                       {t("settings", commonTranslations.settings)}
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-error hover:bg-error/10 rounded-lg transition-all"
                     >
                       <LogOut className="w-4 h-4" />
                       {t("logout", commonTranslations.logout)}
@@ -140,7 +140,7 @@ export default function Navbar({
               <LanguageSwitcher variant="icon-only" className="sm:hidden" />
               <a
                 href="/login"
-                className="px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
+                className="px-4 py-2 text-sm text-muted hover:text-foreground transition-colors"
               >
                 {t("login", commonTranslations.login)}
               </a>

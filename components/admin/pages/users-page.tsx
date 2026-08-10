@@ -352,21 +352,21 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
           <>
             <button
               onClick={exportUsers}
-              className="inline-flex items-center rounded-md bg-slate-800/50 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-black/10 ring-1 ring-inset ring-gray-300 hover:bg-slate-800/30"
+              className="inline-flex items-center rounded-md bg-card px-3 py-2 text-sm font-semibold text-foreground shadow-sm shadow-black/10 ring-1 ring-inset ring-gray-300 hover:bg-card-hover/30"
             >
               <Download className="mr-2 h-4 w-4" />
               {t.users.exportExcel}
             </button>
             <button
               onClick={() => fetchUsers()}
-              className="inline-flex items-center rounded-md bg-slate-800/50 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-black/10 ring-1 ring-inset ring-gray-300 hover:bg-slate-800/30"
+              className="inline-flex items-center rounded-md bg-card px-3 py-2 text-sm font-semibold text-foreground shadow-sm shadow-black/10 ring-1 ring-inset ring-gray-300 hover:bg-card-hover/30"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               {t.common.refresh}
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-black/10 hover:bg-blue-500"
+              className="inline-flex items-center rounded-md bg-accent px-3 py-2 text-sm font-semibold text-foreground shadow-sm shadow-black/10 hover:bg-accent"
             >
               <Plus className="mr-2 h-4 w-4" />
               {t.users.addUser}
@@ -378,7 +378,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
       <ErrorBanner message={error} />
 
       {/* Filters and Search */}
-      <div className="bg-slate-800/50 shadow rounded-lg">
+      <div className="bg-card shadow rounded-lg">
         <div className="px-6 py-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <SearchInput
@@ -419,13 +419,13 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
           </div>
 
           <div className="lg:col-span-4 flex items-center justify-between mt-4">
-            <div className="text-sm text-slate-300">
+            <div className="text-sm text-foreground">
               📊 {t.common.showing} {users.length} {t.common.of}{" "}
               {pagination.totalUsers} {t.users.showingUsers}
               {(searchTerm ||
                 roleFilter !== "all" ||
                 statusFilter !== "all") && (
-                <span className="ml-2 text-sky-400">{t.common.filtered}</span>
+                <span className="ml-2 text-accent">{t.common.filtered}</span>
               )}
             </div>
             <ResetFiltersButton lang={lang} onClick={resetFilters} disabled={!hasFilters} />
@@ -442,10 +442,10 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
       </div>
 
       {/* Users Table */}
-      <div className="bg-slate-800/50 shadow rounded-lg overflow-hidden">
+      <div className="bg-card shadow rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-700/50">
-            <thead className="bg-slate-800/50">
+            <thead className="bg-card">
               <tr>
                 <th className="px-6 py-3 text-left">
                   <input
@@ -454,49 +454,49 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                       selectedUsers.length === users.length && users.length > 0
                     }
                     onChange={handleSelectAll}
-                    className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                    className="h-4 w-4 text-accent focus:ring-accent border-line-hover rounded"
                   />
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
+                  className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider cursor-pointer hover:text-foreground"
                   onClick={() => handleSort("name")}
                 >
                   {t.users.userHeader}
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
+                  className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider cursor-pointer hover:text-foreground"
                   onClick={() => handleSort("role")}
                 >
                   {t.users.roleHeader}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                   {t.users.statusHeader}
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
+                  className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider cursor-pointer hover:text-foreground"
                   onClick={() => handleSort("totalStorageUsed")}
                 >
                   {t.users.storage}
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
+                  className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider cursor-pointer hover:text-foreground"
                   onClick={() => handleSort("totalFilesUploaded")}
                 >
                   {t.users.filesHeader}
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
+                  className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider cursor-pointer hover:text-foreground"
                   onClick={() => handleSort("totalFolders")}
                 >
                   {t.users.foldersHeader}
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200"
+                  className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider cursor-pointer hover:text-foreground"
                   onClick={() => handleSort("createdAt")}
                 >
                   {t.users.joinedHeader}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                   {t.users.lastLoginHeader}
                 </th>
                 <th className="relative px-6 py-3">
@@ -504,20 +504,20 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-slate-800/50 divide-y divide-slate-700/50">
+            <tbody className="bg-card divide-y divide-slate-700/50">
               {loading ? (
                 <TableLoading colSpan={10} />
               ) : users.length === 0 ? (
                 <TableEmpty colSpan={10} message={t.users.noUsers} />
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-800/30">
+                  <tr key={user.id} className="hover:bg-card-hover/30">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <input
                         type="checkbox"
                         checked={selectedUsers.includes(user.id)}
                         onChange={() => handleSelectUser(user.id)}
-                        className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                        className="h-4 w-4 text-accent focus:ring-accent border-line-hover rounded"
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -531,17 +531,17 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                             }`}
                           >
                             {user.role === "admin" ? (
-                              <Shield className="h-5 w-5 text-red-400" />
+                              <Shield className="h-5 w-5 text-error" />
                             ) : (
-                              <Users className="h-5 w-5 text-sky-400" />
+                              <Users className="h-5 w-5 text-accent" />
                             )}
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-white">
+                          <div className="text-sm font-medium text-foreground">
                             {user.name}
                           </div>
-                          <div className="text-sm text-slate-400">
+                          <div className="text-sm text-muted">
                             {user.email}
                           </div>
                         </div>
@@ -559,19 +559,19 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                         {user.isActive ? t.common.active : t.common.inactive}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                       {formatFileSize(user.totalStorageUsed || 0)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                       {(user.totalFilesUploaded || 0).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                       {(user.totalFolders || 0).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                       {formatDate(user.createdAt, lang)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                       {user.lastLoginAt
                         ? formatDate(user.lastLoginAt, lang)
                         : t.common.never}
@@ -580,7 +580,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                       <div className="flex items-center space-x-2">
                         <Link
                           href={`${base}/users/${user.id}`}
-                          className="text-sky-400 hover:text-blue-900"
+                          className="text-accent hover:text-accent"
                         >
                           <Eye className="h-4 w-4" />
                         </Link>
@@ -595,7 +595,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                             setUserToDelete(user);
                             setShowDeleteModal(true);
                           }}
-                          className="text-red-400 hover:text-red-900"
+                          className="text-error hover:text-red-900"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -633,7 +633,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
           <div>
             <label
               htmlFor="createName"
-              className="block text-sm font-medium text-slate-200 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               {t.users.fullName}
             </label>
@@ -644,20 +644,20 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
               required
               value={createForm.name}
               onChange={handleCreateFormChange}
-              className={`block w-full px-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                createErrors.name ? "border-red-300" : "border-slate-600/50"
+              className={`block w-full px-3 py-2 border rounded-md leading-5 bg-card placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
+                createErrors.name ? "border-red-300" : "border-line-hover"
               }`}
               placeholder={t.users.fullNamePlaceholder}
             />
             {createErrors.name && (
-              <p className="mt-1 text-sm text-red-400">{createErrors.name}</p>
+              <p className="mt-1 text-sm text-error">{createErrors.name}</p>
             )}
           </div>
 
           <div>
             <label
               htmlFor="createEmail"
-              className="block text-sm font-medium text-slate-200 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               {t.users.email}
             </label>
@@ -669,21 +669,21 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                 required
                 value={createForm.email}
                 onChange={handleCreateFormChange}
-                className={`block w-full px-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  createErrors.email ? "border-red-300" : "border-slate-600/50"
+                className={`block w-full px-3 py-2 border rounded-md leading-5 bg-card placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
+                  createErrors.email ? "border-red-300" : "border-line-hover"
                 }`}
                 placeholder={t.users.emailPlaceholder}
               />
             </div>
             {createErrors.email && (
-              <p className="mt-1 text-sm text-red-400">{createErrors.email}</p>
+              <p className="mt-1 text-sm text-error">{createErrors.email}</p>
             )}
           </div>
 
           <div>
             <label
               htmlFor="createPassword"
-              className="block text-sm font-medium text-slate-200 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               {t.users.password}
             </label>
@@ -694,13 +694,13 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
               required
               value={createForm.password}
               onChange={handleCreateFormChange}
-              className={`block w-full px-3 py-2 border rounded-md leading-5 bg-slate-800/80 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                createErrors.password ? "border-red-300" : "border-slate-600/50"
+              className={`block w-full px-3 py-2 border rounded-md leading-5 bg-card placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
+                createErrors.password ? "border-red-300" : "border-line-hover"
               }`}
               placeholder={t.users.passwordPlaceholder}
             />
             {createErrors.password && (
-              <p className="mt-1 text-sm text-red-400">
+              <p className="mt-1 text-sm text-error">
                 {createErrors.password}
               </p>
             )}
@@ -709,7 +709,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
           <div>
             <label
               htmlFor="createRole"
-              className="block text-sm font-medium text-slate-200 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               {t.users.roleField}
             </label>
@@ -718,7 +718,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
               name="role"
               value={createForm.role}
               onChange={handleCreateFormChange}
-              className="block w-full px-3 py-2 border border-slate-600/50 rounded-md bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="block w-full px-3 py-2 border border-line-hover rounded-md bg-card focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             >
               <option value="user">{t.common.user}</option>
               <option value="admin">{t.common.administrator}</option>
@@ -726,7 +726,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
           </div>
 
           {createErrors.general && (
-            <div className="bg-red-500/10 border border-red-200 rounded-lg p-3">
+            <div className="bg-error/10 border border-red-200 rounded-lg p-3">
               <p className="text-sm text-red-700">{createErrors.general}</p>
             </div>
           )}
@@ -735,7 +735,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
             <button
               type="submit"
               disabled={createLoading}
-              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-accent text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {createLoading ? t.common.creating : t.users.createUser}
             </button>
@@ -747,7 +747,7 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
                 setCreateErrors({});
               }}
               disabled={createLoading}
-              className="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+              className="flex-1 bg-gray-500 text-foreground py-2 px-4 rounded-md text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
             >
               {t.common.cancel}
             </button>
@@ -763,10 +763,10 @@ export default function AdminUsersPage({ lang }: { lang: Lang }) {
           setUserToDelete(null);
         }}
         onConfirm={() => userToDelete && handleDeleteUser(userToDelete)}
-        icon={<Trash2 className="h-6 w-6 text-red-400" />}
+        icon={<Trash2 className="h-6 w-6 text-error" />}
         title={t.users.deleteUser}
         message={
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted">
             {t.users.deleteConfirm.replace(
               "{name}",
               userToDelete?.name || "",

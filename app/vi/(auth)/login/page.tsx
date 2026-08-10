@@ -139,14 +139,14 @@ export default function VietnameseLoginPage() {
       <AuthShell>
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Cloud className="w-8 h-8 text-white" />
+            <div className="w-14 h-14 p-3 rounded-2xl bg-accent shadow-[0_12px_32px_-12px_rgba(37,99,235,0.5)]">
+              <Cloud className="w-7 h-7 text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-2">
             Chào mừng trở lại
           </h1>
-          <p className="text-slate-400">
+          <p className="text-sub">
             Đăng nhập vào tài khoản Free Clouds của bạn
           </p>
         </div>
@@ -154,50 +154,50 @@ export default function VietnameseLoginPage() {
         <div className="modal-content p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && !error.field && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-300">{error.message}</p>
+              <div className="p-4 rounded-xl bg-error/10 border border-error/25 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-error font-medium">{error.message}</p>
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
                 Địa chỉ Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input id="email" name="email" type="email" autoComplete="email" required
                   value={form.email} onChange={handleInputChange}
                   className={`input-modern w-full pl-10 pr-4 py-3 rounded-xl ${
-                    error?.field === "email" ? "border-red-500/50 bg-red-500/5" : ""
+                    error?.field === "email" ? "border-error/50 bg-error/5" : ""
                   }`}
                   placeholder="Nhập địa chỉ email của bạn" disabled={loading} />
               </div>
               {error?.field === "email" && (
-                <p className="mt-1 text-sm text-red-400">{error.message}</p>
+                <p className="mt-1.5 text-sm text-error">{error.message}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1.5">
                 Mật khẩu
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input id="password" name="password" type={showPassword ? "text" : "password"}
                   autoComplete="current-password" required value={form.password}
                   onChange={handleInputChange}
                   className={`input-modern w-full pl-10 pr-12 py-3 rounded-xl ${
-                    error?.field === "password" ? "border-red-500/50 bg-red-500/5" : ""
+                    error?.field === "password" ? "border-error/50 bg-error/5" : ""
                   }`}
                   placeholder="Nhập mật khẩu của bạn" disabled={loading} />
                 <button type="button" onClick={togglePasswordVisibility}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors">
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
               {error?.field === "password" && (
-                <p className="mt-1 text-sm text-red-400">{error.message}</p>
+                <p className="mt-1.5 text-sm text-error">{error.message}</p>
               )}
             </div>
 
@@ -213,12 +213,12 @@ export default function VietnameseLoginPage() {
           </form>
 
           <div className="mt-6 text-center space-y-4">
-            <a href="/vi/forgot-password" className="text-sm text-sky-400 hover:text-sky-300 font-medium">
+            <a href="/vi/forgot-password" className="text-sm text-accent hover:text-accent-hover font-medium">
               Quên mật khẩu?
             </a>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-sub">
               Chưa có tài khoản?{" "}
-              <a href="/vi/register" className="text-sky-400 hover:text-sky-300 font-medium">
+              <a href="/vi/register" className="text-accent hover:text-accent-hover font-medium">
                 Đăng ký ngay
               </a>
             </p>
@@ -226,7 +226,7 @@ export default function VietnameseLoginPage() {
         </div>
 
         <div className="text-center mt-6">
-          <a href="/vi" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
+          <a href="/vi" className="text-sm text-muted hover:text-foreground transition-colors">
             ← Về trang chủ
           </a>
         </div>

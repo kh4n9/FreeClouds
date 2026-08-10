@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Shield, Zap, Users, ArrowRight, Check, Cloud, Lock, Globe, Upload, FolderPlus, Share2 } from "lucide-react";
+import { Shield, Zap, Cloud, Lock, Users, Globe, ArrowRight, Check, Upload, FolderPlus, Share2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import DashboardMockup from "@/components/DashboardMockup";
@@ -75,7 +75,7 @@ const faqData = {
       name: "Tôi có thể truy cập file từ bất kỳ thiết bị nào không?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Có. Free Clouds hoạt động trên mọi trình duyệt và nền tảng — Windows, macOS, Linux, iOS và Android.",
+        text: "Có. Free Clouds hoạt động trên mọi trình duyệt và nền tảng, Windows, macOS, Linux, iOS và Android.",
       },
     },
     {
@@ -96,45 +96,33 @@ const breadcrumbsData = generateBreadcrumbs([
 const features = [
   {
     icon: Shield,
-    title: "Bảo Mật & Riêng Tư",
-    desc: "File của bạn được mã hóa và lưu trữ an toàn. Chỉ bạn mới có quyền truy cập.",
-    en: "Secure and private",
-    gradient: "from-blue-500 to-sky-500",
+    title: "Bảo mật & riêng tư",
+    desc: "File được mã hóa và lưu trữ an toàn. Chỉ bạn mới có quyền truy cập.",
   },
   {
     icon: Zap,
-    title: "Tốc Độ Cực Nhanh",
+    title: "Tốc độ cực nhanh",
     desc: "Tải lên và tải xuống với tốc độ cao nhờ hạ tầng tối ưu.",
-    en: "Lightning fast",
-    gradient: "from-cyan-500 to-blue-500",
   },
   {
     icon: Cloud,
-    title: "Vận Hành Bởi Telegram",
+    title: "Vận hành bởi Telegram",
     desc: "Tận dụng hạ tầng mạnh mẽ của Telegram cho lưu trữ luôn sẵn sàng.",
-    en: "Telegram powered",
-    gradient: "from-sky-400 to-cyan-400",
   },
   {
     icon: Lock,
-    title: "Bảo Mật Doanh Nghiệp",
+    title: "Bảo mật doanh nghiệp",
     desc: "Xác thực JWT, bảo vệ CSRF, giới hạn tốc độ tích hợp sẵn.",
-    en: "Enterprise security",
-    gradient: "from-blue-600 to-cyan-500",
   },
   {
     icon: Users,
-    title: "Dễ Dàng Quản Lý",
+    title: "Dễ dàng quản lý",
     desc: "Sắp xếp với thư mục, tìm kiếm tức thì, quản lý dễ dàng.",
-    en: "Easy organization",
-    gradient: "from-cyan-500 to-teal-500",
   },
   {
     icon: Globe,
-    title: "Truy Cập Mọi Nơi",
+    title: "Truy cập mọi nơi",
     desc: "Truy cập file từ bất kỳ thiết bị nào, bất kỳ đâu trên thế giới.",
-    en: "Cross-platform",
-    gradient: "from-sky-500 to-blue-600",
   },
 ];
 
@@ -142,23 +130,17 @@ const steps = [
   {
     icon: Upload,
     title: "Tải file lên đám mây",
-    desc: "Kéo và thả file vào đám mây. File được mã hóa và lưu trữ an toàn trên hạ tầng Telegram.",
-    en: "Upload your files",
-    gradient: "from-blue-500 to-sky-500",
+    desc: "Kéo và thả file vào đám mây. File được mã hóa và lưu trữ an toàn.",
   },
   {
     icon: FolderPlus,
     title: "Tổ chức với thư mục",
-    desc: "Tạo thư mục không giới hạn, tìm kiếm tức thì và sắp xếp mọi thứ gọn gàng.",
-    en: "Organize with folders",
-    gradient: "from-cyan-500 to-teal-500",
+    desc: "Tạo thư mục không giới hạn và tìm kiếm tức thì trên mọi thứ.",
   },
   {
     icon: Share2,
     title: "Truy cập mọi nơi",
-    desc: "Mở file từ bất kỳ thiết bị nào, trên mọi nền tảng — đúng lúc bạn cần.",
-    en: "Access anywhere",
-    gradient: "from-sky-500 to-blue-600",
+    desc: "Mở file từ bất kỳ thiết bị nào, trên mọi nền tảng, đúng lúc bạn cần.",
   },
 ];
 
@@ -185,113 +167,136 @@ export default function VietnameseHomePage() {
       />
 
       {/* Hero */}
-      <section className="relative pt-32 pb-24 overflow-hidden">
+      <section className="relative pt-24 pb-20 overflow-hidden">
         <div className="absolute inset-0">
-          <Image src="/images/hero-bg.webp?w=1200&q=70" alt="" fill priority sizes="100vw" className="object-cover opacity-25" />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/70 to-[#0f172a]" />
+          <Image src="/images/hero-bg.webp?w=1200&q=70" alt="" fill priority sizes="100vw" className="object-cover opacity-[0.06]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background" />
         </div>
-        <div className="absolute top-1/4 -left-24 w-96 h-96 bg-blue-500/20 rounded-full blur-[128px] animate-pulse-slow" />
-        <div className="absolute bottom-1/4 -right-24 w-96 h-96 bg-cyan-500/20 rounded-full blur-[128px] animate-pulse-slow" style={{ animationDelay: "1.5s" }} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Stagger className="text-center max-w-4xl mx-auto mb-16">
-            <StaggerItem className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-sm mb-8">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              Vận hành bởi hạ tầng Telegram
-            </StaggerItem>
-            <StaggerItem>
-              <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-                File Của Bạn,{" "}
-                <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-sky-400 bg-clip-text text-transparent">
-                  Ở Mọi Nơi
-                </span>
-              </h1>
-            </StaggerItem>
-            <StaggerItem>
-              <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-                Lưu trữ, sắp xếp và truy cập file của bạn một cách an toàn trên đám mây. Được vận hành bởi hạ tầng mạnh mẽ của Telegram với bảo mật cấp doanh nghiệp.
-              </p>
-            </StaggerItem>
-            <StaggerItem>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/vi/register" className="btn-primary px-8 py-4 rounded-xl text-lg font-semibold inline-flex items-center gap-2 group">
-                  Bắt Đầu Miễn Phí
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <a href="#features" className="btn-secondary px-8 py-4 rounded-xl text-lg font-semibold inline-flex items-center gap-2">
-                  Tìm Hiểu Thêm
-                </a>
-              </div>
-            </StaggerItem>
-          </Stagger>
-
-          <Reveal delay={0.2}><DashboardMockup /></Reveal>
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div>
+              <Stagger className="max-w-xl">
+                <StaggerItem className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-medium mb-7">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                  Vận hành bởi hạ tầng Telegram
+                </StaggerItem>
+                <StaggerItem>
+                  <h1 className="text-4xl md:text-5xl xl:text-6xl font-semibold tracking-tighter leading-[1.05] text-foreground mb-6">
+                    File của bạn,{" "}
+                    <em className="font-semibold text-accent not-italic">ở mọi nơi</em> bạn cần.
+                  </h1>
+                </StaggerItem>
+                <StaggerItem>
+                  <p className="text-base md:text-lg text-sub leading-relaxed mb-9 max-w-md">
+                    Lưu trữ, sắp xếp và truy cập file an toàn trên đám mây. Được vận hành bởi hạ tầng Telegram với bảo mật cấp doanh nghiệp.
+                  </p>
+                </StaggerItem>
+                <StaggerItem>
+                  <div className="flex flex-col sm:flex-row gap-3.5">
+                    <Link
+                      href="/vi/register"
+                      className="btn-primary px-7 py-3.5 rounded-xl text-base font-semibold inline-flex items-center justify-center gap-2 group"
+                    >
+                      Bắt đầu miễn phí
+                      <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                    <a
+                      href="#features"
+                      className="btn-secondary px-7 py-3.5 rounded-xl text-base font-semibold inline-flex items-center justify-center gap-2"
+                    >
+                      Tìm hiểu thêm
+                    </a>
+                  </div>
+                </StaggerItem>
+              </Stagger>
+            </div>
+            <Reveal delay={0.15} className="lg:pl-6">
+              <DashboardMockup />
+            </Reveal>
+          </div>
         </div>
       </section>
 
       {/* Stats */}
-      <section className="py-16 border-y border-slate-800 bg-slate-950/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-8" gap={0.12}>
+      <section className="border-y border-line bg-card/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-y-10" gap={0.08}>
             <StaggerItem>
               <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                  <CountUp to={50} suffix="MB" />
+                <div className="text-3xl md:text-4xl font-semibold tracking-tight text-accent font-mono">
+                  <CountUp to={50} suffix=" MB" />
                 </div>
-                <div className="text-sm text-slate-500 mt-1">Giới hạn file</div>
+                <div className="text-sm text-muted mt-1.5">Giới hạn file</div>
               </div>
             </StaggerItem>
             <StaggerItem>
               <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                  ∞
-                </div>
-                <div className="text-sm text-slate-500 mt-1">Thư mục</div>
+                <div className="text-3xl md:text-4xl font-semibold tracking-tight text-accent font-mono">∞</div>
+                <div className="text-sm text-muted mt-1.5">Thư mục</div>
               </div>
             </StaggerItem>
             <StaggerItem>
               <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                <div className="text-3xl md:text-4xl font-semibold tracking-tight text-accent font-mono">
                   <CountUp to={99.9} decimals={1} suffix="%" />
                 </div>
-                <div className="text-sm text-slate-500 mt-1">Hoạt động ổn định</div>
+                <div className="text-sm text-muted mt-1.5">Hoạt động ổn định</div>
               </div>
             </StaggerItem>
             <StaggerItem>
               <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                <div className="text-3xl md:text-4xl font-semibold tracking-tight text-accent font-mono">
                   <CountUp to={24} suffix="/7" />
                 </div>
-                <div className="text-sm text-slate-500 mt-1">Hỗ trợ</div>
+                <div className="text-sm text-muted mt-1.5">Hỗ trợ</div>
               </div>
             </StaggerItem>
           </Stagger>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="py-24">
+      {/* Features — bento */}
+      <section id="features" className="py-20 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="text-center mb-16">
-            <div className="text-sm font-medium text-cyan-400 uppercase tracking-widest mb-3">Tính năng</div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <Reveal className="max-w-2xl mb-14">
+            <div className="text-sm font-medium text-accent uppercase tracking-[0.14em] mb-3">Tính năng</div>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-foreground mb-4">
               Mọi thứ bạn cần cho lưu trữ file
             </h2>
-            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-sub">
               Lưu trữ đám mây đơn giản, an toàn và đáng tin cậy với đầy đủ tính năng bạn mong đợi.
             </p>
           </Reveal>
-          <Stagger className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature) => {
+          <Stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4" gap={0.07}>
+            <StaggerItem className="lg:col-span-4 lg:row-span-2">
+              <div className="relative h-full min-h-[320px] rounded-2xl overflow-hidden border border-line group">
+                <Image
+                  src="/images/about.webp"
+                  alt="File được sắp xếp trong thư mục, lưu trữ an toàn trên đám mây"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 66vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                  <Cloud className="w-6 h-6 text-accent mb-3" />
+                  <h3 className="text-lg md:text-xl font-semibold text-foreground mb-1">
+                    Dữ liệu của bạn, luôn trong tầm tay
+                  </h3>
+                  <p className="text-sm text-sub">Mã hóa · Sao lưu · Luôn sẵn sàng</p>
+                </div>
+              </div>
+            </StaggerItem>
+            {features.slice(0, 4).map((feature) => {
               const Icon = feature.icon;
               return (
-                <StaggerItem key={feature.title}>
-                  <div className="stat-card group">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} p-2.5 mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
-                      <Icon className="w-full h-full text-white" />
+                <StaggerItem key={feature.title} className="lg:col-span-2">
+                  <div className="h-full rounded-2xl border border-line bg-card p-6 transition-all duration-200 hover:border-line-hover hover:shadow-[0_12px_32px_-16px_rgba(23,25,31,0.25)]">
+                    <div className="w-10 h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center mb-4">
+                      <Icon className="w-5 h-5" />
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                    <p className="text-sm text-slate-400 mb-2">{feature.desc}</p>
-                    <p className="text-xs text-slate-500 italic">{feature.en}</p>
+                    <h3 className="text-[15px] font-semibold text-foreground mb-1.5">{feature.title}</h3>
+                    <p className="text-sm text-sub leading-relaxed">{feature.desc}</p>
                   </div>
                 </StaggerItem>
               );
@@ -301,33 +306,34 @@ export default function VietnameseHomePage() {
       </section>
 
       {/* How it works */}
-      <section className="py-24 bg-slate-900/50 border-y border-slate-800">
+      <section className="py-20 md:py-24 bg-card/50 border-y border-line">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
             <Reveal>
-              <div className="text-sm font-medium text-cyan-400 uppercase tracking-widest mb-3">Cách hoạt động</div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-foreground mb-4">
                 Ba bước đến đám mây tự do
               </h2>
-              <p className="text-lg text-slate-400 mb-10">
-                Bắt đầu chỉ mất chưa đầy một phút. Không cần thẻ tín dụng — chỉ cần tạo tài khoản miễn phí.
+              <p className="text-base md:text-lg text-sub mb-10">
+                Bắt đầu chỉ mất chưa đầy một phút. Không cần thẻ tín dụng, chỉ cần tạo tài khoản miễn phí.
               </p>
-              <Stagger className="space-y-6" gap={0.12}>
+              <Stagger className="space-y-8" gap={0.1}>
                 {steps.map((step, i) => {
                   const Icon = step.icon;
                   return (
                     <StaggerItem key={step.title}>
-                      <div className="flex gap-4 group">
-                        <div className={`w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br ${step.gradient} p-3 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                          <Icon className="w-full h-full text-white" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-3 mb-1">
-                            <span className="text-sm font-semibold text-white">{step.title}</span>
-                            <span className="text-xs text-slate-500">— Bước {i + 1}</span>
+                      <div className="flex gap-5">
+                        <div className="flex flex-col items-center">
+                          <div className="w-11 h-11 shrink-0 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
+                            <Icon className="w-5 h-5" />
                           </div>
-                          <p className="text-sm text-slate-400">{step.desc}</p>
-                          <p className="text-xs text-slate-500 italic mt-0.5">{step.en}</p>
+                          {i < steps.length - 1 && <div className="w-px flex-1 bg-line my-2" />}
+                        </div>
+                        <div className="pt-1.5">
+                          <div className="flex items-baseline gap-2.5 mb-1">
+                            <span className="text-xs font-semibold font-mono text-accent">0{i + 1}</span>
+                            <span className="text-[15px] font-semibold text-foreground">{step.title}</span>
+                          </div>
+                          <p className="text-sm text-sub leading-relaxed">{step.desc}</p>
                         </div>
                       </div>
                     </StaggerItem>
@@ -335,19 +341,23 @@ export default function VietnameseHomePage() {
                 })}
               </Stagger>
             </Reveal>
-            <Reveal delay={0.15}>
+            <Reveal delay={0.12}>
               <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-3xl blur-2xl" />
-                <div className="relative rounded-2xl overflow-hidden border border-slate-700/60 shadow-2xl">
-                  <Image src="/images/about.webp" alt="File được lưu trữ an toàn trên đám mây" width={1600} height={1066} className="w-full h-auto object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
-                  <div className="absolute bottom-5 left-5 right-5 flex items-center gap-3 rounded-xl glass px-4 py-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shrink-0">
+                <div className="relative rounded-2xl overflow-hidden border border-line shadow-[0_24px_64px_-32px_rgba(23,25,31,0.35)]">
+                  <Image
+                    src="/images/hero-bg.webp?w=1200&q=70"
+                    alt="Truy cập lưu trữ đám mây từ bất kỳ thiết bị nào"
+                    width={1600}
+                    height={1066}
+                    className="w-full h-auto object-cover"
+                  />
+                  <div className="absolute bottom-5 left-5 right-5 flex items-center gap-3 rounded-xl border border-line bg-card/90 backdrop-blur px-4 py-3">
+                    <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center shrink-0">
                       <Cloud className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-white">Dữ liệu của bạn, luôn trong tầm tay</div>
-                      <div className="text-xs text-slate-400">Mã hóa · Sao lưu · Luôn sẵn sàng</div>
+                      <div className="text-sm font-semibold text-foreground">Dữ liệu của bạn, luôn trong tầm tay</div>
+                      <div className="text-xs text-sub">Mã hóa · Sao lưu · Luôn sẵn sàng</div>
                     </div>
                   </div>
                 </div>
@@ -358,50 +368,49 @@ export default function VietnameseHomePage() {
       </section>
 
       {/* Pricing */}
-      <section className="py-24">
+      <section className="py-20 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="text-center mb-16">
-            <div className="text-sm font-medium text-cyan-400 uppercase tracking-widest mb-3">Bảng giá</div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <Reveal className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-foreground mb-4">
               Giá đơn giản, minh bạch
             </h2>
-            <p className="text-lg text-slate-400">Bắt đầu miễn phí, nâng cấp khi bạn cần thêm.</p>
+            <p className="text-base md:text-lg text-sub">Bắt đầu miễn phí, nâng cấp khi bạn cần thêm.</p>
           </Reveal>
-          <Stagger className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto" gap={0.12}>
+          <Stagger className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto" gap={0.1}>
             {pricing.map((plan) => (
               <StaggerItem key={plan.name}>
-                <div className={`relative rounded-2xl p-8 transition-all duration-300 hover:translate-y-[-4px] ${
-                  plan.popular
-                    ? "bg-gradient-to-b from-blue-500/10 to-cyan-500/10 border-2 border-cyan-500/50 shadow-xl shadow-cyan-500/10"
-                    : "bg-slate-800/50 border border-slate-700"
-                }`}>
+                <div
+                  className={`relative h-full rounded-2xl p-7 transition-all duration-200 hover:-translate-y-0.5 ${
+                    plan.popular
+                      ? "border-2 border-accent bg-card shadow-[0_20px_48px_-24px_rgba(37,99,235,0.35)]"
+                      : "border border-line bg-card hover:border-line-hover"
+                  }`}
+                >
                   {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 text-xs font-semibold text-white">
-                      Phổ Biến Nhất
+                    <div className="absolute -top-3 left-6 px-3 py-0.5 rounded-full bg-accent text-xs font-medium text-white">
+                      Phổ biến nhất
                     </div>
                   )}
-                  <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
+                  <h3 className="text-base font-semibold text-foreground mb-1.5">{plan.name}</h3>
                   <div className="flex items-baseline gap-1 mb-6">
-                    <span className="text-4xl font-bold text-white">{plan.price}</span>
-                    <span className="text-slate-400">/{plan.period}</span>
+                    <span className="text-4xl font-semibold tracking-tight text-foreground font-mono">{plan.price}</span>
+                    <span className="text-sm text-muted">/{plan.period}</span>
                   </div>
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-2.5 mb-8">
                     {plan.features.map((f) => (
-                      <li key={f} className="flex items-center gap-3 text-sm text-slate-300">
-                        <Check className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                      <li key={f} className="flex items-center gap-2.5 text-sm text-sub">
+                        <Check className="w-4 h-4 text-accent flex-shrink-0" />
                         {f}
                       </li>
                     ))}
                   </ul>
                   <Link
                     href="/vi/register"
-                    className={`w-full py-3 rounded-xl text-sm font-semibold text-center block transition-all ${
-                      plan.popular
-                        ? "btn-primary"
-                        : "btn-secondary"
+                    className={`w-full py-2.5 rounded-xl text-sm font-semibold text-center block transition-all ${
+                      plan.popular ? "btn-primary" : "btn-secondary"
                     }`}
                   >
-                    Bắt Đầu Ngay
+                    Bắt đầu ngay
                   </Link>
                 </div>
               </StaggerItem>
@@ -411,24 +420,24 @@ export default function VietnameseHomePage() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 relative overflow-hidden">
+      <section className="relative py-20 md:py-24 overflow-hidden">
         <div className="absolute inset-0">
-          <Image src="/images/cta-bg.webp" alt="" fill className="object-cover opacity-30" />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/70 via-slate-950/80 to-cyan-900/70" />
+          <Image src="/images/cta-bg.webp" alt="" fill className="object-cover opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-background to-background" />
         </div>
-        <Reveal className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+        <Reveal className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-foreground mb-4">
             Sẵn sàng bắt đầu?
           </h2>
-          <p className="text-lg text-slate-300 mb-8 max-w-xl mx-auto">
+          <p className="text-base md:text-lg text-sub mb-8 max-w-lg mx-auto">
             Hàng nghìn người dùng đã tin tưởng Free Clouds với file của họ.
           </p>
           <Link
             href="/vi/register"
-            className="btn-primary px-10 py-4 rounded-xl text-lg font-semibold inline-flex items-center gap-2 group"
+            className="btn-primary px-9 py-3.5 rounded-xl text-base font-semibold inline-flex items-center gap-2 group"
           >
-            Tạo Tài Khoản
-            <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+            Tạo tài khoản
+            <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </Reveal>
       </section>

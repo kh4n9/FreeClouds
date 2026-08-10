@@ -107,7 +107,7 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
   };
 
   const inputClass =
-    "block w-full px-3 py-2 border border-slate-600/50 rounded-md bg-slate-800/80 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent";
+    "block w-full px-3 py-2 border border-line-hover rounded-md bg-card text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent";
 
   if (loading) {
     return (
@@ -122,13 +122,13 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
       <PageHeader
         title={t.settings.title}
         subtitle={
-          <span className="mt-2 text-slate-300">{t.settings.subtitle}</span>
+          <span className="mt-2 text-foreground">{t.settings.subtitle}</span>
         }
         actions={
           <button
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm shadow-black/10 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm shadow-black/10 text-sm font-medium text-foreground bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50"
           >
             {saving ? (
               <>
@@ -159,10 +159,10 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* General */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-slate-800/50 shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-slate-700/50 flex items-center">
-              <Globe className="h-5 w-5 text-sky-400 mr-2" />
-              <h3 className="text-lg font-medium text-white">
+          <div className="bg-card shadow rounded-lg">
+            <div className="px-6 py-4 border-b border-line flex items-center">
+              <Globe className="h-5 w-5 text-accent mr-2" />
+              <h3 className="text-lg font-medium text-foreground">
                 {t.settings.sectionGeneral}
               </h3>
             </div>
@@ -170,7 +170,7 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
               <div>
                 <label
                   htmlFor="siteName"
-                  className="block text-sm font-medium text-slate-200 mb-2"
+                  className="block text-sm font-medium text-foreground mb-2"
                 >
                   {t.settings.siteName}
                 </label>
@@ -186,10 +186,10 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
             </div>
           </div>
 
-          <div className="bg-slate-800/50 shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-slate-700/50 flex items-center">
+          <div className="bg-card shadow rounded-lg">
+            <div className="px-6 py-4 border-b border-line flex items-center">
               <UserPlus className="h-5 w-5 text-green-400 mr-2" />
-              <h3 className="text-lg font-medium text-white">
+              <h3 className="text-lg font-medium text-foreground">
                 {t.settings.sectionRegistration}
               </h3>
             </div>
@@ -199,19 +199,19 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
                   type="checkbox"
                   checked={allowRegistration}
                   onChange={(e) => setAllowRegistration(e.target.checked)}
-                  className="h-4 w-4 text-sky-400 focus:ring-blue-500 border-slate-600/50 rounded"
+                  className="h-4 w-4 text-accent focus:ring-accent border-line-hover rounded"
                 />
-                <span className="ml-3 text-sm text-slate-200">
+                <span className="ml-3 text-sm text-foreground">
                   {t.settings.allowRegistration}
                 </span>
               </label>
             </div>
           </div>
 
-          <div className="bg-slate-800/50 shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-slate-700/50 flex items-center">
-              <HardDrive className="h-5 w-5 text-cyan-400 mr-2" />
-              <h3 className="text-lg font-medium text-white">
+          <div className="bg-card shadow rounded-lg">
+            <div className="px-6 py-4 border-b border-line flex items-center">
+              <HardDrive className="h-5 w-5 text-accent mr-2" />
+              <h3 className="text-lg font-medium text-foreground">
                 {t.settings.sectionStorage}
               </h3>
             </div>
@@ -219,7 +219,7 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
               <div>
                 <label
                   htmlFor="storageLimit"
-                  className="block text-sm font-medium text-slate-200 mb-2"
+                  className="block text-sm font-medium text-foreground mb-2"
                 >
                   {t.settings.storageLimit}
                 </label>
@@ -233,7 +233,7 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
                 />
               </div>
               {settings && (
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-muted">
                   {t.settings.storageLimitHint.replace(
                     "{value}",
                     formatFileSize(settings.storageLimit),
@@ -246,40 +246,40 @@ export default function AdminSettingsPage({ lang }: { lang: Lang }) {
 
         {/* Preview card */}
         <div className="lg:col-span-1">
-          <div className="bg-slate-800/50 shadow rounded-lg p-6 sticky top-6">
+          <div className="bg-card shadow rounded-lg p-6 sticky top-6">
             <div className="flex items-center mb-4">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-                <SettingsIcon className="h-5 w-5 text-white" />
+              <div className="h-10 w-10 rounded-lg bg-accent flex items-center justify-center">
+                <SettingsIcon className="h-5 w-5 text-foreground" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-white">
+                <p className="text-sm font-medium text-foreground">
                   {siteName || "Free Clouds"}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-muted">
                   {t.nav.brand}
                 </p>
               </div>
             </div>
             <dl className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <dt className="text-slate-400">
+                <dt className="text-muted">
                   {t.settings.allowRegistration}
                 </dt>
-                <dd className="text-white">
+                <dd className="text-foreground">
                   {allowRegistration ? t.common.yes : t.common.no}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-slate-400">{t.settings.storageLimit}</dt>
-                <dd className="text-white">
+                <dt className="text-muted">{t.settings.storageLimit}</dt>
+                <dd className="text-foreground">
                   {storageLimitMB ? `${Number(storageLimitMB).toLocaleString()} MB` : "—"}
                 </dd>
               </div>
             </dl>
             {error && (
               <div className="mt-4 flex items-start">
-                <AlertTriangle className="h-4 w-4 text-red-400 mr-2 mt-0.5 shrink-0" />
-                <span className="text-xs text-red-300">{error}</span>
+                <AlertTriangle className="h-4 w-4 text-error mr-2 mt-0.5 shrink-0" />
+                <span className="text-xs text-error">{error}</span>
               </div>
             )}
           </div>

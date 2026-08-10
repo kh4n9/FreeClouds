@@ -73,8 +73,8 @@ function FolderRow({
         onClick={() => onPick(node.id)}
         className={`flex items-center gap-2 min-h-[40px] px-2 py-1.5 rounded-lg cursor-pointer select-none transition-colors ${
           isTarget
-            ? "bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/30"
-            : "hover:bg-slate-700/50 text-slate-300"
+            ? "bg-blue-500/20 text-accent ring-1 ring-blue-500/30"
+            : "hover:bg-card-hover text-foreground"
         }`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
       >
@@ -83,7 +83,7 @@ function FolderRow({
             e.stopPropagation();
             if (hasChildren) setExpanded((v) => !v);
           }}
-          className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-slate-700/50 transition-colors shrink-0"
+          className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-card-hover transition-colors shrink-0"
           style={{
             color: hasChildren ? "#94a3b8" : "transparent",
             transform: hasChildren && expanded ? "rotate(90deg)" : "rotate(0deg)",
@@ -94,9 +94,9 @@ function FolderRow({
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
-        <Folder className="w-4 h-4 shrink-0 text-sky-400" />
+        <Folder className="w-4 h-4 shrink-0 text-accent" />
         <div className="flex-1 min-w-0 text-sm truncate">{node.name}</div>
-        {isTarget && <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-300" />}
+        {isTarget && <CheckCircle2 className="w-4 h-4 shrink-0 text-accent" />}
       </div>
       {expanded && hasChildren && (
         <div style={{ marginTop: 2 }}>
@@ -168,18 +168,18 @@ export default function MoveModal({
         className="modal-content w-full max-w-md max-h-[85vh] overflow-hidden animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center">
               {isFolder ? <FolderOpen className="w-4 h-4 text-white" /> : <Folder className="w-4 h-4 text-white" />}
             </div>
             <div className="min-w-0">
-              <h2 className="text-lg font-semibold text-white leading-tight">
+              <h2 className="text-lg font-semibold text-foreground leading-tight">
                 {isFolder
                   ? t("moveFolder", { en: "Move Folder", vi: "Di chuyển thư mục" })
                   : t("moveFile", { en: "Move File", vi: "Di chuyển tệp" })}
               </h2>
-              <p className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
+              <p className="text-xs text-muted truncate flex items-center gap-1 mt-0.5">
                 {isFolder ? <FolderOpen className="w-3 h-3 shrink-0" /> : <FileText className="w-3 h-3 shrink-0" />}
                 {item.name}
               </p>
@@ -187,14 +187,14 @@ export default function MoveModal({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="p-6 max-h-[50vh] overflow-y-auto">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">
             {t("chooseDestination", { en: "Choose destination", vi: "Chọn nơi đến" })}
           </p>
 
@@ -203,21 +203,21 @@ export default function MoveModal({
             onClick={() => setTargetId(null)}
             className={`flex items-center gap-2 min-h-[40px] px-2 py-1.5 rounded-lg cursor-pointer select-none transition-colors ${
               targetId === null
-                ? "bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/30"
-                : "hover:bg-slate-700/50 text-slate-300"
+                ? "bg-blue-500/20 text-accent ring-1 ring-blue-500/30"
+                : "hover:bg-card-hover text-foreground"
             }`}
           >
-            <svg className="w-4 h-4 shrink-0 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="w-4 h-4 shrink-0 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v1M4 10h16M4 10v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
             </svg>
             <div className="flex-1 min-w-0 font-medium text-sm">
               {t("allFiles", commonTranslations.allFiles)}
             </div>
-            {targetId === null && <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-300" />}
+            {targetId === null && <CheckCircle2 className="w-4 h-4 shrink-0 text-accent" />}
           </div>
 
           {tree.length > 0 && (
-            <div className="mt-1 border-t border-slate-700/50 pt-1">
+            <div className="mt-1 border-t border-line pt-1">
               {tree.map((n) => (
                 <FolderRow key={n.id} node={n} level={0} targetId={targetId} onPick={setTargetId} />
               ))}
@@ -225,7 +225,7 @@ export default function MoveModal({
           )}
 
           {targetId !== currentFolderId && (
-            <p className="text-xs text-slate-500 mt-3">
+            <p className="text-xs text-muted mt-3">
               {isFolder
                 ? t("moveFolderNote", {
                     en: "The folder and all its contents will be moved to the selected location.",
@@ -239,17 +239,17 @@ export default function MoveModal({
           )}
 
           {error && (
-            <div className="mt-3 px-4 py-3 bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl text-sm">
+            <div className="mt-3 px-4 py-3 bg-error/10 border border-red-500/20 text-error rounded-xl text-sm">
               {error}
             </div>
           )}
         </div>
 
-        <div className="flex justify-end gap-3 p-6 pt-0 border-t border-slate-700/50 mt-2">
+        <div className="flex justify-end gap-3 p-6 pt-0 border-t border-line mt-2">
           <button
             onClick={onClose}
             disabled={moving}
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-700/50 transition-all disabled:opacity-50"
+            className="px-4 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-card-hover transition-all disabled:opacity-50"
           >
             {t("cancel", commonTranslations.cancel)}
           </button>

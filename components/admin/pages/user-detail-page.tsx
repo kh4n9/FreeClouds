@@ -231,16 +231,16 @@ export default function AdminUserDetailPage({
         <div className="flex items-center">
           <Link
             href={`${base}/users`}
-            className="flex items-center text-sm text-slate-400 hover:text-slate-200"
+            className="flex items-center text-sm text-muted hover:text-foreground"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             {t.userDetail.backToList}
           </Link>
         </div>
-        <div className="bg-red-500/10 border border-red-200 rounded-lg p-6">
+        <div className="bg-error/10 border border-red-200 rounded-lg p-6">
           <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-            <span className="text-red-300">{error}</span>
+            <AlertTriangle className="h-5 w-5 text-error mr-2" />
+            <span className="text-error">{error}</span>
           </div>
         </div>
       </div>
@@ -250,7 +250,7 @@ export default function AdminUserDetailPage({
   if (!user) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-400">{t.userDetail.noInfo}</p>
+        <p className="text-muted">{t.userDetail.noInfo}</p>
       </div>
     );
   }
@@ -262,13 +262,13 @@ export default function AdminUserDetailPage({
         <div className="flex items-center space-x-4">
           <Link
             href={`${base}/users`}
-            className="flex items-center text-sm text-slate-400 hover:text-slate-200"
+            className="flex items-center text-sm text-muted hover:text-foreground"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             {t.userDetail.backToList}
           </Link>
           <div className="text-gray-300">|</div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             {t.userDetail.title}
           </h1>
         </div>
@@ -276,14 +276,14 @@ export default function AdminUserDetailPage({
         <div className="flex items-center space-x-3">
           <Link
             href={`${base}/users/${userId}/edit`}
-            className="inline-flex items-center px-3 py-2 border border-slate-600/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-slate-200 bg-slate-800/50 hover:bg-slate-700/50"
+            className="inline-flex items-center px-3 py-2 border border-line-hover shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-foreground bg-card hover:bg-card-hover"
           >
             <Edit className="mr-2 h-4 w-4" />
             {t.userDetail.edit}
           </Link>
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="inline-flex items-center px-3 py-2 border border-red-500/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-red-300 bg-slate-800/50 hover:bg-red-500/10"
+            className="inline-flex items-center px-3 py-2 border border-red-500/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-error bg-card hover:bg-error/10"
           >
             <Trash2 className="mr-2 h-4 w-4" />
             {t.userDetail.delete}
@@ -293,18 +293,18 @@ export default function AdminUserDetailPage({
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/10 border border-red-200 rounded-lg p-4">
+        <div className="bg-error/10 border border-red-200 rounded-lg p-4">
           <div className="flex">
-            <AlertTriangle className="h-5 w-5 text-red-400" />
+            <AlertTriangle className="h-5 w-5 text-error" />
             <div className="ml-3">
-              <p className="text-sm text-red-300">{error}</p>
+              <p className="text-sm text-error">{error}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* User Profile Card */}
-      <div className="bg-slate-800/50 shadow rounded-lg overflow-hidden">
+      <div className="bg-card shadow rounded-lg overflow-hidden">
         <div className="px-6 py-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -314,15 +314,15 @@ export default function AdminUserDetailPage({
                 }`}
               >
                 {user.role === "admin" ? (
-                  <Shield className="h-10 w-10 text-red-400" />
+                  <Shield className="h-10 w-10 text-error" />
                 ) : (
-                  <User className="h-10 w-10 text-sky-400" />
+                  <User className="h-10 w-10 text-accent" />
                 )}
               </div>
             </div>
             <div className="ml-6 flex-1">
               <div className="flex items-center">
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className="text-2xl font-bold text-foreground">
                   {user.name}
                 </h2>
                 <span
@@ -340,23 +340,23 @@ export default function AdminUserDetailPage({
                   className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     user.isActive
                       ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-slate-100"
+                      : "bg-card-hover text-sub"
                   }`}
                 >
                   {user.isActive ? t.common.active : t.common.inactive}
                 </span>
               </div>
-              <div className="mt-1 flex items-center text-sm text-slate-400">
+              <div className="mt-1 flex items-center text-sm text-muted">
                 <Mail className="mr-1 h-4 w-4" />
                 {user.email}
               </div>
-              <div className="mt-1 flex items-center text-sm text-slate-400">
+              <div className="mt-1 flex items-center text-sm text-muted">
                 <Calendar className="mr-1 h-4 w-4" />
                 {t.userDetail.joinedLabel}{" "}
                 {formatDate(user.createdAt, lang)}
               </div>
               {user.lastLoginAt && (
-                <div className="mt-1 flex items-center text-sm text-slate-400">
+                <div className="mt-1 flex items-center text-sm text-muted">
                   <Clock className="mr-1 h-4 w-4" />
                   {t.userDetail.lastLogin} {getRelativeTime(user.lastLoginAt)}
                 </div>
@@ -368,8 +368,8 @@ export default function AdminUserDetailPage({
                 disabled={actionLoading}
                 className={`inline-flex items-center px-3 py-2 border shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md ${
                   user.isActive
-                    ? "border-red-500/50 text-red-300 bg-slate-800/50 hover:bg-red-500/10"
-                    : "border-green-500/50 text-green-300 bg-slate-800/50 hover:bg-green-500/10"
+                    ? "border-red-500/50 text-error bg-card hover:bg-error/10"
+                    : "border-green-500/50 text-green-300 bg-card hover:bg-green-500/10"
                 } disabled:opacity-50`}
               >
                 {user.isActive ? (
@@ -387,7 +387,7 @@ export default function AdminUserDetailPage({
               <button
                 onClick={handleToggleRole}
                 disabled={actionLoading}
-                className="inline-flex items-center px-3 py-2 border border-cyan-500/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-blue-300 bg-slate-800/50 hover:bg-blue-500/10 disabled:opacity-50"
+                className="inline-flex items-center px-3 py-2 border border-accent/50 shadow-sm shadow-black/10 text-sm leading-4 font-medium rounded-md text-accent bg-card hover:bg-accent/10 disabled:opacity-50"
               >
                 <Shield className="mr-2 h-4 w-4" />
                 {user.role === "admin"
@@ -401,7 +401,7 @@ export default function AdminUserDetailPage({
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -409,10 +409,10 @@ export default function AdminUserDetailPage({
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-400 truncate">
+                  <dt className="text-sm font-medium text-muted truncate">
                     {t.userDetail.totalFiles}
                   </dt>
-                  <dd className="text-lg font-medium text-white">
+                  <dd className="text-lg font-medium text-foreground">
                     {user.stats.totalFiles.toLocaleString()}
                   </dd>
                 </dl>
@@ -421,7 +421,7 @@ export default function AdminUserDetailPage({
           </div>
         </div>
 
-        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -429,10 +429,10 @@ export default function AdminUserDetailPage({
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-400 truncate">
+                  <dt className="text-sm font-medium text-muted truncate">
                     {t.userDetail.totalFolders}
                   </dt>
-                  <dd className="text-lg font-medium text-white">
+                  <dd className="text-lg font-medium text-foreground">
                     {user.stats.totalFolders.toLocaleString()}
                   </dd>
                 </dl>
@@ -441,18 +441,18 @@ export default function AdminUserDetailPage({
           </div>
         </div>
 
-        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <HardDrive className="h-8 w-8 text-cyan-500" />
+                <HardDrive className="h-8 w-8 text-accent" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-400 truncate">
+                  <dt className="text-sm font-medium text-muted truncate">
                     {t.userDetail.storageUsed}
                   </dt>
-                  <dd className="text-lg font-medium text-white">
+                  <dd className="text-lg font-medium text-foreground">
                     {formatFileSize(user.totalStorageUsed || 0)}
                   </dd>
                 </dl>
@@ -461,7 +461,7 @@ export default function AdminUserDetailPage({
           </div>
         </div>
 
-        <div className="bg-slate-800/50 overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -469,10 +469,10 @@ export default function AdminUserDetailPage({
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-400 truncate">
+                  <dt className="text-sm font-medium text-muted truncate">
                     {t.userDetail.avgSize}
                   </dt>
-                  <dd className="text-lg font-medium text-white">
+                  <dd className="text-lg font-medium text-foreground">
                     {user.stats.totalFiles > 0
                       ? formatFileSize(
                           user.stats.totalSize / user.stats.totalFiles,
@@ -489,9 +489,9 @@ export default function AdminUserDetailPage({
       {/* Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* File Type Distribution */}
-        <div className="bg-slate-800/50 shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-slate-700/50">
-            <h3 className="text-lg font-medium text-white">
+        <div className="bg-card shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-line">
+            <h3 className="text-lg font-medium text-foreground">
               {t.userDetail.fileTypeDist}
             </h3>
           </div>
@@ -512,18 +512,18 @@ export default function AdminUserDetailPage({
                             colorClasses[index % colorClasses.length]
                           }`}
                         ></div>
-                        <span className="text-sm font-medium text-white capitalize">
+                        <span className="text-sm font-medium text-foreground capitalize">
                           {type || t.userDetail.unknownType}
                         </span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-foreground">
                           {t.userDetail.filesCount.replace(
                             "{n}",
                             data.count.toString(),
                           )}
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-muted">
                           {formatFileSize(data.size)}
                         </div>
                       </div>
@@ -531,7 +531,7 @@ export default function AdminUserDetailPage({
                   ))}
               </div>
             ) : (
-              <p className="text-slate-400 text-center py-4">
+              <p className="text-muted text-center py-4">
                 {t.userDetail.noFiles}
               </p>
             )}
@@ -539,9 +539,9 @@ export default function AdminUserDetailPage({
         </div>
 
         {/* Recent Files */}
-        <div className="bg-slate-800/50 shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-slate-700/50">
-            <h3 className="text-lg font-medium text-white">
+        <div className="bg-card shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-line">
+            <h3 className="text-lg font-medium text-foreground">
               {t.userDetail.recentFiles}
             </h3>
           </div>
@@ -555,16 +555,16 @@ export default function AdminUserDetailPage({
                         <FileText className="h-8 w-8 text-gray-400" />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-white truncate max-w-48">
+                        <div className="text-sm font-medium text-foreground truncate max-w-48">
                           {file.name}
                         </div>
-                        <div className="text-sm text-slate-400">
+                        <div className="text-sm text-muted">
                           {formatFileSize(file.size)} •{" "}
                           {getRelativeTime(file.createdAt)}
                         </div>
                       </div>
                     </div>
-                    <div className="text-xs text-slate-400 capitalize">
+                    <div className="text-xs text-muted capitalize">
                       {file.type || t.userDetail.unknownType}
                     </div>
                   </div>
@@ -572,15 +572,15 @@ export default function AdminUserDetailPage({
               ))
             ) : (
               <div className="px-6 py-8 text-center">
-                <p className="text-slate-400">{t.userDetail.noFiles}</p>
+                <p className="text-muted">{t.userDetail.noFiles}</p>
               </div>
             )}
           </div>
           {user.recentFiles.length > 0 && (
-            <div className="px-6 py-3 border-t border-slate-700/50">
+            <div className="px-6 py-3 border-t border-line">
               <Link
                 href={`${base}/files?user=${userId}`}
-                className="text-sm text-sky-400 hover:text-blue-500 font-medium"
+                className="text-sm text-accent hover:text-accent font-medium"
               >
                 {t.userDetail.viewAllUserFiles}
               </Link>
@@ -594,10 +594,10 @@ export default function AdminUserDetailPage({
         open={showDeleteModal}
         onCancel={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteUser}
-        icon={<Trash2 className="h-6 w-6 text-red-400" />}
+        icon={<Trash2 className="h-6 w-6 text-error" />}
         title={t.userDetail.deleteUser}
         message={
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted">
             {t.userDetail.deleteConfirm
               .replace("{name}", user.name)
               .replace("{files}", user.stats.totalFiles.toString())

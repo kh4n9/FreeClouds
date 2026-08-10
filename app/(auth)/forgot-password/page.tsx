@@ -119,36 +119,36 @@ export default function ForgotPasswordPage() {
     <AuthShell>
       <div className="text-center mb-8">
         <div className="flex justify-center mb-4">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <div className="w-14 h-14 p-3 rounded-2xl bg-accent shadow-[0_12px_32px_-12px_rgba(37,99,235,0.5)]">
             <Cloud className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">{getStepTitle()}</h1>
-        <p className="text-slate-400">{getStepDescription()}</p>
+        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-2">{getStepTitle()}</h1>
+        <p className="text-sub">{getStepDescription()}</p>
       </div>
 
       <div className="modal-content p-8">
         {error && !error.field && (
           <div className={`p-4 rounded-xl flex items-start gap-3 mb-6 ${
-            error.field === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'
+            error.field === 'success' ? 'bg-success/10 border border-success/25' : 'bg-error/10 border border-error/25'
           }`}>
-            {error.field === 'success' ? <Check className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />}
-            <p className={`text-sm ${error.field === 'success' ? 'text-emerald-300' : 'text-red-300'}`}>{error.message}</p>
+            {error.field === 'success' ? <Check className="w-5 h-5 text-success flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />}
+            <p className={`text-sm ${error.field === 'success' ? 'text-success' : 'text-error'}`}>{error.message}</p>
           </div>
         )}
 
         {step === 'email' && (
           <form onSubmit={handleEmailSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input id="email" name="email" type="email" autoComplete="email" required
                   value={emailForm.email} onChange={handleEmailChange}
-                  className={`input-modern w-full pl-10 pr-4 py-3 rounded-xl ${error?.field === "email" ? "border-red-500/50 bg-red-500/5" : ""}`}
+                  className={`input-modern w-full pl-10 pr-4 py-3 rounded-xl ${error?.field === "email" ? "border-error/50 bg-error/5" : ""}`}
                   placeholder="Enter your email" disabled={loading} />
               </div>
-              {error?.field === "email" && <p className="mt-1 text-sm text-red-400">{error.message}</p>}
+              {error?.field === "email" && <p className="mt-1.5 text-sm text-error">{error.message}</p>}
             </div>
             <button type="submit" disabled={loading}
               className="btn-primary w-full py-3 rounded-xl font-medium disabled:opacity-50">
@@ -162,17 +162,17 @@ export default function ForgotPasswordPage() {
         {step === 'code' && (
           <div className="space-y-5">
             <div>
-              <label htmlFor="code" className="block text-sm font-medium text-slate-300 mb-2">Verification Code</label>
+              <label htmlFor="code" className="block text-sm font-medium text-foreground mb-2">Verification Code</label>
               <input id="code" name="code" type="text" maxLength={6}
                 value={resetForm.code} onChange={handleResetFormChange}
-                className={`input-modern w-full px-4 py-3 rounded-xl text-center text-2xl font-mono tracking-widest ${error?.field === "code" ? "border-red-500/50 bg-red-500/5" : ""}`}
+                className={`input-modern w-full px-4 py-3 rounded-xl text-center text-2xl font-mono tracking-widest ${error?.field === "code" ? "border-error/50 bg-error/5" : ""}`}
                 placeholder="000000" disabled={loading} />
-              {error?.field === "code" && <p className="mt-1 text-sm text-red-400">{error.message}</p>}
+              {error?.field === "code" && <p className="mt-1.5 text-sm text-error">{error.message}</p>}
             </div>
             <div className="text-center">
-              <p className="text-sm text-slate-400 mb-2">Didn&apos;t receive the code?</p>
+              <p className="text-sm text-sub mb-2">Didn&apos;t receive the code?</p>
               <button type="button" onClick={handleCodeResend} disabled={countdown > 0 || loading}
-                className="text-sky-400 hover:text-sky-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                className="text-accent hover:text-accent-hover font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 {countdown > 0 ? `Resend in ${countdown}s` : "Resend Code"}
               </button>
             </div>
@@ -187,34 +187,34 @@ export default function ForgotPasswordPage() {
         {step === 'password' && (
           <form onSubmit={handleResetSubmit} className="space-y-5">
             <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-slate-300 mb-2">New Password</label>
+              <label htmlFor="newPassword" className="block text-sm font-medium text-foreground mb-2">New Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input id="newPassword" name="newPassword" type={showPassword ? "text" : "password"}
                   autoComplete="new-password" required value={resetForm.newPassword} onChange={handleResetFormChange}
-                  className={`input-modern w-full pl-10 pr-12 py-3 rounded-xl ${error?.field === "newPassword" ? "border-red-500/50 bg-red-500/5" : ""}`}
+                  className={`input-modern w-full pl-10 pr-12 py-3 rounded-xl ${error?.field === "newPassword" ? "border-error/50 bg-error/5" : ""}`}
                   placeholder="Enter new password" disabled={loading} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              {error?.field === "newPassword" && <p className="mt-1 text-sm text-red-400">{error.message}</p>}
+              {error?.field === "newPassword" && <p className="mt-1.5 text-sm text-error">{error.message}</p>}
             </div>
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-2">Confirm New Password</label>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-2">Confirm New Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input id="confirmPassword" name="confirmPassword" type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password" required value={resetForm.confirmPassword} onChange={handleResetFormChange}
-                  className={`input-modern w-full pl-10 pr-12 py-3 rounded-xl ${error?.field === "confirmPassword" ? "border-red-500/50 bg-red-500/5" : ""}`}
+                  className={`input-modern w-full pl-10 pr-12 py-3 rounded-xl ${error?.field === "confirmPassword" ? "border-error/50 bg-error/5" : ""}`}
                   placeholder="Confirm new password" disabled={loading} />
                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              {error?.field === "confirmPassword" && <p className="mt-1 text-sm text-red-400">{error.message}</p>}
+              {error?.field === "confirmPassword" && <p className="mt-1.5 text-sm text-error">{error.message}</p>}
             </div>
             <button type="submit" disabled={loading}
               className="btn-primary w-full py-3 rounded-xl font-medium disabled:opacity-50">
@@ -227,12 +227,12 @@ export default function ForgotPasswordPage() {
 
         {step === 'success' && (
           <div className="text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 rounded-full bg-success/10 border border-success/30 flex items-center justify-center mx-auto">
               <Check className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Password Reset Successful!</h3>
-              <p className="text-slate-400 mb-6">Your password has been successfully updated. You can now sign in with your new password.</p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Password Reset Successful!</h3>
+              <p className="text-sub mb-6">Your password has been successfully updated. You can now sign in with your new password.</p>
             </div>
             <Link href="/login" className="btn-primary w-full py-3 rounded-xl font-medium inline-block text-center">
               Sign In Now
@@ -246,7 +246,7 @@ export default function ForgotPasswordPage() {
               if (step === 'code') setStep('email');
               else if (step === 'password') setStep('code');
               else router.push('/login');
-            }} className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition-colors">
+            }} className="inline-flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors">
               <ArrowLeft className="w-4 h-4" />
               {step === 'email' ? 'Back to Sign In' : 'Back'}
             </button>

@@ -156,17 +156,17 @@ export default function VersionHistoryModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative modal-content w-full max-w-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30 flex items-center justify-center">
               <History className="w-5 h-5 text-purple-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">{t("versionHistory", { en: "Version History", vi: "Lịch sử phiên bản" })}</h3>
-              <p className="text-xs text-slate-400 truncate max-w-[280px]">{fileName}</p>
+              <h3 className="text-lg font-semibold text-foreground">{t("versionHistory", { en: "Version History", vi: "Lịch sử phiên bản" })}</h3>
+              <p className="text-xs text-muted truncate max-w-[280px]">{fileName}</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all">
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground hover:text-foreground hover:bg-card-hover transition-all">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -177,13 +177,13 @@ export default function VersionHistoryModal({
             <div className="flex items-center gap-3">
               <Upload className="w-5 h-5 text-purple-400" />
               <div>
-                <p className="text-sm font-medium text-slate-200">{t("uploadNewVersion", { en: "Upload new version", vi: "Tải lên phiên bản mới" })}</p>
-                <p className="text-xs text-slate-400">{t("currentVersion", { en: `Current version: v${currentVersion}`, vi: `Phiên bản hiện tại: v${currentVersion}` })}</p>
+                <p className="text-sm font-medium text-foreground">{t("uploadNewVersion", { en: "Upload new version", vi: "Tải lên phiên bản mới" })}</p>
+                <p className="text-xs text-muted">{t("currentVersion", { en: `Current version: v${currentVersion}`, vi: `Phiên bản hiện tại: v${currentVersion}` })}</p>
               </div>
             </div>
             <label className="cursor-pointer shrink-0">
               <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
-              <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${uploading ? "opacity-50" : "bg-gradient-to-r from-purple-500 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25"}`}>
+              <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${uploading ? "opacity-50" : "bg-accent text-white hover:shadow-lg hover:shadow-accent/25"}`}>
                 {uploading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                 {t("upload", { en: "Upload", vi: "Tải lên" })}
               </span>
@@ -197,33 +197,33 @@ export default function VersionHistoryModal({
             </div>
           ) : versions.length === 0 ? (
             <div className="text-center py-8">
-              <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-              <p className="text-sm text-slate-400">{t("noVersions", { en: "No previous versions yet. Upload a new version to get started.", vi: "Chưa có phiên bản trước đó. Hãy tải lên phiên bản mới." })}</p>
+              <FileText className="w-10 h-10 text-muted mx-auto mb-3" />
+              <p className="text-sm text-muted">{t("noVersions", { en: "No previous versions yet. Upload a new version to get started.", vi: "Chưa có phiên bản trước đó. Hãy tải lên phiên bản mới." })}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {versions.map((v) => (
                 <div key={v.id} className="flex items-center justify-between gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700/50 flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-card border border-line flex items-center justify-center shrink-0">
                       <span className="text-xs font-bold text-purple-400">v{v.version}</span>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-slate-200 truncate">{v.name}</p>
-                      <p className="text-xs text-slate-500">{formatFileSize(v.size)} · {formatDate(v.createdAt)}</p>
+                      <p className="text-sm font-medium text-foreground truncate">{v.name}</p>
+                      <p className="text-xs text-muted">{formatFileSize(v.size)} · {formatDate(v.createdAt)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button onClick={() => handleDownload(v)} title={t("download", commonTranslations.download)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all">
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground hover:text-foreground hover:bg-card-hover transition-all">
                       <Download className="w-4 h-4" />
                     </button>
                     <button onClick={() => handleRestore(v)} disabled={busyId === v.id} title={t("restore", { en: "Restore", vi: "Khôi phục" })}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all">
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground hover:text-success hover:bg-emerald-500/10 transition-all">
                       <RotateCcw className="w-4 h-4" />
                     </button>
                     <button onClick={() => handleDelete(v)} disabled={busyId === v.id} title={t("delete", commonTranslations.delete)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground hover:text-error hover:bg-error/10 transition-all">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>

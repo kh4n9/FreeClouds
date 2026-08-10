@@ -84,9 +84,9 @@ function Modal({ show, onClose, title, children }: { show: boolean; onClose: () 
         <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} {...modalVariants.overlay}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <motion.div className="relative modal-content w-full max-w-lg max-h-[90vh] overflow-y-auto" style={{ animation: "none" }} {...modalVariants.content}>
-            <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
-              <h3 className="text-lg font-semibold text-white">{title}</h3>
-              <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all"><X className="w-4 h-4" /></button>
+            <div className="flex items-center justify-between p-6 border-b border-line">
+              <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+              <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground hover:text-foreground hover:bg-card-hover transition-all"><X className="w-4 h-4" /></button>
             </div>
             <div className="p-6">{children}</div>
           </motion.div>
@@ -118,7 +118,7 @@ function CreateFolderModal({ show, onClose, onConfirm, loading }: { show: boolea
         <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} {...modalVariants.overlay}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <motion.div className="relative modal-content w-full max-w-md" style={{ animation: "none" }} {...modalVariants.content}>
-            <div className="p-6 border-b border-slate-700/50"><h3 className="text-lg font-semibold text-white">Create New Folder</h3></div>
+            <div className="p-6 border-b border-line"><h3 className="text-lg font-semibold text-foreground">Create New Folder</h3></div>
             <div className="p-6">
               <input ref={inputRef} type="text" placeholder="Folder name" value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -150,16 +150,16 @@ function ConfirmModal({ show, title, message, warning, loading, onCancel, onConf
         <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }} {...modalVariants.overlay}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <motion.div className="relative modal-content w-full max-w-md p-6" style={{ animation: "none" }} {...modalVariants.content}>
-            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 mx-auto">
-              <AlertCircle className="w-6 h-6 text-red-400" />
+            <div className="w-12 h-12 rounded-full bg-error/10 flex items-center justify-center mb-4 mx-auto">
+              <AlertCircle className="w-6 h-6 text-error" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2 text-center">{title}</h3>
-            <p className="text-sm text-slate-300 mb-1 text-center">{message}</p>
-            {warning && <p className="text-sm text-red-400/80 mb-6 text-center">{warning}</p>}
+            <h3 className="text-lg font-semibold text-foreground mb-2 text-center">{title}</h3>
+            <p className="text-sm text-foreground mb-1 text-center">{message}</p>
+            {warning && <p className="text-sm text-error/80 mb-6 text-center">{warning}</p>}
             <div className="flex gap-3 justify-center">
               <button onClick={onCancel} disabled={loading} className="btn-secondary px-5 py-2.5 rounded-lg text-sm font-medium">Cancel</button>
               <button onClick={onConfirm} disabled={loading}
-                className="px-5 py-2.5 rounded-lg text-sm font-medium bg-gradient-to-r from-red-500 to-rose-600 text-white hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-50 transition-all">
+                className="px-5 py-2.5 rounded-lg text-sm font-medium bg-error text-white hover:shadow-lg hover:shadow-error/25 disabled:opacity-50 transition-all">
                 {loading && <svg className="animate-spin h-4 w-4 inline mr-1.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
                 {confirmLabel}
               </button>
@@ -173,13 +173,13 @@ function ConfirmModal({ show, title, message, warning, loading, onCancel, onConf
 
 function StatsCard({ icon: Icon, label, value, sub, gradient }: { icon: LucideIcon; label: string; value: string; sub?: string; gradient: string }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-slate-800/50 border border-slate-700/50 p-5 group hover:border-slate-600/50 transition-all">
+    <div className="relative overflow-hidden rounded-2xl bg-card border border-line p-5 group hover:border-line-hover transition-all">
       <div className={`absolute inset-0 opacity-[0.03] ${gradient}`} />
       <div className="relative flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-          <p className="text-2xl font-bold text-white">{value}</p>
-          {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
+          <p className="text-xs font-medium text-muted uppercase tracking-wider mb-1">{label}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          {sub && <p className="text-xs text-muted mt-1">{sub}</p>}
         </div>
         <div className={`w-10 h-10 rounded-xl ${gradient} flex items-center justify-center`}>
           <Icon className="w-5 h-5 text-white" />
@@ -192,12 +192,12 @@ function StatsCard({ icon: Icon, label, value, sub, gradient }: { icon: LucideIc
 function SearchBar({ value, onChange, onClear }: { value: string; onChange: (v: string) => void; onClear: () => void }) {
   return (
     <div className="relative group">
-      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-sky-400 transition-colors" />
+      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-accent transition-colors" />
       <input ref={(el) => { if (el) el.onkeydown = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key === "k") e.preventDefault(); }; }} type="text" placeholder="Search files... (Ctrl+K)" value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="input-modern w-full pl-10 pr-10 py-2.5 rounded-xl text-sm bg-slate-800/50 border-slate-700/50 focus:border-cyan-500/50 focus:bg-slate-800/80 transition-all" />
+        className="input-modern w-full pl-10 pr-10 py-2.5 rounded-xl text-sm transition-all" />
       {value && (
-        <button onClick={onClear} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors">
+        <button onClick={onClear} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors">
           <X className="w-4 h-4" />
         </button>
       )}
@@ -209,10 +209,10 @@ function SkeletonLoader() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-pulse">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="rounded-2xl bg-slate-800/30 border border-slate-700/30 p-5">
-          <div className="h-4 bg-slate-700/50 rounded w-3/4 mb-3" />
-          <div className="h-3 bg-slate-700/50 rounded w-1/2 mb-4" />
-          <div className="h-8 bg-slate-700/50 rounded w-full" />
+        <div key={i} className="rounded-2xl bg-card border border-line p-5">
+          <div className="h-4 bg-card-hover rounded w-3/4 mb-3" />
+          <div className="h-3 bg-card-hover rounded w-1/2 mb-4" />
+          <div className="h-8 bg-card-hover rounded w-full" />
         </div>
       ))}
     </div>
@@ -221,16 +221,16 @@ function SkeletonLoader() {
 
 function FileRow({ file, gradient, children }: { file: FileData; gradient: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-slate-600/50 transition-all">
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-line hover:border-line-hover transition-all">
       <div className={`w-10 h-10 rounded-xl ${gradient} flex items-center justify-center flex-shrink-0`}>
-        <FileIcon className="w-5 h-5 text-slate-200" />
+        <FileIcon className="w-5 h-5 text-foreground" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-slate-200 truncate">{file.displayName || file.name}</p>
-        <p className="text-xs text-slate-400 flex items-center gap-2">
+        <p className="text-sm font-medium text-foreground truncate">{file.displayName || file.name}</p>
+        <p className="text-xs text-muted flex items-center gap-2">
           <span>{formatSize(file.size)}</span>
           <span>{formatDate(file.createdAt)}</span>
-          {file.folderName && <span className="text-sky-400 truncate">in {file.folderName}</span>}
+          {file.folderName && <span className="text-accent truncate">in {file.folderName}</span>}
         </p>
       </div>
       <div className="flex items-center gap-1 flex-shrink-0">{children}</div>
@@ -253,12 +253,12 @@ function EmptyState({ icon, title, subtitle, gradient }: { icon: React.ReactNode
     <div className="text-center py-20">
       <div className="relative w-24 h-24 mx-auto mb-6">
         <div className={`absolute inset-0 rounded-3xl ${gradient} blur-lg animate-pulse-slow`} />
-        <div className="relative w-24 h-24 rounded-3xl bg-slate-800/50 border border-blue-500/30 flex items-center justify-center">
+        <div className="relative w-24 h-24 rounded-3xl bg-card border border-accent/30 flex items-center justify-center">
           {icon}
         </div>
       </div>
-      <h3 className="text-xl font-semibold text-slate-300 mb-2">{title}</h3>
-      <p className="text-sm text-slate-400">{subtitle}</p>
+      <h3 className="text-xl font-semibold text-foreground mb-2">{title}</h3>
+      <p className="text-sm text-muted">{subtitle}</p>
     </div>
   );
 }
@@ -282,7 +282,7 @@ export default function DashboardPage() {
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [recentLoading, setRecentLoading] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">(() =>
-    typeof window !== "undefined" && localStorage.getItem("theme") === "light" ? "light" : "dark"
+    typeof window !== "undefined" && localStorage.getItem("theme") === "dark" ? "dark" : "light"
   );
   const showTrash = activeView === "trash";
   const [showDuplicates, setShowDuplicates] = useState(false);
@@ -717,12 +717,12 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen app-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-500/20 animate-pulse">
+          <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-5 shadow-lg animate-pulse">
             <Cloud className="w-8 h-8 text-white" />
           </div>
           <div className="flex gap-1.5 justify-center">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="w-2.5 h-2.5 rounded-full bg-blue-500/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+              <div key={i} className="w-2.5 h-2.5 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
             ))}
           </div>
         </div>
@@ -745,7 +745,7 @@ export default function DashboardPage() {
 
         {/* Sidebar */}
         <aside className={`
-          flex-shrink-0 bg-slate-900/40 border-r border-slate-800/50 flex flex-col relative
+          flex-shrink-0 bg-background border-r border-line flex flex-col relative
           transition-all duration-300 ease-in-out
           ${sidebarOpen ? "w-72" : "w-0 lg:w-16"}
           ${sidebarOpen ? "" : "overflow-hidden"}
@@ -754,33 +754,33 @@ export default function DashboardPage() {
         `}>
           {sidebarOpen ? (
             <div className="flex flex-col h-full min-w-72">
-              <div className="p-4 border-b border-slate-800/50">
+              <div className="p-4 border-b border-line">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center flex-shrink-0 shadow-sm">
-                    <span className="text-sm font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
+                  <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <span className="text-sm font-bold text-foreground">{user.name.charAt(0).toUpperCase()}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{user.name}</p>
-                    <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                    <p className="text-xs text-muted truncate">{user.email}</p>
                   </div>
                   <button onClick={() => setSidebarOpen(false)}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all" title="Collapse sidebar">
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all" title="Collapse sidebar">
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                 </div>
               </div>
-              <div className="p-3 border-b border-slate-800/50">
+              <div className="p-3 border-b border-line">
                 <div className="grid grid-cols-2 gap-2">
                   <button onClick={() => { setScannerState({ open: true, files: [] }); setSidebarOpen(false); }}
-                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-gradient-to-r from-sky-500/10 to-cyan-500/10 border border-sky-500/20 text-sky-300 hover:from-sky-500/20 hover:to-cyan-500/20 hover:border-sky-500/30 transition-all text-sm font-medium min-h-[44px]">
+                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-accent/10 border border-accent/25 text-accent hover:bg-accent/20 hover:border-accent/30 transition-all text-sm font-medium min-h-[44px]">
                     <ScanLine className="w-4 h-4" /> Scan
                   </button>
                   <button onClick={() => { setShowUpload(true); setSidebarOpen(false); }}
-                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 text-blue-300 hover:from-sky-500/20 hover:to-cyan-500/20 hover:border-blue-500/30 transition-all text-sm font-medium min-h-[44px]">
+                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-accent/10 border border-accent/25 text-accent hover:bg-accent/20 hover:border-accent/30 transition-all text-sm font-medium min-h-[44px]">
                     <Upload className="w-4 h-4" /> Upload
                   </button>
                   <button onClick={() => { handleCreateFolder(selectedFolderId); setSidebarOpen(false); }}
-                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:border-slate-600/50 transition-all text-sm font-medium min-h-[44px]">
+                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-card border border-line text-foreground hover:bg-card-hover hover:border-line-hover transition-all text-sm font-medium min-h-[44px]">
                     <FolderPlus className="w-4 h-4" /> New
                   </button>
                 </div>
@@ -788,15 +788,15 @@ export default function DashboardPage() {
               <div className="flex-1 overflow-y-auto min-h-0">
                 <div className="p-3">
                   <div className="flex items-center justify-between mb-2 px-2">
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Folders</h3>
-                    <button onClick={() => refreshFolders()} disabled={foldersLoading} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-400 hover:bg-slate-800/50 transition-colors">
+                    <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">Folders</h3>
+                    <button onClick={() => refreshFolders()} disabled={foldersLoading} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-muted hover:bg-card-hover transition-colors">
                       <RefreshCw className={`w-3.5 h-3.5 ${foldersLoading ? "animate-spin" : ""}`} />
                     </button>
                   </div>
                   {foldersLoading && folders.length === 0 ? (
                     <div className="space-y-2 px-2">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="h-10 rounded-lg bg-slate-800/30 animate-pulse" />
+                        <div key={i} className="h-10 rounded-lg bg-card animate-pulse" />
                       ))}
                     </div>
                   ) : (
@@ -807,35 +807,35 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
-              <div className="p-3 border-t border-slate-800/50">
+              <div className="p-3 border-t border-line">
                 <div className="flex flex-col gap-1">
                   <button onClick={() => { setActiveView(activeView === "favorites" ? "files" : "favorites"); loadFavorites(); setSidebarOpen(false); }}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${activeView === "favorites" ? "text-amber-400 bg-amber-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${activeView === "favorites" ? "text-warning bg-warning/10" : "text-muted hover:text-foreground hover:bg-card-hover"}`}>
                     <Star className={`w-4 h-4 ${activeView === "favorites" ? "fill-amber-400" : ""}`} /> Favorites
                   </button>
                   <button onClick={() => { setActiveView(activeView === "recent" ? "files" : "recent"); loadRecent(); setSidebarOpen(false); }}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${activeView === "recent" ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${activeView === "recent" ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-card-hover"}`}>
                     <Clock className="w-4 h-4" /> Recent
                   </button>
                   <button onClick={() => { setShowDuplicates(true); setSidebarOpen(false); }}
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all min-h-[44px]">
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-muted hover:text-foreground hover:bg-card-hover transition-all min-h-[44px]">
                     <Copy className="w-4 h-4" /> Duplicates
                   </button>
                   <button onClick={() => { setActiveView(activeView === "trash" ? "files" : "trash"); loadTrashFiles(); setSidebarOpen(false); }}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${showTrash ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`}>
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${showTrash ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-card-hover"}`}>
                     <Trash2 className="w-4 h-4" /> Trash
                   </button>
                   <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all min-h-[44px]">
-                    {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-muted hover:text-foreground hover:bg-card-hover transition-all min-h-[44px]">
+                    {theme === "dark" ? <Sun className="w-4 h-4 text-warning" /> : <Moon className="w-4 h-4 text-indigo-400" />}
                     {theme === "dark" ? "Light Mode" : "Dark Mode"}
                   </button>
                   <button onClick={() => { setShowUserProfile(true); setSidebarOpen(false); }}
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all min-h-[44px]">
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-muted hover:text-foreground hover:bg-card-hover transition-all min-h-[44px]">
                     <Settings className="w-4 h-4" /> Settings
                   </button>
                   <button onClick={handleLogout}
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all min-h-[44px]">
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-error/70 hover:text-error hover:bg-error/10 transition-all min-h-[44px]">
                     <LogOut className="w-4 h-4" /> Sign Out
                   </button>
                 </div>
@@ -843,50 +843,50 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="hidden lg:flex flex-col items-center h-full py-4 gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center flex-shrink-0 shadow-sm">
-                <span className="text-sm font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
+              <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center flex-shrink-0 shadow-sm">
+                <span className="text-sm font-bold text-foreground">{user.name.charAt(0).toUpperCase()}</span>
               </div>
-              <div className="w-8 border-t border-slate-700/50" />
+              <div className="w-8 border-t border-line" />
               <button onClick={() => setScannerState({ open: true, files: [] })}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-sky-300 hover:bg-slate-800/50 transition-all" title="Scan Documents">
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-accent hover:bg-card-hover transition-all" title="Scan Documents">
                 <ScanLine className="w-4 h-4" />
               </button>
               <button onClick={() => setShowUpload(true)}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-blue-300 hover:bg-slate-800/50 transition-all" title="Upload">
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-accent hover:bg-card-hover transition-all" title="Upload">
                 <Upload className="w-4 h-4" />
               </button>
               <button onClick={() => handleCreateFolder(selectedFolderId)}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all" title="New Folder">
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all" title="New Folder">
                 <FolderPlus className="w-4 h-4" />
               </button>
               <div className="flex-1" />
               <button onClick={() => { setActiveView(activeView === "favorites" ? "files" : "favorites"); loadFavorites(); }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeView === "favorites" ? "text-amber-400 bg-amber-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`} title="Favorites">
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeView === "favorites" ? "text-warning bg-warning/10" : "text-muted hover:text-foreground hover:bg-card-hover"}`} title="Favorites">
                 <Star className={`w-4 h-4 ${activeView === "favorites" ? "fill-amber-400" : ""}`} />
               </button>
               <button onClick={() => { setActiveView(activeView === "recent" ? "files" : "recent"); loadRecent(); }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeView === "recent" ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`} title="Recent">
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeView === "recent" ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-card-hover"}`} title="Recent">
                 <Clock className="w-4 h-4" />
               </button>
               <button onClick={() => { setActiveView(activeView === "trash" ? "files" : "trash"); loadTrashFiles(); }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${showTrash ? "text-sky-400 bg-blue-500/10" : "text-slate-400 hover:text-white hover:bg-slate-800/50"}`} title="Trash">
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${showTrash ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-card-hover"}`} title="Trash">
                 <Trash2 className="w-4 h-4" />
               </button>
               <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all" title={theme === "dark" ? "Light Mode" : "Dark Mode"}>
-                {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all" title={theme === "dark" ? "Light Mode" : "Dark Mode"}>
+                {theme === "dark" ? <Sun className="w-4 h-4 text-warning" /> : <Moon className="w-4 h-4 text-indigo-400" />}
               </button>
               <button onClick={() => setShowUserProfile(true)}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all" title="Settings">
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all" title="Settings">
                 <Settings className="w-4 h-4" />
               </button>
               <button onClick={handleLogout}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all" title="Sign Out">
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-error/70 hover:text-error hover:bg-error/10 transition-all" title="Sign Out">
                 <LogOut className="w-4 h-4" />
               </button>
-              <div className="w-8 border-t border-slate-700/50" />
+              <div className="w-8 border-t border-line" />
               <button onClick={() => setSidebarOpen(true)}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all" title="Expand sidebar">
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all" title="Expand sidebar">
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -896,20 +896,20 @@ export default function DashboardPage() {
         {/* Main */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top bar */}
-          <div className="flex-shrink-0 border-b border-slate-800/50 bg-slate-900/30 backdrop-blur-xl">
+          <div className="flex-shrink-0 border-b border-line bg-card backdrop-blur-xl">
             <div className="px-6 py-4">
               <div className="flex items-center gap-4">
-                <button onClick={() => setSidebarOpen(true)} className="lg:hidden btn-ghost p-2 rounded-lg text-slate-400 hover:text-white">
+                <button onClick={() => setSidebarOpen(true)} className="lg:hidden btn-ghost p-2 rounded-lg text-muted hover:text-foreground">
                   <Sidebar className="w-5 h-5" />
                 </button>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
-                    <h1 className="text-xl font-bold text-white truncate">
+                    <h1 className="text-xl font-bold text-foreground truncate">
                       {activeView === "trash" ? "Trash" : activeView === "favorites" ? "Favorites" : activeView === "recent" ? "Recent" : currentFolderName || "All Files"}
                     </h1>
-                    {debouncedSearch && activeView === "files" && <span className="text-sm text-sky-400 hidden sm:inline">&mdash; &ldquo;{debouncedSearch}&rdquo;</span>}
+                    {debouncedSearch && activeView === "files" && <span className="text-sm text-accent hidden sm:inline">&mdash; &ldquo;{debouncedSearch}&rdquo;</span>}
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-muted">
                     {activeView === "favorites"
                       ? `${favoriteFiles.length} favorited file${favoriteFiles.length !== 1 ? "s" : ""}`
                       : activeView === "recent"
@@ -930,21 +930,21 @@ export default function DashboardPage() {
                   <SearchBar value={searchQuery} onChange={setSearchQuery} onClear={() => setSearchQuery("")} />
                 </div>
                 <div className="flex gap-2">
-                  <div className="flex items-center gap-1 bg-slate-800/80 rounded-xl p-1">
+                  <div className="flex items-center gap-1 bg-card rounded-xl p-1">
                     {(["grid", "list"] as const).map((mode) => (
                       <button key={mode} onClick={() => setViewMode(mode)}
-                        className={`p-2 rounded-lg transition-all ${viewMode === mode ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-300"}`} title={mode === "grid" ? "Grid view" : "List view"}>
+                        className={`p-2 rounded-lg transition-all ${viewMode === mode ? "bg-foreground text-background shadow-sm" : "text-muted hover:text-foreground"}`} title={mode === "grid" ? "Grid view" : "List view"}>
                         {mode === "grid" ? <Grid3X3 className="w-4 h-4" /> : <List className="w-4 h-4" />}
                       </button>
                     ))}
                   </div>
                   <button onClick={refreshData} disabled={filesLoading || foldersLoading}
-                    className="btn-secondary px-3 py-2 rounded-xl text-sm flex items-center gap-2 border-slate-700/50 hover:border-slate-600/50">
+                    className="btn-secondary px-3 py-2 rounded-xl text-sm flex items-center gap-2 border-line hover:border-line-hover">
                     <RefreshCw className={`w-4 h-4 ${filesLoading || foldersLoading ? "animate-spin" : ""}`} />
                     <span className="hidden sm:inline">Refresh</span>
                   </button>
                   <button onClick={() => setScannerState({ open: true, files: [] })}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-sky-400/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 transition-colors">
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-sky-400/30 bg-accent/10 text-accent hover:bg-accent/20 transition-colors">
                     <ScanLine className="w-4 h-4" /> <span className="hidden sm:inline">Scan</span>
                   </button>
                   <button onClick={() => setShowUpload(true)}
@@ -966,16 +966,16 @@ export default function DashboardPage() {
             onClick={() => setSpaceMenu(null)}
           >
             <ListStagger className="grid grid-cols-1 sm:grid-cols-3 gap-3 px-6 pt-5 pb-2">
-              <ListStaggerItem><StatsCard icon={FileIcon} label="Files" value={totalFiles.toLocaleString()} gradient="bg-gradient-to-br from-blue-500 to-cyan-600" /></ListStaggerItem>
-              <ListStaggerItem><StatsCard icon={FolderIcon} label="Folders" value={totalFolders.toLocaleString()} gradient="bg-gradient-to-br from-cyan-400 to-pink-600" /></ListStaggerItem>
-              <ListStaggerItem><StatsCard icon={HardDrive} label="Storage" value={formatSize(totalSize)} gradient="bg-gradient-to-br from-amber-500 to-orange-600" /></ListStaggerItem>
+              <ListStaggerItem><StatsCard icon={FileIcon} label="Files" value={totalFiles.toLocaleString()} gradient="bg-accent" /></ListStaggerItem>
+              <ListStaggerItem><StatsCard icon={FolderIcon} label="Folders" value={totalFolders.toLocaleString()} gradient="bg-sub" /></ListStaggerItem>
+              <ListStaggerItem><StatsCard icon={HardDrive} label="Storage" value={formatSize(totalSize)} gradient="bg-warning" /></ListStaggerItem>
             </ListStagger>
 
             {error && (
-              <div className="mx-6 mt-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400">
+              <div className="mx-6 mt-4 p-4 rounded-2xl bg-error/10 border border-red-500/20 flex items-center gap-3 text-error">
                 <AlertCircle className="w-5 h-5 flex-shrink-0" />
                 <span className="text-sm flex-1">{error}</span>
-                <button onClick={() => setError(null)} className="text-red-400 hover:text-red-300 p-1"><X className="w-4 h-4" /></button>
+                <button onClick={() => setError(null)} className="text-error hover:text-error p-1"><X className="w-4 h-4" /></button>
               </div>
             )}
 
@@ -992,12 +992,12 @@ export default function DashboardPage() {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <Trash2 className="w-5 h-5 text-red-400" />
-                    <h2 className="text-lg font-semibold text-white">Trash</h2>
-                    <span className="text-xs text-slate-400">Files auto-delete after 30 days</span>
+                    <Trash2 className="w-5 h-5 text-error" />
+                    <h2 className="text-lg font-semibold text-foreground">Trash</h2>
+                    <span className="text-xs text-muted">Files auto-delete after 30 days</span>
                   </div>
                   <button onClick={handleEmptyTrash} disabled={trashFiles.length === 0 || emptyingTrash}
-                    className="px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-red-500 to-rose-600 text-white hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2">
+                    className="px-4 py-2 rounded-xl text-sm font-medium bg-error text-white hover:shadow-lg hover:shadow-error/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2">
                     {emptyingTrash ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     Empty Trash
                   </button>
@@ -1008,12 +1008,12 @@ export default function DashboardPage() {
                   <div className="text-center py-20">
                     <div className="relative w-24 h-24 mx-auto mb-6">
                       <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-red-500/25 to-rose-400/25 blur-lg animate-pulse-slow" />
-                      <div className="relative w-24 h-24 rounded-3xl bg-slate-800/50 border border-red-500/30 flex items-center justify-center">
-                        <Trash2 className="w-12 h-12 text-red-400" />
+                      <div className="relative w-24 h-24 rounded-3xl bg-card border border-error/30 flex items-center justify-center">
+                        <Trash2 className="w-12 h-12 text-error" />
                       </div>
                     </div>
-                    <h3 className="text-xl font-semibold text-slate-300 mb-2">Trash is empty</h3>
-                    <p className="text-sm text-slate-400">Deleted files will appear here and be auto-deleted after 30 days.</p>
+                    <h3 className="text-xl font-semibold text-foreground mb-2">Trash is empty</h3>
+                    <p className="text-sm text-muted">Deleted files will appear here and be auto-deleted after 30 days.</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1023,24 +1023,24 @@ export default function DashboardPage() {
                       const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
                       return (
                         <div key={file.id}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-slate-600/50 transition-all">
+                          className="flex items-center gap-3 p-3 rounded-xl bg-card border border-line hover:border-line-hover transition-all">
                           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500/20 to-rose-500/20 flex items-center justify-center flex-shrink-0">
-                            <FileIcon className="w-5 h-5 text-red-400" />
+                            <FileIcon className="w-5 h-5 text-error" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-200 truncate">{file.displayName || file.name}</p>
-                            <p className="text-xs text-slate-400">{formatSize(file.size)}</p>
+                            <p className="text-sm font-medium text-foreground truncate">{file.displayName || file.name}</p>
+                            <p className="text-xs text-muted">{formatSize(file.size)}</p>
                           </div>
-                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${daysLeft <= 3 ? "text-red-400 bg-red-500/10" : "text-slate-400 bg-slate-700/30"}`}>
+                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${daysLeft <= 3 ? "text-error bg-error/10" : "text-muted bg-card-hover"}`}>
                             <Clock className="w-3 h-3" />
                             {daysLeft > 0 ? `${daysLeft}d left` : "Expired"}
                           </div>
                           <button onClick={() => handleRestoreFile(file.id)}
-                            className="px-3 py-2 rounded-lg text-sm text-sky-400 hover:text-sky-300 hover:bg-blue-500/10 transition-all flex items-center gap-1.5 min-h-[44px]">
+                            className="px-3 py-2 rounded-lg text-sm text-accent hover:text-accent hover:bg-accent/10 transition-all flex items-center gap-1.5 min-h-[44px]">
                             <RotateCcw className="w-4 h-4" /> Restore
                           </button>
                           <button onClick={() => handlePermanentDelete(file.id)}
-                            className="px-3 py-2 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all flex items-center gap-1.5 min-h-[44px]"
+                            className="px-3 py-2 rounded-lg text-sm text-error hover:text-error hover:bg-error/10 transition-all flex items-center gap-1.5 min-h-[44px]"
                             title="Delete permanently">
                             <Trash2 className="w-4 h-4" /> Delete forever
                           </button>
@@ -1053,15 +1053,15 @@ export default function DashboardPage() {
             ) : activeView === "favorites" ? (
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <Star className="w-5 h-5 text-amber-400" />
-                  <h2 className="text-lg font-semibold text-white">Favorites</h2>
-                  <span className="text-xs text-slate-400">{favoriteFiles.length} file{favoriteFiles.length !== 1 ? "s" : ""}</span>
+                  <Star className="w-5 h-5 text-warning" />
+                  <h2 className="text-lg font-semibold text-foreground">Favorites</h2>
+                  <span className="text-xs text-muted">{favoriteFiles.length} file{favoriteFiles.length !== 1 ? "s" : ""}</span>
                 </div>
                 {favoritesLoading ? (
                   <SkeletonLoader />
                 ) : favoriteFiles.length === 0 ? (
                   <EmptyState
-                    icon={<Star className="w-12 h-12 text-amber-400" />}
+                    icon={<Star className="w-12 h-12 text-warning" />}
                     title="No favorites yet"
                     subtitle="Star files to pin them here for quick access."
                     gradient="bg-gradient-to-br from-amber-500/25 to-orange-400/25"
@@ -1072,16 +1072,16 @@ export default function DashboardPage() {
                       <FileRow key={file.id} file={file} gradient="bg-gradient-to-br from-amber-500/20 to-orange-500/20">
                         {file.folderId && (
                           <button onClick={() => handleOpenFolder(file.folderId)}
-                            className="px-2.5 py-2 rounded-lg text-xs text-sky-400 hover:text-sky-300 hover:bg-blue-500/10 transition-all flex items-center gap-1.5" title="Open containing folder">
+                            className="px-2.5 py-2 rounded-lg text-xs text-accent hover:text-accent hover:bg-accent/10 transition-all flex items-center gap-1.5" title="Open containing folder">
                             <FolderOpen className="w-4 h-4" />
                           </button>
                         )}
                         <button onClick={() => handleDownload(file.id, file.displayName || file.name)}
-                          className="px-2.5 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all flex items-center gap-1.5" title="Download">
+                          className="px-2.5 py-2 rounded-lg text-xs text-muted hover:text-foreground hover:bg-card-hover transition-all flex items-center gap-1.5" title="Download">
                           <Download className="w-4 h-4" />
                         </button>
                         <button onClick={() => handleToggleFavorite(file)}
-                          className="px-2.5 py-2 rounded-lg text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 transition-all flex items-center gap-1.5" title="Remove from Favorites">
+                          className="px-2.5 py-2 rounded-lg text-xs text-warning hover:text-warning hover:bg-warning/10 transition-all flex items-center gap-1.5" title="Remove from Favorites">
                           <Star className="w-4 h-4 fill-amber-400" />
                         </button>
                       </FileRow>
@@ -1092,15 +1092,15 @@ export default function DashboardPage() {
             ) : activeView === "recent" ? (
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <Clock className="w-5 h-5 text-sky-400" />
-                  <h2 className="text-lg font-semibold text-white">Recent</h2>
-                  <span className="text-xs text-slate-400">Latest files across all folders</span>
+                  <Clock className="w-5 h-5 text-accent" />
+                  <h2 className="text-lg font-semibold text-foreground">Recent</h2>
+                  <span className="text-xs text-muted">Latest files across all folders</span>
                 </div>
                 {recentLoading ? (
                   <SkeletonLoader />
                 ) : recentFiles.length === 0 ? (
                   <EmptyState
-                    icon={<Clock className="w-12 h-12 text-sky-400" />}
+                    icon={<Clock className="w-12 h-12 text-accent" />}
                     title="No recent files"
                     subtitle="Files you upload will appear here."
                     gradient="bg-gradient-to-br from-blue-500/25 to-cyan-400/25"
@@ -1111,16 +1111,16 @@ export default function DashboardPage() {
                       <FileRow key={file.id} file={file} gradient="bg-gradient-to-br from-sky-500/20 to-cyan-500/20">
                         {file.folderId && (
                           <button onClick={() => handleOpenFolder(file.folderId)}
-                            className="px-2.5 py-2 rounded-lg text-xs text-sky-400 hover:text-sky-300 hover:bg-blue-500/10 transition-all flex items-center gap-1.5" title="Open containing folder">
+                            className="px-2.5 py-2 rounded-lg text-xs text-accent hover:text-accent hover:bg-accent/10 transition-all flex items-center gap-1.5" title="Open containing folder">
                             <FolderOpen className="w-4 h-4" />
                           </button>
                         )}
                         <button onClick={() => handleDownload(file.id, file.displayName || file.name)}
-                          className="px-2.5 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all flex items-center gap-1.5" title="Download">
+                          className="px-2.5 py-2 rounded-lg text-xs text-muted hover:text-foreground hover:bg-card-hover transition-all flex items-center gap-1.5" title="Download">
                           <Download className="w-4 h-4" />
                         </button>
                         <button onClick={() => handleToggleFavorite(file)}
-                          className={`px-2.5 py-2 rounded-lg text-xs transition-all flex items-center gap-1.5 ${file.favorite ? "text-amber-400 hover:bg-amber-500/10" : "text-slate-400 hover:text-amber-300 hover:bg-slate-700/50"}`}
+                          className={`px-2.5 py-2 rounded-lg text-xs transition-all flex items-center gap-1.5 ${file.favorite ? "text-warning hover:bg-warning/10" : "text-muted hover:text-warning hover:bg-card-hover"}`}
                           title={file.favorite ? "Remove from Favorites" : "Add to Favorites"}>
                           <Star className={`w-4 h-4 ${file.favorite ? "fill-amber-400" : ""}`} />
                         </button>
@@ -1135,8 +1135,8 @@ export default function DashboardPage() {
                 {childFolders.length > 0 && !debouncedSearch && (
                   <div className="px-6 pt-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <FolderIcon className="w-4 h-4 text-cyan-400" />
-                      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sub-folders</h3>
+                      <FolderIcon className="w-4 h-4 text-accent" />
+                      <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">Sub-folders</h3>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                       {childFolders.map(child => (
@@ -1151,13 +1151,13 @@ export default function DashboardPage() {
                             { label: "Delete", icon: <Trash2 className="w-4 h-4" />, onClick: () => handleDeleteFolder(child.id), danger: true },
                           ]}>
                           <div data-context-menu="true" onClick={() => handleFolderSelect(child.id)}
-                            className="group relative flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-cyan-500/30 hover:bg-slate-800/50 cursor-pointer transition-all">
+                            className="group relative flex items-center gap-3 p-3 rounded-xl bg-card border border-line hover:border-accent/30 hover:bg-card-hover cursor-pointer transition-all">
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
-                              <FolderIcon className="w-5 h-5 text-cyan-400" />
+                              <FolderIcon className="w-5 h-5 text-accent" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-200 truncate">{child.name}</p>
-                              <p className="text-xs text-slate-400">{folders.filter(f => f.parent === child.id).length} sub-folders</p>
+                              <p className="text-sm font-medium text-foreground truncate">{child.name}</p>
+                              <p className="text-xs text-muted">{folders.filter(f => f.parent === child.id).length} sub-folders</p>
                             </div>
                           </div>
                         </ContextMenu>
@@ -1174,14 +1174,14 @@ export default function DashboardPage() {
                     <div className="text-center py-20">
                       <div className="relative w-24 h-24 mx-auto mb-6">
                         <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/30 to-cyan-400/30 blur-lg animate-pulse-slow" />
-                        <div className="relative w-24 h-24 rounded-3xl bg-slate-800/50 border border-blue-500/30 flex items-center justify-center">
-                          <Cloud className="w-12 h-12 text-blue-400" />
+                        <div className="relative w-24 h-24 rounded-3xl bg-card border border-accent/30 flex items-center justify-center">
+                          <Cloud className="w-12 h-12 text-accent" />
                         </div>
                       </div>
-                      <h3 className="text-xl font-semibold text-slate-300 mb-2">
+                      <h3 className="text-xl font-semibold text-foreground mb-2">
                         {debouncedSearch ? `No results for "${debouncedSearch}"` : selectedFolderId ? "This folder is empty" : "No files yet"}
                       </h3>
-                      <p className="text-sm text-slate-400 mb-6 max-w-md mx-auto">
+                      <p className="text-sm text-muted mb-6 max-w-md mx-auto">
                         {debouncedSearch ? "Try a different search term or browse your folders." : selectedFolderId ? "Drag and drop files here or use the upload button to add files." : "Upload your first file to get started with FreeClouds."}
                       </p>
                       {!debouncedSearch && (
@@ -1198,7 +1198,7 @@ export default function DashboardPage() {
                   ) : (
                     <>
                       {filesLoading && files.length > 0 && (
-                        <div className="flex items-center gap-2 mb-4 text-sm text-slate-400">
+                        <div className="flex items-center gap-2 mb-4 text-sm text-muted">
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                           Refreshing...
                         </div>
@@ -1237,20 +1237,20 @@ export default function DashboardPage() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed z-[100] min-w-[180px] py-1.5 rounded-xl bg-slate-800 border border-slate-700 shadow-2xl shadow-black/30 backdrop-blur-xl"
+          className="fixed z-[100] min-w-[180px] py-1.5 rounded-xl bg-card border border-line shadow-xl backdrop-blur-xl"
           style={{ left: spaceMenu.x, top: spaceMenu.y }}
           onClick={() => setSpaceMenu(null)}>
           <button onClick={() => { setShowUpload(true); setSpaceMenu(null); }}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors">
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-card-hover transition-colors">
             <Upload className="w-4 h-4" /> Upload Files
           </button>
           <button onClick={() => { handleCreateFolder(selectedFolderId); setSpaceMenu(null); }}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors">
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-card-hover transition-colors">
             <FolderPlus className="w-4 h-4" /> New Folder
           </button>
-          <div className="my-1 border-t border-slate-700/50" />
+          <div className="my-1 border-t border-line" />
           <button onClick={() => { refreshData(); setSpaceMenu(null); }}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors">
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-card-hover transition-colors">
             <RefreshCw className="w-4 h-4" /> Refresh
           </button>
         </motion.div>
@@ -1270,7 +1270,7 @@ export default function DashboardPage() {
         />
       )}
       <Modal show={showUserProfile} onClose={() => setShowUserProfile(false)} title="User Profile">
-        <Suspense fallback={<div className="text-center py-4 text-slate-400">Loading...</div>}>
+        <Suspense fallback={<div className="text-center py-4 text-muted">Loading...</div>}>
           <DynamicUserProfile isOpen={showUserProfile} onClose={() => setShowUserProfile(false)} user={user!} onUserUpdate={handleUserUpdate} />
         </Suspense>
       </Modal>

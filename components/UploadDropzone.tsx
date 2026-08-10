@@ -353,7 +353,7 @@ export default function UploadDropzone({
                     <span>{formatFileSize(uploadFile.file.size)}</span>
 
                     {uploadFile.status === "uploading" && (
-                      <span className="text-blue-600">
+                      <span className="text-accent">
                         {t("uploading", {
                           en: "Uploading...",
                           vi: "Đang tải...",
@@ -368,7 +368,7 @@ export default function UploadDropzone({
                     )}
 
                     {uploadFile.status === "error" && (
-                      <span className="text-red-600">
+                      <span className="text-error">
                         {uploadFile.error ||
                           t("uploadFailed", {
                             en: "Upload failed",
@@ -382,7 +382,7 @@ export default function UploadDropzone({
                   {uploadFile.status === "uploading" && (
                     <div className="mt-1 w-full bg-gray-200 rounded-full h-1">
                       <div
-                        className="bg-blue-600 h-1 rounded-full transition-all duration-300"
+                        className="bg-accent h-1 rounded-full transition-all duration-300"
                         style={{ width: `${uploadFile.progress}%` }}
                       />
                     </div>
@@ -403,12 +403,12 @@ export default function UploadDropzone({
                     <div className="flex gap-1">
                       <button
                         onClick={() => retry(uploadFile)}
-                        className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded"
+                        className="text-xs text-accent hover:text-accent px-2 py-1 rounded"
                         disabled={isUploading}
                       >
                         {t("retry", { en: "Retry", vi: "Thử lại" })}
                       </button>
-                      <AlertCircle className="w-5 h-5 text-red-500" />
+                      <AlertCircle className="w-5 h-5 text-error" />
                     </div>
                   )}
                 </div>

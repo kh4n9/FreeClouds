@@ -213,8 +213,21 @@ class TelegramAPI {
   }> {
     try {
       if (filePath) {
-        const stream = await this.downloadFile(filePath);
-        return { stream, filePath };
+        try {
+          const stream = await this.downloadFile(filePath);
+          return { stream, filePath };
+        } catch (error) {
+          if (
+            error instanceof TelegramError &&
+            /404|400/.test(error.message)
+          ) {
+            console.warn(
+              `Cached file path unavailable (${filePath}), refreshing from getFile`,
+            );
+            return this.getFileStream(fileId);
+          }
+          throw error;
+        }
       }
 
       const fileInfo = await this.getFile(fileId);

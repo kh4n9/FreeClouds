@@ -1,5 +1,6 @@
-const CACHE_NAME = "freeclouds-v1";
-const STATIC_CACHE = "freeclouds-static-v1";
+const CACHE_NAME = "freeclouds-v2";
+const STATIC_CACHE = "freeclouds-static-v2";
+const IS_DEV = ["localhost", "127.0.0.1", "::1"].includes(self.location.hostname);
 
 const PRECACHE_URLS = ["/", "/manifest.json", "/logo.svg"];
 
@@ -32,6 +33,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   if (request.method !== "GET") return;
+  if (IS_DEV) return;
 
   if (url.origin === "https://fonts.googleapis.com" || url.origin === "https://fonts.gstatic.com") {
     event.respondWith(
