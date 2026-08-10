@@ -10,8 +10,8 @@ export async function GET(
   { params }: { params: Promise<{ token: string }> },
 ) {
   try {
-    const rateLimit = checkRateLimit(request, RATE_LIMITS.API);
-    if (!rateLimit.allowed) return createRateLimitResponse(rateLimit.remaining, rateLimit.resetTime);
+    const rateLimit = checkRateLimit(request, RATE_LIMITS.API, "shares");
+    if (!rateLimit.allowed) return createRateLimitResponse(rateLimit.remaining, rateLimit.resetTime, rateLimit.maxRequests);
 
     const { token } = await params;
     if (!token || token.length < 8 || token.length > 128) {

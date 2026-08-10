@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const { action } = body;
 
     if (action === "send") {
-      const rateLimitResult = await rateLimit(request, 3, 15 * 60 * 1000);
+      const rateLimitResult = await rateLimit(request, 3, 15 * 60 * 1000, "verify-email");
       if (!rateLimitResult.success) {
         return NextResponse.json(
           { error: "Too many attempts. Please try again later." },

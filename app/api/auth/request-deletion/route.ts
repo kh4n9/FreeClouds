@@ -12,7 +12,7 @@ import VerificationCode from "@/models/VerificationCode";
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimit(request, 3, 60 * 60 * 1000); // 3 requests per hour
+    const rateLimitResult = await rateLimit(request, 3, 60 * 60 * 1000, "request-deletion"); // 3 requests per hour
     if (!rateLimitResult.success) {
       return NextResponse.json(
         {

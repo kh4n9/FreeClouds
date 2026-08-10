@@ -87,6 +87,10 @@ export const RATE_LIMITS = {
     maxRequests: 5,
     windowMs: 5 * 60 * 1000, // 5 minutes
   },
+  WEBDAV: {
+    maxRequests: 30,
+    windowMs: 5 * 60 * 1000, // 5 minutes
+  },
   UPLOAD: {
     maxRequests: 10,
     windowMs: 5 * 60 * 1000, // 5 minutes
@@ -104,13 +108,15 @@ export const RATE_LIMITS = {
 export function checkRateLimit(
   request: Request,
   config: { maxRequests: number; windowMs: number },
+  bucket: string = "default",
 ): {
   allowed: boolean;
   remaining: number;
   resetTime: number | null;
+  maxRequests: number;
 } {
   const ip = getClientIp(request);
-  const identifier = ip;
+  const identifier = `${bucket}:${ip}`;
 
   const allowed = rateLimiter.check(
     identifier,
@@ -129,16 +135,18 @@ export function checkRateLimit(
     allowed,
     remaining,
     resetTime,
+    maxRequests: config.maxRequests,
   };
 }
 
 export function createRateLimitResponse(
   remaining: number,
   resetTime: number | null,
+  maxRequests?: number,
 ): Response {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "X-RateLimit-Limit": "60",
+    "X-RateLimit-Limit": (maxRequests ?? 60).toString(),
     "X-RateLimit-Remaining": remaining.toString(),
   };
 
@@ -167,11 +175,16 @@ export async function rateLimit(
   request: Request,
   maxRequests: number,
   windowMs: number,
+  bucket: string = "default",
 ): Promise<{
   success: boolean;
   retryAfter?: number;
 }> {
-  const result = checkRateLimit(request, { maxRequests, windowMs });
+  const result = checkRateLimit(
+    request,
+    { maxRequests, windowMs },
+    bucket,
+  );
 
   if (!result.allowed) {
     const retryAfter = result.resetTime

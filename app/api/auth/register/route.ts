@@ -33,9 +33,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Rate limiting
-    const rateLimit = checkRateLimit(request, RATE_LIMITS.AUTH);
+    const rateLimit = checkRateLimit(request, RATE_LIMITS.AUTH, "auth");
     if (!rateLimit.allowed) {
-      return createRateLimitResponse(rateLimit.remaining, rateLimit.resetTime);
+      return createRateLimitResponse(rateLimit.remaining, rateLimit.resetTime, rateLimit.maxRequests);
     }
 
     // Parse and validate request body

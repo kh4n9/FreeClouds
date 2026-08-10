@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { LogOut, User, Settings, Cloud, Shield } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
+import { clearAuthCookieClientSide } from "@/utils/auth-helpers";
 
 interface NavbarProps {
   user?: {
@@ -43,12 +44,14 @@ export default function Navbar({
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
+      clearAuthCookieClientSide();
       if (response.ok) {
         if (onLogout) onLogout();
         else window.location.href = "/login";
       }
     } catch (error) {
       console.error("Logout error:", error);
+      clearAuthCookieClientSide();
     }
   };
 

@@ -34,8 +34,8 @@ export async function handleUpload(request: NextRequest) {
   try {
     if (!validateOrigin(request)) return createCsrfError();
 
-    const rateLimit = checkRateLimit(request, RATE_LIMITS.UPLOAD);
-    if (!rateLimit.allowed) return createRateLimitResponse(rateLimit.remaining, rateLimit.resetTime);
+    const rateLimit = checkRateLimit(request, RATE_LIMITS.UPLOAD, "upload");
+    if (!rateLimit.allowed) return createRateLimitResponse(rateLimit.remaining, rateLimit.resetTime, rateLimit.maxRequests);
 
     const user = await requireAuth(request);
     await connectToDatabase();

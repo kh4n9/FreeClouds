@@ -84,11 +84,19 @@ export function createAuthCookie(token: string): string {
 }
 
 export function createLogoutCookie(): string {
+  // Must mirror createAuthCookie's attributes exactly. A Secure cookie can
+  // only be overwritten/deleted by a cookie that also carries Secure —
+  // otherwise browsers silently ignore the deletion and the old session
+  // survives (stale account kept on production HTTPS).
+  const secure = env.NODE_ENV === "production";
   return [
     `token=`,
     `Max-Age=0`,
     `Path=/`,
     `HttpOnly`,
     `SameSite=lax`,
-  ].join("; ");
+    secure ? "Secure" : "",
+  ]
+    .filter(Boolean)
+    .join("; ");
 }

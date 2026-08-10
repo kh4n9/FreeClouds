@@ -182,9 +182,9 @@ export async function PATCH(request: NextRequest) {
         { status: 200 },
       );
     } else if (action === "update-avatar") {
-      const rateLimit = checkRateLimit(request, RATE_LIMITS.UPLOAD);
+      const rateLimit = checkRateLimit(request, RATE_LIMITS.UPLOAD, "upload");
       if (!rateLimit.allowed) {
-        return createRateLimitResponse(rateLimit.remaining, rateLimit.resetTime);
+        return createRateLimitResponse(rateLimit.remaining, rateLimit.resetTime, rateLimit.maxRequests);
       }
 
       const validation = updateAvatarSchema.safeParse(body);

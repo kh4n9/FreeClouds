@@ -21,6 +21,7 @@ import {
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Lang, getDict } from "./i18n";
+import { clearAuthCookieClientSide } from "@/utils/auth-helpers";
 
 interface AdminUser {
   id: string;
@@ -88,8 +89,16 @@ export default function AdminLayout({ children, lang }: AdminLayoutProps) {
   }, [reloadKey]);
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push(loginPath);
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      clearAuthCookieClientSide();
+      if (response.ok) {
+        router.push(loginPath);
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      clearAuthCookieClientSide();
+    }
   };
 
   if (loading) {

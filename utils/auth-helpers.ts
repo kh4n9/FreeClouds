@@ -19,6 +19,24 @@ export interface AuthUser {
   role?: string;
 }
 
+function formatRateLimitMessage(response: Response): string {
+  const retryAfter = response.headers.get("Retry-After");
+  const wait = retryAfter ? Math.ceil(Number(retryAfter) / 60) : 5;
+  return `Too many attempts. Please try again in ${wait} minute${wait === 1 ? "" : "s"}.`;
+}
+
+/**
+ * Belt-and-suspenders cleanup: expire the auth cookie from the browser side.
+ * HttpOnly cookies can still be removed via document.cookie with matching
+ * attributes; this guarantees no stale session survives a logout even if the
+ * server's Set-Cookie is ignored (e.g. Secure-flag mismatch in production).
+ */
+export function clearAuthCookieClientSide(): void {
+  if (typeof document === "undefined") return;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `token=; Max-Age=0; Path=/; HttpOnly; SameSite=lax${secure}`;
+}
+
 // Shared authentication hook
 export function useAuth() {
   const [loading, setLoading] = useState(false);
@@ -82,9 +100,11 @@ export function useAuth() {
         }
       } else {
         console.error("Login failed:", response.status, data);
-        setError({
-          message: data?.error || `Login failed (${response.status}). Please try again.`,
-        });
+        const message =
+          response.status === 429
+            ? formatRateLimitMessage(response)
+            : data?.error || `Login failed (${response.status}). Please try again.`;
+        setError({ message });
         return null;
       }
     } catch (error) {
@@ -101,9 +121,11 @@ export function useAuth() {
   const logout = async (): Promise<boolean> => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
+      clearAuthCookieClientSide();
       return true;
     } catch (error) {
       console.error("Logout failed:", error);
+      clearAuthCookieClientSide();
       return false;
     }
   };

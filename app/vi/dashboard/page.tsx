@@ -21,6 +21,7 @@ import Navbar from "@/components/Navbar";
 import PlainFolderTree from "@/components/PlainFolderTree";
 import ContextMenu from "@/components/ContextMenu";
 import Footer from "@/components/Footer";
+import { clearAuthCookieClientSide } from "@/utils/auth-helpers";
 
 interface User { id: string; email: string; name: string; createdAt: string; updatedAt: string; stats?: { totalFiles: number; totalSize: number; totalFolders: number; }; }
 interface FolderData { id: string; name: string; parent: string | null; createdAt: string; }
@@ -638,7 +639,16 @@ export default function DashboardPage() {
     finally { setTimeout(() => setToast(null), 3000); }
   };
 
-  const handleLogout = async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/login"); };
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      clearAuthCookieClientSide();
+      if (response.ok) router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      clearAuthCookieClientSide();
+    }
+  };
 
   const totalSize = user?.stats?.totalSize ?? 0;
   const totalFiles = user?.stats?.totalFiles ?? files.length;

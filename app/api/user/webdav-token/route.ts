@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
     if (!validateOrigin(request)) return createCsrfError();
     const user = await requireAuth(request);
 
-    const limit = await checkRateLimit(request, RATE_LIMITS.AUTH);
-    if (!limit.allowed) return createRateLimitResponse(limit.remaining, limit.resetTime);
+    const limit = await checkRateLimit(request, RATE_LIMITS.WEBDAV, "webdav");
+    if (!limit.allowed) return createRateLimitResponse(limit.remaining, limit.resetTime, limit.maxRequests);
 
     await connectToDatabase();
 

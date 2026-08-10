@@ -11,7 +11,7 @@ import type { FilterQuery } from "mongoose";
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimit(request, 5, 60 * 60 * 1000); // 5 requests per hour
+    const rateLimitResult = await rateLimit(request, 5, 60 * 60 * 1000, "confirm-deletion"); // 5 requests per hour
     if (!rateLimitResult.success) {
       return NextResponse.json(
         {

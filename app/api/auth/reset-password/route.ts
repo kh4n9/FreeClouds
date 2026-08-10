@@ -8,7 +8,7 @@ import VerificationCode from '@/models/VerificationCode';
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimit(request, 10, 15 * 60 * 1000); // 10 requests per 15 minutes
+    const rateLimitResult = await rateLimit(request, 10, 15 * 60 * 1000, "reset-password"); // 10 requests per 15 minutes
     if (!rateLimitResult.success) {
       return NextResponse.json(
         {
