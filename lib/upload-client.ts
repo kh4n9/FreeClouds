@@ -1,5 +1,5 @@
 export const CLIENT_CHUNK_SIZE = 4 * 1024 * 1024; // 4MB per chunk (Vercel hobby 4.5MB body limit)
-export const PARALLEL_CHUNKS = 3; // max concurrent chunk uploads
+export const PARALLEL_CHUNKS = 6; // max concurrent chunk uploads (Telegram tolerates ~6-8 parallel uploads)
 
 /**
  * Upload a Blob to the user's cloud storage, saving it as a new file.

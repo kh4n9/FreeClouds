@@ -557,6 +557,36 @@ export default function DashboardPage() {
     setMoveFile(file);
   }, []);
 
+  const [copyFile, setCopyFile] = useState<FileData | null>(null);
+
+  const handleCopy = useCallback((file: FileData) => {
+    setCopyFile(file);
+  }, []);
+
+  const handleRename = useCallback(async (file: FileData) => {
+    const currentName = file.displayName || file.name;
+    const newName = window.prompt("Enter new file name", currentName);
+    if (newName === null || newName.trim() === "" || newName.trim() === currentName) return;
+    try {
+      const res = await fetch(`/api/files/${file.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "rename", name: newName.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        fileCache.current.clear();
+        loadFiles(selectedFolderId, debouncedSearch, false);
+        setToast({ type: "success", message: "File renamed" });
+        setTimeout(() => setToast(null), 3000);
+      } else {
+        alert(data.error || "Failed to rename file");
+      }
+    } catch {
+      alert("Failed to rename file");
+    }
+  }, [selectedFolderId, debouncedSearch]);
+
   const [moveFolder, setMoveFolder] = useState<{ id: string; name: string } | null>(null);
 
   const [versionsFile, setVersionsFile] = useState<FileData | null>(null);
@@ -1205,7 +1235,9 @@ export default function DashboardPage() {
                       )}
                       <DynamicFileGrid files={files} loading={filesLoading}
                         onDownload={handleDownload} onDelete={handleDeleteFile}
-                        onShare={handleShare} onMove={handleMove} onVersions={handleVersions}
+                        onShare={handleShare} onMove={handleMove}
+                        onRename={handleRename} onCopy={handleCopy}
+                        onVersions={handleVersions}
                         onSearch={setSearchQuery} searchQuery={searchQuery}
                         onToggleFavorite={handleToggleFavorite} onOpenFolder={handleOpenFolder}
                         onScan={(selected) => setScannerState({ open: true, files: selected })}
@@ -1288,6 +1320,16 @@ export default function DashboardPage() {
           folders={folders}
           currentFolderId={selectedFolderId}
           onMoved={() => { fileCache.current.clear(); loadFiles(selectedFolderId, debouncedSearch, false); setToast({ type: "success", message: "File moved" }); setTimeout(() => setToast(null), 3000); }} />
+      )}
+
+      {copyFile && (
+        <DynamicMoveModal isOpen={!!copyFile}
+          onClose={() => setCopyFile(null)}
+          item={{ id: copyFile.id, name: copyFile.displayName || copyFile.name, kind: "file" }}
+          folders={folders}
+          currentFolderId={selectedFolderId}
+          copy
+          onMoved={() => { fileCache.current.clear(); loadFiles(selectedFolderId, debouncedSearch, false); setToast({ type: "success", message: "File copied" }); setTimeout(() => setToast(null), 3000); }} />
       )}
 
       {moveFolder && (

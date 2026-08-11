@@ -37,6 +37,7 @@ import {
   FolderOpen,
   History,
   ScanLine,
+  Files,
 } from "lucide-react";
 import {
   getFileTypeInfo,
@@ -74,6 +75,8 @@ interface FileGridProps {
   onDelete: (fileId: string) => void;
   onShare?: (file: FileData) => void;
   onMove?: (file: FileData) => void;
+  onRename?: (file: FileData) => void;
+  onCopy?: (file: FileData) => void;
   onSearch?: (query: string) => void;
   searchQuery?: string;
   viewMode?: "grid" | "list";
@@ -91,6 +94,8 @@ interface FileItemProps {
   onDelete: (fileId: string) => void;
   onShare: ((file: FileData) => void) | undefined;
   onMove: ((file: FileData) => void) | undefined;
+  onRename: ((file: FileData) => void) | undefined;
+  onCopy: ((file: FileData) => void) | undefined;
   onPreview: (file: FileData) => void;
   onToggleFavorite: ((file: FileData) => void) | undefined;
   onOpenFolder: ((folderId: string | null) => void) | undefined;
@@ -158,6 +163,8 @@ function FileItem({
   onDelete,
   onShare,
   onMove,
+  onRename,
+  onCopy,
   onPreview,
   onToggleFavorite,
   onOpenFolder,
@@ -192,6 +199,16 @@ function FileItem({
 
   const handleMove = () => {
     onMove?.(file);
+    setIsMenuOpen(false);
+  };
+
+  const handleRename = () => {
+    onRename?.(file);
+    setIsMenuOpen(false);
+  };
+
+  const handleCopy = () => {
+    onCopy?.(file);
     setIsMenuOpen(false);
   };
 
@@ -273,6 +290,8 @@ function FileItem({
     { label: "Download", icon: <Download className="w-4 h-4" />, onClick: handleDownload },
     { label: "Share", icon: <Link2 className="w-4 h-4" />, onClick: handleShare },
     { label: "Move", icon: <Folder className="w-4 h-4" />, onClick: handleMove },
+    { label: "Rename", icon: <Type className="w-4 h-4" />, onClick: handleRename },
+    { label: "Copy", icon: <Files className="w-4 h-4" />, onClick: handleCopy },
     { label: "Version History", icon: <History className="w-4 h-4" />, onClick: handleVersions },
     { divider: true },
     {
@@ -481,6 +500,8 @@ export default function FileGrid({
   onDelete,
   onShare,
   onMove,
+  onRename,
+  onCopy,
   onSearch,
   searchQuery = "",
   viewMode = "grid",
@@ -1047,6 +1068,8 @@ export default function FileGrid({
                       onDelete={onDelete}
                       onShare={onShare}
                       onMove={onMove}
+                      onRename={onRename}
+                      onCopy={onCopy}
                       onPreview={handleFilePreview}
                       onToggleFavorite={onToggleFavorite}
                       onOpenFolder={onOpenFolder}
@@ -1068,6 +1091,8 @@ export default function FileGrid({
                       onDelete={onDelete}
                       onShare={onShare}
                       onMove={onMove}
+                      onRename={onRename}
+                      onCopy={onCopy}
                       onPreview={handleFilePreview}
                       onToggleFavorite={onToggleFavorite}
                       onOpenFolder={onOpenFolder}

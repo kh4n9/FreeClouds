@@ -10,6 +10,8 @@ import {
   sanitizeFileName,
 } from "@/lib/telegram";
 import { getEffectiveStorageLimit } from "@/lib/quota";
+import { uploadBodyToTelegram, MAX_PUT_BYTES } from "@/lib/upload-chunks";
+import { referenceCopyFile, referenceCopyFolder, sumFolderSize } from "@/lib/file-copy";
 import {
   DavError,
   authenticateWebDav,
@@ -228,12 +230,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const mime = contentType.split(";")[0]!.trim().toLowerCase() || "application/octet-stream";
         const declaredSize = typeof req.headers["content-length"] === "string" ? parseInt(req.headers["content-length"], 10) : NaN;
 
-        if (Number.isFinite(declaredSize) && declaredSize > 50 * 1024 * 1024) {
-          throw new DavError("File too large (50MB limit)", 413);
+        if (Number.isFinite(declaredSize) && declaredSize > MAX_PUT_BYTES) {
+          throw new DavError("File too large (2GB limit)", 413);
         }
 
-        const buffer = await readBodyBuffer(req, 50 * 1024 * 1024);
-        if (buffer.length === 0) throw new DavError("Empty file not allowed", 400);
+        const existing = resolved.kind === "file" ? resolved.file : null;
+        const isOverwrite = !!existing;
+
+        const usage = await File.getStorageUsage(userId);
+        const storageLimit = await getEffectiveStorageLimit(userId);
+        if (Number.isFinite(declaredSize)) {
+          const delta = declaredSize - (existing ? existing.size : 0);
+          if ((usage.totalSize || 0) + delta > storageLimit) {
+            throw new DavError("Insufficient storage", 507);
+          }
+        }
 
         let fileName = sanitizeFileName(name);
 
@@ -249,58 +260,156 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
 
-        const existing = resolved.kind === "file" ? resolved.file : null;
-
-        const usage = await File.getStorageUsage(userId);
-        const storageLimit = await getEffectiveStorageLimit(userId);
-        const delta = buffer.length - (existing ? existing.size : 0);
-        if ((usage.totalSize || 0) + delta > storageLimit) {
-          throw new DavError("Insufficient storage", 507);
-        }
-
-        let telegramResponse;
+        // Stream the body and upload to Telegram (auto-split into 15MB parts
+        // past the single-message limit, parts upload concurrently).
+        let result;
         try {
-          telegramResponse = await telegramAPI.sendDocument(buffer, fileName, mime);
+          result = await uploadBodyToTelegram(req, fileName, mime, { maxBytes: MAX_PUT_BYTES });
         } catch (error) {
+          if (error instanceof Error && error.message === "PAYLOAD_TOO_LARGE") {
+            throw new DavError("File too large (2GB limit)", 413);
+          }
           console.error("WebDAV upload failed:", error);
           throw new DavError("Telegram upload failed", 502);
         }
 
-        let telegramFilePath: string | null = null;
-        try {
-          const info = await telegramAPI.getFile(telegramResponse.document.file_id);
-          telegramFilePath = info.file_path || null;
-        } catch {}
+        if (result.totalBytes === 0) {
+          throw new DavError("Empty file not allowed", 400);
+        }
 
-        if (existing) {
-          const oldMessageId = existing.telegramMessageId;
-          existing.name = fileName;
-          existing.size = buffer.length;
-          existing.mime = mime;
-          existing.fileId = telegramResponse.document.file_id;
-          existing.telegramFilePath = telegramFilePath;
-          existing.telegramMessageId = String(telegramResponse.message_id);
-          if (originalExt !== null) existing.originalExt = originalExt;
-          await existing.save();
-          if (oldMessageId) {
-            await telegramAPI.deleteMessage(oldMessageId).catch(() => {});
+        if (!Number.isFinite(declaredSize)) {
+          const delta = result.totalBytes - (existing ? existing.size : 0);
+          if ((usage.totalSize || 0) + delta > storageLimit) {
+            await Promise.allSettled(
+              result.meta.map((m) =>
+                m.telegramMessageId ? telegramAPI.deleteMessage(m.telegramMessageId) : Promise.resolve(),
+              ),
+            );
+            throw new DavError("Insufficient storage", 507);
           }
-          sendStatus(res, 204);
+        }
+
+        const wasChunked = !!(existing?.chunkedId && existing?.totalChunks && existing.totalChunks > 1);
+        const oldMessageId = existing?.telegramMessageId || null;
+        const oldChunkMessages = wasChunked
+          ? (
+              await File.find({
+                chunkedId: existing!.chunkedId,
+                chunkIndex: { $gte: 0 },
+                owner: userId,
+              })
+            )
+              .map((c) => c.telegramMessageId)
+              .filter(Boolean)
+          : [];
+
+        if (result.meta.length === 1) {
+          const part = result.meta[0]!;
+          if (existing) {
+            if (wasChunked) {
+              await File.deleteMany({ chunkedId: existing.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+            }
+            existing.name = fileName;
+            existing.size = result.totalBytes;
+            existing.mime = mime;
+            existing.fileId = part.fileId;
+            existing.telegramFilePath = part.telegramFilePath;
+            existing.telegramMessageId = part.telegramMessageId;
+            existing.chunkedId = null;
+            existing.chunkIndex = null;
+            existing.totalChunks = null;
+            existing.blobCacheUrl = null;
+            if (originalExt !== null) existing.originalExt = originalExt;
+            await existing.save();
+          } else {
+            const record = new File({
+              name: fileName,
+              size: result.totalBytes,
+              mime,
+              fileId: part.fileId,
+              telegramFilePath: part.telegramFilePath,
+              telegramMessageId: part.telegramMessageId,
+              owner: userId,
+              folder: parentId,
+              ...(originalExt !== null ? { originalExt } : {}),
+            });
+            await record.save();
+          }
         } else {
-          const record = new File({
-            name: fileName,
-            size: buffer.length,
+          const chunkedId = crypto.randomUUID();
+          const totalChunks = result.meta.length;
+          const chunkDocs = result.meta.map((part, i) => ({
+            name: `${fileName}.part${i + 1}`,
+            size: part.size,
             mime,
-            fileId: telegramResponse.document.file_id,
-            telegramFilePath,
-            telegramMessageId: String(telegramResponse.message_id),
+            fileId: part.fileId,
+            telegramFilePath: part.telegramFilePath,
+            telegramMessageId: part.telegramMessageId,
             owner: userId,
             folder: parentId,
+            chunkedId,
+            chunkIndex: i,
+            totalChunks,
             ...(originalExt !== null ? { originalExt } : {}),
-          });
-          await record.save();
-          sendStatus(res, 201);
+          }));
+
+          try {
+            await File.insertMany(chunkDocs);
+          } catch (err) {
+            console.error("WebDAV chunk save failed:", err);
+            await Promise.allSettled(
+              chunkDocs.map((d) => telegramAPI.deleteMessage(d.telegramMessageId!)),
+            );
+            throw new DavError("Failed to save file chunks", 500);
+          }
+
+          if (existing) {
+            if (wasChunked) {
+              await File.deleteMany({ chunkedId: existing.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+            }
+            existing.name = fileName;
+            existing.size = result.totalBytes;
+            existing.mime = mime;
+            existing.fileId = `chunked_parent_${chunkedId}`;
+            existing.telegramFilePath = null;
+            existing.telegramMessageId = null;
+            existing.chunkedId = chunkedId;
+            existing.chunkIndex = -1;
+            existing.totalChunks = totalChunks;
+            existing.blobCacheUrl = null;
+            if (originalExt !== null) existing.originalExt = originalExt;
+            await existing.save();
+          } else {
+            const parentFile = new File({
+              name: fileName,
+              size: result.totalBytes,
+              mime,
+              fileId: `chunked_parent_${chunkedId}`,
+              owner: userId,
+              folder: parentId,
+              chunkedId,
+              chunkIndex: -1,
+              totalChunks,
+              ...(originalExt !== null ? { originalExt } : {}),
+            });
+            try {
+              await parentFile.save();
+            } catch (err) {
+              console.error("WebDAV parent save failed, cleaning up chunks:", err);
+              await File.deleteMany({ chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+              throw new DavError("Failed to finalize file upload", 500);
+            }
+          }
         }
+
+        if (oldMessageId) {
+          await telegramAPI.deleteMessage(oldMessageId).catch(() => {});
+        }
+        await Promise.allSettled(
+          oldChunkMessages.map((messageId) => telegramAPI.deleteMessage(messageId!)),
+        );
+
+        sendStatus(res, isOverwrite ? 204 : 201);
         return;
       }
 
@@ -411,8 +520,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       case "COPY": {
-        if (resolved.kind !== "file") {
-          throw new DavError("Only file copy is supported", 501);
+        if (resolved.kind === "missing") {
+          throw new DavError("Not found", 404);
+        }
+        if (resolved.kind === "root") {
+          throw new DavError("Cannot copy root", 405);
         }
         const destination = parseDestinationPath(req.headers.destination);
         const destName = destination[destination.length - 1];
@@ -430,74 +542,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
           await deleteTargetFile(destResolved.file._id.toString());
         }
+        const destParentId = destination.length === 1 ? null : await resolveParentId(userId, destination);
 
-        // Read the source content fully, then re-upload as a new Telegram doc.
-        const parts: Buffer[] = [];
-        const isChunked = resolved.file.chunkedId && resolved.file.totalChunks && resolved.file.totalChunks > 1;
-        if (isChunked) {
-          const chunks = await File.find({
-            chunkedId: resolved.file.chunkedId,
-            chunkIndex: { $gte: 0 },
-            owner: userId,
-            deletedAt: null,
-          }).sort({ chunkIndex: 1 });
-          if (chunks.length !== resolved.file.totalChunks) {
-            throw new DavError("File chunks not found", 404);
-          }
-          for (const chunk of chunks) {
-            const result = await telegramAPI.getFileStream(chunk.fileId, chunk.telegramFilePath || undefined);
-            const reader = result.stream.getReader();
-            const buf: Uint8Array[] = [];
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              buf.push(value);
-            }
-            reader.releaseLock();
-            parts.push(Buffer.concat(buf));
-          }
-        } else {
-          const result = await telegramAPI.getFileStream(
-            resolved.file.fileId,
-            resolved.file.telegramFilePath || undefined,
-          );
-          const reader = result.stream.getReader();
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            if (value) parts.push(Buffer.from(value));
-          }
-          reader.releaseLock();
-        }
-
-        const buffer = Buffer.concat(parts);
-
+        // Quota check before duplicating any records.
         const usage = await File.getStorageUsage(userId);
         const storageLimit = await getEffectiveStorageLimit(userId);
-        if ((usage.totalSize || 0) + buffer.length > storageLimit) {
+        const copySize =
+          resolved.kind === "file"
+            ? resolved.file.size || 0
+            : await sumFolderSize(userId, resolved.folder._id.toString());
+        if ((usage.totalSize || 0) + copySize > storageLimit) {
           throw new DavError("Insufficient storage", 507);
         }
 
-        const telegramResponse = await telegramAPI.sendDocument(buffer, resolved.file.name, resolved.file.mime);
+        if (resolved.kind === "folder") {
+          // Reject copying a folder into itself or one of its descendants.
+          let cursor: string | null = destParentId;
+          const visited = new Set<string>();
+          while (cursor) {
+            if (cursor === resolved.folder._id.toString()) {
+              throw new DavError("Cannot copy a folder into itself", 409);
+            }
+            if (visited.has(cursor)) break;
+            visited.add(cursor);
+            const parent = await Folder.findById(cursor);
+            cursor = parent?.parent?.toString() || null;
+          }
+          const destId = await referenceCopyFolder(
+            resolved.folder._id.toString(),
+            userId,
+            destParentId,
+            destName,
+          );
+        } else {
+          const copy = await referenceCopyFile(resolved.file, userId, destParentId);
+          if (destName !== resolved.file.name) {
+            copy.name = destName;
+            await copy.save();
+          }
+        }
 
-        let telegramFilePath: string | null = null;
-        try {
-          const info = await telegramAPI.getFile(telegramResponse.document.file_id);
-          telegramFilePath = info.file_path || null;
-        } catch {}
-
-        const record = new File({
-          name: destName,
-          size: buffer.length,
-          mime: resolved.file.mime,
-          fileId: telegramResponse.document.file_id,
-          telegramFilePath,
-          telegramMessageId: telegramResponse.message_id,
-          owner: userId,
-          folder: destination.length === 1 ? null : await resolveParentId(userId, destination),
-          ...(resolved.file.originalExt ? { originalExt: resolved.file.originalExt } : {}),
-        });
-        await record.save();
         sendStatus(res, 201);
         return;
       }

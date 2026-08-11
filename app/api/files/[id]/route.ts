@@ -222,6 +222,37 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ id: file._id.toString(), folderId: targetFolderId }, { status: 200 });
     }
 
+    if (action === "copy") {
+      const targetFolderId = body.folderId === null ? null : String(body.folderId || "");
+      if (body.folderId !== null && targetFolderId && targetFolderId.length !== 24) {
+        return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
+      }
+      const file = await File.findById(fileId);
+      if (!file || file.deletedAt) return NextResponse.json({ error: "File not found" }, { status: 404 });
+      if (!(await verifyOwnership(user.id, file))) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      if (targetFolderId) {
+        const { Folder } = await import("@/models/Folder");
+        const targetFolder = await Folder.findOne({ _id: targetFolderId, owner: user.id });
+        if (!targetFolder) {
+          return NextResponse.json({ error: "Target folder not found" }, { status: 404 });
+        }
+      }
+
+      const { getEffectiveStorageLimit } = await import("@/lib/quota");
+      const { referenceCopyFile } = await import("@/lib/file-copy");
+      const usage = await File.getStorageUsage(user.id);
+      const storageLimit = await getEffectiveStorageLimit(user.id);
+      if ((usage.totalSize || 0) + (file.size || 0) > storageLimit) {
+        return NextResponse.json({ error: "Storage limit exceeded" }, { status: 413 });
+      }
+
+      const copy = await referenceCopyFile(file, user.id, targetFolderId);
+      return NextResponse.json(
+        { id: copy._id.toString(), name: copy.name, folderId: targetFolderId },
+        { status: 201 },
+      );
+    }
+
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (error) {
     console.error("Patch file error:", error);

@@ -63,11 +63,16 @@ class TelegramAPI {
     this.maxRetries = env.TELEGRAM_MAX_RETRIES;
   }
 
-  private async fetchWithRetry(url: string, options?: RequestInit): Promise<Response> {
+  private async fetchWithRetry(
+    url: string,
+    options?: RequestInit,
+    timeoutMs?: number,
+  ): Promise<Response> {
     let lastError: unknown;
+    const effectiveTimeout = timeoutMs ?? this.timeoutMs;
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+      const timer = setTimeout(() => controller.abort(), effectiveTimeout);
       try {
         return await fetch(url, { ...options, signal: controller.signal });
       } catch (error) {
@@ -182,11 +187,47 @@ class TelegramAPI {
     }
   }
 
-  async downloadFile(filePath: string): Promise<ReadableStream<Uint8Array>> {
+  /**
+   * Download a byte range of a Telegram file. Telegram's file endpoints
+   * honor standard HTTP Range requests (206). `end` is inclusive.
+   * Long timeout (default 5 min) because large transfers must not be
+   * killed by the 30s bot-API timeout.
+   */
+  async downloadFileRange(
+    filePath: string,
+    start: number,
+    end: number,
+    timeoutMs: number = 300_000,
+  ): Promise<{ stream: ReadableStream<Uint8Array>; isPartial: boolean }> {
+    const url = `${env.TELEGRAM_API_BASE}/file/bot${this.botToken}/${filePath}`;
+
+    const response = await this.fetchWithRetry(
+      url,
+      { headers: { Range: `bytes=${start}-${end}` } },
+      timeoutMs,
+    );
+
+    if (!response.ok && response.status !== 206) {
+      throw new TelegramError(
+        `Failed to download file: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    if (!response.body) {
+      throw new TelegramError("No response body received");
+    }
+
+    return { stream: response.body, isPartial: response.status === 206 };
+  }
+
+  async downloadFile(
+    filePath: string,
+    timeoutMs: number = 300_000,
+  ): Promise<ReadableStream<Uint8Array>> {
     try {
       const url = `${env.TELEGRAM_API_BASE}/file/bot${this.botToken}/${filePath}`;
 
-      const response = await this.fetchWithRetry(url);
+      const response = await this.fetchWithRetry(url, undefined, timeoutMs);
 
       if (!response.ok) {
         throw new TelegramError(
@@ -205,16 +246,28 @@ class TelegramAPI {
     }
   }
 
-  async getFileStream(fileId: string, filePath?: string): Promise<{
+  async getFileStream(
+    fileId: string,
+    filePath?: string,
+    range?: { start: number; end: number },
+  ): Promise<{
     stream: ReadableStream<Uint8Array>;
     size?: number;
     mimeType?: string;
     filePath?: string;
   }> {
     try {
+      const download = async (path: string) => {
+        if (range) {
+          const result = await this.downloadFileRange(path, range.start, range.end);
+          return result.stream;
+        }
+        return this.downloadFile(path);
+      };
+
       if (filePath) {
         try {
-          const stream = await this.downloadFile(filePath);
+          const stream = await download(filePath);
           return { stream, filePath };
         } catch (error) {
           if (
@@ -224,7 +277,7 @@ class TelegramAPI {
             console.warn(
               `Cached file path unavailable (${filePath}), refreshing from getFile`,
             );
-            return this.getFileStream(fileId);
+            return this.getFileStream(fileId, undefined, range);
           }
           throw error;
         }
@@ -236,7 +289,7 @@ class TelegramAPI {
         throw new TelegramError("File path not available");
       }
 
-      const stream = await this.downloadFile(fileInfo.file_path);
+      const stream = await download(fileInfo.file_path);
 
       return {
         stream,

@@ -15,9 +15,9 @@ export interface IFile extends Document {
   originalExt?: string | null;     // restored on download when set
 
   // Chunked file support
-  chunkedId?: string;       // group UUID shared by all chunks + parent
-  chunkIndex?: number;      // 0-based index for chunks (parent = -1 or null)
-  totalChunks?: number;     // total number of chunks
+  chunkedId?: string | null;   // group UUID shared by all chunks + parent
+  chunkIndex?: number | null;  // 0-based index for chunks (parent = -1 or null)
+  totalChunks?: number | null; // total number of chunks
 
   // Trash support (auto-delete after 30 days)
   trashExpiresAt?: Date | null;
@@ -125,7 +125,8 @@ const fileSchema = new Schema<IFile>({
   fileId: {
     type: String,
     required: [true, "Telegram file ID is required"],
-    unique: true,
+    // NOT unique: reference copies share the same Telegram document.
+    // Migration (prod): db.files.dropIndex({ fileId: 1 }) once deployed.
     index: true,
   },
   telegramFilePath: {

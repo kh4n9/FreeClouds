@@ -27,6 +27,8 @@ interface MoveModalProps {
   /** Folder ids that must not be shown as destinations (e.g. the folder being moved and its descendants) */
   excludeIds?: string[];
   onMoved: () => void;
+  /** Copy mode: duplicates the item into the chosen folder instead of moving it */
+  copy?: boolean;
 }
 
 function buildTree(folders: FolderData[], excludeIds: Set<string>): FolderData[] {
@@ -117,6 +119,7 @@ export default function MoveModal({
   currentFolderId,
   excludeIds = [],
   onMoved,
+  copy = false,
 }: MoveModalProps) {
   const { t } = useTranslation();
   const [targetId, setTargetId] = useState<string | null>(null);
@@ -134,9 +137,11 @@ export default function MoveModal({
     setError(null);
     try {
       const endpoint = isFolder ? `/api/folders/${item.id}` : `/api/files/${item.id}`;
-      const payload = isFolder
-        ? { action: "move", targetFolderId: targetId }
-        : { action: "move", folderId: targetId };
+      const payload = copy
+        ? { action: "copy", folderId: targetId }
+        : isFolder
+          ? { action: "move", targetFolderId: targetId }
+          : { action: "move", folderId: targetId };
       const response = await fetch(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -175,9 +180,13 @@ export default function MoveModal({
             </div>
             <div className="min-w-0">
               <h2 className="text-lg font-semibold text-foreground leading-tight">
-                {isFolder
-                  ? t("moveFolder", { en: "Move Folder", vi: "Di chuyển thư mục" })
-                  : t("moveFile", { en: "Move File", vi: "Di chuyển tệp" })}
+                {copy
+                  ? (isFolder
+                    ? t("copyFolder", { en: "Copy Folder", vi: "Sao chép thư mục" })
+                    : t("copyFile", { en: "Copy File", vi: "Sao chép tệp" }))
+                  : (isFolder
+                    ? t("moveFolder", { en: "Move Folder", vi: "Di chuyển thư mục" })
+                    : t("moveFile", { en: "Move File", vi: "Di chuyển tệp" }))}
               </h2>
               <p className="text-xs text-muted truncate flex items-center gap-1 mt-0.5">
                 {isFolder ? <FolderOpen className="w-3 h-3 shrink-0" /> : <FileText className="w-3 h-3 shrink-0" />}
@@ -226,15 +235,20 @@ export default function MoveModal({
 
           {targetId !== currentFolderId && (
             <p className="text-xs text-muted mt-3">
-              {isFolder
-                ? t("moveFolderNote", {
-                    en: "The folder and all its contents will be moved to the selected location.",
-                    vi: "Thư mục và toàn bộ nội dung sẽ được chuyển đến nơi đã chọn.",
+              {copy
+                ? t("copyNote", {
+                    en: "A copy will be created in the selected folder.",
+                    vi: "Bản sao sẽ được tạo trong thư mục đã chọn.",
                   })
-                : t("moveNote", {
-                    en: "The file will be moved to the selected folder.",
-                    vi: "Tệp sẽ được chuyển đến thư mục đã chọn.",
-                  })}
+                : isFolder
+                  ? t("moveFolderNote", {
+                      en: "The folder and all its contents will be moved to the selected location.",
+                      vi: "Thư mục và toàn bộ nội dung sẽ được chuyển đến nơi đã chọn.",
+                    })
+                  : t("moveNote", {
+                      en: "The file will be moved to the selected folder.",
+                      vi: "Tệp sẽ được chuyển đến thư mục đã chọn.",
+                    })}
             </p>
           )}
 
@@ -259,7 +273,9 @@ export default function MoveModal({
             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium btn-primary disabled:opacity-50 min-w-28"
           >
             {moving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Folder className="w-4 h-4" />}
-            {moving ? t("moving", { en: "Moving...", vi: "Đang chuyển..." }) : t("moveBtn", { en: "Move", vi: "Di chuyển" })}
+            {moving
+              ? (copy ? t("copying", { en: "Copying...", vi: "Đang sao chép..." }) : t("moving", { en: "Moving...", vi: "Đang chuyển..." }))
+              : (copy ? t("copyBtn", { en: "Copy", vi: "Sao chép" }) : t("moveBtn", { en: "Move", vi: "Di chuyển" }))}
           </button>
         </div>
       </div>

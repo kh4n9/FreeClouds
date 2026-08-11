@@ -13,6 +13,12 @@ let nextConfig = {
   // erroring again, set `turbopackFileSystemCacheForDev: false`.
   experimental: {
     turbopackFileSystemCacheForDev: true,
+    // Without this, dev's proxy.ts rewrite buffers the request body and
+    // silently drops everything past ~10MiB — WebDAV PUTs > 10MiB via the
+    // /webdav mount ended up truncated (verified: direct /api/webdav was
+    // fine, proxied /webdav was 30MiB -> 10.4MiB). Cap at 256MiB so big
+    // uploads stream through the rewrite intact.
+    proxyClientMaxBodySize: 256 * 1024 * 1024,
   },
   images: {
     remotePatterns: [

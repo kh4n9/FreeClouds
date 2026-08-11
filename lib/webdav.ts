@@ -273,6 +273,20 @@ export function propfindResponse(
   return PROPFIND_MULTISTATUS_XML.replace("%s", responses.join(""));
 }
 
+/** Parse `bytes=a-b` / `bytes=a-` against a known size; null when invalid. */
+export function parseRangeHeader(
+  header: string | string[] | undefined,
+  size: number,
+): { start: number; end: number } | null {
+  if (typeof header !== "string" || size <= 0) return null;
+  const match = header.match(/bytes=(\d+)-(\d*)/);
+  if (!match) return null;
+  const start = parseInt(match[1]!, 10);
+  const end = match[2] ? parseInt(match[2], 10) : size - 1;
+  if (start >= size || start > end) return null;
+  return { start, end: Math.min(end, size - 1) };
+}
+
 /** Stream a file body to the response (used by GET/HEAD). */
 export async function streamFileBody(
   res: ServerResponse,
@@ -281,19 +295,29 @@ export async function streamFileBody(
   const displayName = file.originalExt
     ? file.name.replace(/\.bin$/i, "") + file.originalExt
     : file.name;
+  const size = file.size ?? 0;
+  const rangeHeader = res.req.headers.range;
+  const parsedRange = parseRangeHeader(rangeHeader, size);
+  const status = parsedRange ? 206 : 200;
   const headers: Record<string, string> = {
     "Content-Type": file.mime || "application/octet-stream",
     "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(displayName)}`,
-    "Content-Length": String(file.size ?? 0),
     "ETag": `"${file._id.toString()}"`,
     "Cache-Control": "private, max-age=3600",
     "Accept-Ranges": "bytes",
   };
+  if (parsedRange) {
+    headers["Content-Range"] = `bytes ${parsedRange.start}-${parsedRange.end}/${size}`;
+    headers["Content-Length"] = String(parsedRange.end - parsedRange.start + 1);
+  } else if (size > 0) {
+    headers["Content-Length"] = String(size);
+  }
 
   const chunked = file.chunkedId && file.totalChunks && file.totalChunks > 1;
 
+  // Chunked files are assembled from their Telegram parts on demand; a
+  // ranged request slices the assembled buffer (same as /api/files download).
   if (chunked) {
-    // Assemble chunked files into a buffer then stream.
     try {
       const chunks = await File.find({
         chunkedId: file.chunkedId,
@@ -302,25 +326,32 @@ export async function streamFileBody(
         deletedAt: null,
       }).sort({ chunkIndex: 1 });
       if (chunks.length !== file.totalChunks) throw new DavError("File chunks not found", 404);
-      const parts: Buffer[] = [];
-      for (const c of chunks) {
-        const result = await telegramAPI.getFileStream(c.fileId, c.telegramFilePath || undefined);
-        if (!c.telegramFilePath && result.filePath) {
-          File.updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
-        }
-        const reader = result.stream.getReader();
-        const buf: Uint8Array[] = [];
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf.push(value);
-        }
-        reader.releaseLock();
-        parts.push(Buffer.concat(buf));
+      const ranges = await Promise.all(
+        chunks.map(async (c) => {
+          const result = await telegramAPI.getFileStream(c.fileId, c.telegramFilePath || undefined);
+          if (!c.telegramFilePath && result.filePath) {
+            File.updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
+          }
+          const reader = result.stream.getReader();
+          const buf: Uint8Array[] = [];
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf.push(value);
+          }
+          reader.releaseLock();
+          return Buffer.concat(buf);
+        }),
+      );
+      const assembled = Buffer.concat(ranges);
+      if (parsedRange) {
+        const sliced = assembled.subarray(parsedRange.start, parsedRange.end + 1);
+        res.writeHead(206, headers);
+        res.end(sliced);
+      } else {
+        res.writeHead(200, headers);
+        res.end(assembled);
       }
-      const assembled = Buffer.concat(parts);
-      res.writeHead(200, headers);
-      res.end(assembled);
       return;
     } catch (error) {
       if (error instanceof DavError) throw error;
@@ -328,14 +359,19 @@ export async function streamFileBody(
     }
   }
 
-  // Non-chunked: stream directly from Telegram.
+  // Non-chunked: stream directly from Telegram, forwarding ranged requests
+  // one-to-one (Telegram honors Range headers).
   let stream: ReadableStream<Uint8Array>;
-  let knownSize: number | undefined;
   try {
     const cached = file.telegramFilePath;
-    const result = await telegramAPI.getFileStream(file.fileId, cached || undefined);
+    const result = parsedRange
+      ? await telegramAPI.getFileStream(
+          file.fileId,
+          cached || undefined,
+          { start: parsedRange.start, end: parsedRange.end },
+        )
+      : await telegramAPI.getFileStream(file.fileId, cached || undefined);
     stream = result.stream;
-    knownSize = result.size;
     if (!cached && result.filePath) {
       File.updateOne({ _id: file._id }, { telegramFilePath: result.filePath }).catch(() => {});
     }
@@ -344,11 +380,14 @@ export async function streamFileBody(
     throw new DavError("File temporarily unavailable", 503);
   }
 
-  if (knownSize !== undefined) {
-    headers["Content-Length"] = String(knownSize);
+  if (rangeHeader && !parsedRange) {
+    headers["Content-Range"] = `bytes */${size}`;
+    res.writeHead(416, headers);
+    res.end();
+    return;
   }
 
-  res.writeHead(200, headers);
+  res.writeHead(status, headers);
   if (res.req.method === "HEAD") {
     res.end();
     return;
