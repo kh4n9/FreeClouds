@@ -67,17 +67,19 @@ class TelegramAPI {
     url: string,
     options?: RequestInit,
     timeoutMs?: number,
+    maxRetries?: number,
   ): Promise<Response> {
     let lastError: unknown;
     const effectiveTimeout = timeoutMs ?? this.timeoutMs;
-    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+    const attempts = Math.min(maxRetries ?? this.maxRetries, 5);
+    for (let attempt = 0; attempt <= attempts; attempt++) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), effectiveTimeout);
       try {
         return await fetch(url, { ...options, signal: controller.signal });
       } catch (error) {
         lastError = error;
-        if (attempt < this.maxRetries) {
+        if (attempt < attempts) {
           const delay = 500 * 2 ** attempt + Math.random() * 250;
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
@@ -190,14 +192,16 @@ class TelegramAPI {
   /**
    * Download a byte range of a Telegram file. Telegram's file endpoints
    * honor standard HTTP Range requests (206). `end` is inclusive.
-   * Long timeout (default 5 min) because large transfers must not be
-   * killed by the 30s bot-API timeout.
+   * Per-attempt timeout capped at 3 min and a single retry, so a stalled
+   * connection (Telegram throttling parallel downloads) fails in minutes
+   * instead of hanging the whole request for 20+ min. HTTP errors like 404
+   * are NOT retried — the file is permanently gone, fail fast.
    */
   async downloadFileRange(
     filePath: string,
     start: number,
     end: number,
-    timeoutMs: number = 300_000,
+    timeoutMs: number = 180_000,
   ): Promise<{ stream: ReadableStream<Uint8Array>; isPartial: boolean }> {
     const url = `${env.TELEGRAM_API_BASE}/file/bot${this.botToken}/${filePath}`;
 
@@ -205,6 +209,7 @@ class TelegramAPI {
       url,
       { headers: { Range: `bytes=${start}-${end}` } },
       timeoutMs,
+      2,
     );
 
     if (!response.ok && response.status !== 206) {
@@ -222,12 +227,17 @@ class TelegramAPI {
 
   async downloadFile(
     filePath: string,
-    timeoutMs: number = 300_000,
+    timeoutMs: number = 90_000,
   ): Promise<ReadableStream<Uint8Array>> {
     try {
       const url = `${env.TELEGRAM_API_BASE}/file/bot${this.botToken}/${filePath}`;
 
-      const response = await this.fetchWithRetry(url, undefined, timeoutMs);
+      // Retry transient timeouts up to 3 attempts: Telegram throttles bursts
+      // of parallel connections with ETIMEDOUT, and a retry usually succeeds
+      // once the burst subsides. Stall-abort is 90s per attempt, so worst
+      // case is ~4.5 min per chunk instead of 20+ min. 404/400 is never
+      // retried (fail fast).
+      const response = await this.fetchWithRetry(url, undefined, timeoutMs, 2);
 
       if (!response.ok) {
         throw new TelegramError(

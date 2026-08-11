@@ -7,6 +7,7 @@ import { File } from "@/models/File";
 import {
   telegramAPI,
   isAllowedFileType,
+  validateFileName,
   sanitizeFileName,
 } from "@/lib/telegram";
 import { getEffectiveStorageLimit } from "@/lib/quota";
@@ -246,7 +247,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
 
-        let fileName = sanitizeFileName(name);
+        // Sanitize only when the name is truly invalid (like the upload API
+        // does). Clients like RaiDrive PUT hidden temp files ("._tmp_...")
+        // then MOVE them — stripping leading dots renames the file and the
+        // follow-up MOVE/DELETE 404s.
+        let fileName = validateFileName(name) ? name : sanitizeFileName(name);
 
         let originalExt: string | null = null;
         if (!isAllowedFileType(mime, fileName)) {
@@ -440,7 +445,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           throw new DavError("Parent collection not found", 409);
         }
         const parentId = resolved.kind === "missing" ? resolved.parentId : null;
-        const folder = new Folder({ name: sanitizeFileName(name), owner: userId, parent: parentId });
+        const folder = new Folder({ name: validateFileName(name) ? name : sanitizeFileName(name), owner: userId, parent: parentId });
         try {
           await folder.save();
         } catch (error) {

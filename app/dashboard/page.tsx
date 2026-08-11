@@ -434,10 +434,14 @@ export default function DashboardPage() {
     loadFiles(selectedFolderId, debouncedSearch, true);
   }, [user, selectedFolderId, debouncedSearch, loadFiles]);
 
-  const refreshData = useCallback(() => {
+  const refreshData = useCallback(async () => {
     fileCache.current.clear();
     loadFiles(selectedFolderId, debouncedSearch, false);
     refreshFolders();
+    try {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) setUser(await res.json());
+    } catch { /* ignore */ }
   }, [selectedFolderId, debouncedSearch, loadFiles, refreshFolders]);
 
   const handleFolderSelect = useCallback((folderId: string | null) => {

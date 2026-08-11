@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, AuthError, createAuthResponse } from "@/lib/auth";
 import { getStorageLimitInfo } from "@/lib/quota";
+import { connectToDatabase } from "@/lib/db";
+import { File } from "@/models/File";
+import { Folder } from "@/models/Folder";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,12 +17,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { storageLimit, customStorageLimit } = await getStorageLimitInfo(
-      user.id,
-    );
+    await connectToDatabase();
+    const [usage, folderCount, { storageLimit, customStorageLimit }] =
+      await Promise.all([
+        File.getStorageUsage(user.id),
+        Folder.countDocuments({ owner: user.id, deletedAt: null }),
+        getStorageLimitInfo(user.id),
+      ]);
 
     return NextResponse.json(
-      { ...user, storageLimit, customStorageLimit },
+      {
+        ...user,
+        stats: {
+          totalFiles: usage.totalFiles,
+          totalSize: usage.totalSize,
+          totalFolders: folderCount,
+        },
+        storageLimit,
+        customStorageLimit,
+      },
       { status: 200 }
     );
   } catch (error) {
