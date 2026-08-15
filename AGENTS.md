@@ -1,0 +1,34 @@
+# AGENTS.md
+
+Free Clouds: Next.js 16 (App Router, Turbopack) cloud storage. Metadata lives in MongoDB (Mongoose 8, `models/`); file bytes live in a private Telegram channel via Bot API (file_id stored on the File doc). React 19, Tailwind 3, TS strict.
+
+## Commands
+
+- `npm run dev` — Turbopack dev server on :3000. Requires a valid `.env.local`; `lib/env.ts` validates env at import time and crashes startup if `DATABASE_URL`, `JWT_SECRET`, `TELEGRAM_BOT_TOKEN`, or `TELEGRAM_CHAT_ID` are missing.
+- `npm run dev` runs `scripts/clean-dev-lock.js` first: a stale `.next/dev/lock` (from a previous crash) makes Turbopack fail with "An IO error occurred while attempting to create and acquire the lockfile" on this WSL/9p mount. Never enable `experimental.turbopackFileSystemCacheForDev` (it re-triggers the lock issue even on fresh `.next`) and keep `turbopack.root: __dirname` in `next.config.js` (a stray `package-lock.json` one level up misleads workspace-root inference).
+- **Turbopack watch does not pick up file edits on this 9p mount — kill all `next-server`/`next dev` PIDs and restart `npm run dev` to load changes.** (`pkill -f "next dev"` self-kills the shell; kill by PID.)
+- `npm run lint` (eslint) and `npm run type-check` (`tsc --noEmit`) — run both after changes.
+- `npm run build` / `npm start` — production.
+- `npm run create-admin` — interactive script; boots its own mongoose connection using `.env.local`, so MongoDB must be running.
+- `npm run test` / `test:login` / `test:admin` / `test:email` — NOT unit tests. `scripts/tests/*.js` are plain node scripts that hit a **live running server** with real env (start `npm run dev` first). There is no test framework, no CI, no Prettier config (README claims Prettier; none is configured).
+
+## Architecture map
+
+- `proxy.ts` is Next 16's renamed `middleware.ts` — do not create a `middleware.ts`. It handles: WebDAV rewrites, trailing-slash normalization (the default 308 is disabled via `skipTrailingSlashRedirect` in `next.config.js`), `x-locale` header, and cookie-token gating for `/dashboard` and `/admin`.
+- **WebDAV handler is in the Pages Router**: `pages/api/webdav/[[...path]].ts` (`bodyParser: false`), because app-router handlers 400 on PROPFIND/MKCOL/COPY/MOVE/LOCK/UNLOCK. `proxy.ts` rewrites `/webdav/*` and DAV-method requests (incl. base-origin mounts and `OPTIONS /`) there. Do not "migrate" it to `app/api` — that breaks WebDAV.
+- `next.config.js` quirks are load-bearing: `compress: false` (Windows WebDAV mini-redirector can't decode gzip 207 responses), `skipTrailingSlashRedirect: true`, `proxyClientMaxBodySize: 256MB` (without it, proxied WebDAV PUTs truncate ~10MB), `serverExternalPackages: ["mongoose"]`, `images.unoptimized: true`.
+- **i18n is hardcoded duplication, not a library**: every page/route under `app/` has a Vietnamese mirror under `app/vi/` (including `app/vi/admin/*`, `app/vi/s/*`). New/changed UI must be mirrored there manually. Locale is only an `x-locale` header set in `proxy.ts`.
+- Upload path: client chunks at 4MB (`lib/upload-client.ts`, Vercel 4.5MB body limit) → `app/api/upload/chunk` + `complete`; server re-splits >50MB files into 15MB parts (`SERVER_CHUNK_SIZE`, `lib/upload-chunks.ts`); WebDAV PUTs stream up to 2GB (`MAX_PUT_BYTES`).
+- Auth: JWT in http-only cookie named `token`. Use `requireAuth` / `requireAdmin` / `validateOrigin` / `checkRateLimit` from `lib/auth.ts`. Admin role is a field on the User model; `proxy.ts` only checks token presence, real role checks happen in route handlers/layouts.
+- Rate limiting is in-memory (two implementations: `lib/ratelimit.ts` class and `checkRateLimit` in `lib/auth.ts`); both reset on restart — fine for dev, not a distributed limiter.
+- `lib/quota.ts` computes per-user storage limits (admin-configurable via `SystemSetting`); Telegram is authoritative for file size.
+- **YouTube extractor is in `lib/youtube.ts`, NOT `lib/youtubei.ts`** — do not "fix" it by switching to youtubei.js (it cannot resolve URLs on this network). On this IP, classic clients (WEB/TV via `@distube/ytdl-core` `playerClients`, and youtubei.js) are pot-gated: they return only itag 18 with a raw `n` param and every URL 403s on fetch. The working paths: **(1) ANDROID_VR (Oculus) innerTube client** — `POST youtubei/v1/visitor_id` (WEB client context) → `visitorData` (cached 30 min), then `POST youtubei/v1/player` with `client: {clientName:'ANDROID_VR', clientVersion:'1.60.19', androidSdkVersion:32, deviceMake:'Oculus', deviceModel:'Quest 3', osName:'Android', osVersion:'12'}` + `contentCheckOk/racyCheckOk: true` → all formats carry plain ungated URLs; **(2) ANDROID 20.11.31 innerTube client** — for videos VR refuses (`LOGIN_REQUIRED Sign in to confirm you're not a bot`, video-level pot-gate): returns fully-signed URLs (sig+lsig, no `n`) for all 26 formats. `resolveYoutubeInfo()` tries VR (retry once with a fresh visitor), then ANDROID, then ytdl-core last; formats are normalized to `YoutubeStreamFormat` (audioBitrate already kbps; VR `videoDetails.author` is a plain string, `thumbnail` lives under `videoDetails.thumbnail.thumbnails`). `isUsableFormat` rejects URLs with an `n=` param (pot-gated, always 403).
+- YouTube API routes (all behind `requireAuth` + `validateOrigin`, rate-limited): `POST /api/youtube/info` (`{url}` → `{title, author, durationSeconds, thumbnail, audio[], mp4[], urls{itag: snapshot}}`) and `GET /api/youtube/download?videoId&itag&url=<signed snapshot>`. **Download never re-deciphers** — it streams the snapshot. The CDN serves signed URLs ONLY via bounded Range requests (plain GET either 403s or trickles ~30KB/s on `gir=yes` URLs), so `app/api/youtube/download/route.ts` fetches consecutive 1MB ranges (`fetchRange`, retry 500ms/1s/2s) and **rotates to a freshly resolved URL every 16MB** (`rotateYoutubeStreamUrl`) because the CDN throttles a URL after ~25MB. MP3 conversion is client-side ffmpeg.wasm. Optional env: `YOUTUBE_COOKIES` (ytdl fallback), `YOUTUBE_MAX_BYTES` (download cap, default 1GB).
+
+## Gotchas
+
+- TS is strict-plus: `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` are on — index access returns `T | undefined` and optional props must be explicitly `undefined` when omitted.
+- `xlsx` is installed from the SheetJS CDN tarball URL in `package.json`; fresh `npm install` needs network access to cdn.sheetjs.com.
+- `.env.local` is gitignored and there is no `.env.example`; extra keys beyond `lib/env.ts` (`EMAIL_USER`, `EMAIL_PASS`, `NEXT_PUBLIC_BASE_URL`, `NEXT_PUBLIC_*_VERIFICATION`) are read directly with `process.env` where needed.
+- `docs/` is stale in places (ARCHITECTURE.md still says Next.js 14/React 18). Trust code and `package.json`, not the docs.
+- Commit history is informal and mixed Vietnamese/English (`van fix webdav`, `doi gia dien`) — don't overthink message style.

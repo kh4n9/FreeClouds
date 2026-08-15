@@ -1,18 +1,35 @@
 /** @type {import('next').NextConfig} */
 let nextConfig = {
   serverExternalPackages: ["mongoose"],
+  // Pin Turbopack's workspace root to this project. Without it, a stray
+  // package-lock.json in a parent directory (e.g. ~/package-lock.json) gets
+  // picked as the root and `next dev` dies with a lockfile permission error.
+  turbopack: {
+    root: __dirname,
+  },
   // Next.js auto-adds a pre-middleware 308 redirect that strips trailing
   // slashes, which breaks WebDAV collection paths like /webdav/. We disable
   // it and normalize trailing slashes in proxy.ts instead (WebDAV paths keep
   // theirs, everything else gets rewritten to the canonical no-slash form).
   skipTrailingSlashRedirect: true,
+  // Disable Next's automatic gzip compression. The Windows WebDAV
+  // mini-redirector cannot decode gzip'd 207 Multi-Status responses and
+  // fails with "Could not find this item"; declaring Content-Encoding:
+  // identity per response is not enough because the compression layer
+  // re-encodes any body over its size threshold and overrides the header.
+  compress: false,
   // Persist the Turbopack dev cache across restarts (SST/RocksDB). Speeds up
   // cold `next dev` starts by reusing compiled output. We previously kept it
   // off because of "Unable to write SST file" lockups on Windows/WSL paths,
   // but with a clean .next and newer Next it is stable here — if it starts
   // erroring again, set `turbopackFileSystemCacheForDev: false`.
   experimental: {
-    turbopackFileSystemCacheForDev: true,
+    // Must stay OFF on this WSL box: with the persistent dev cache enabled,
+    // `next dev` always dies right after "Ready" with "An IO error occurred
+    // while attempting to create and acquire the lockfile" (EACCES from the
+    // native lock on the 9p drvfs mount) — verified on a completely fresh
+    // .next. Cold starts are slower; that's the price of not crashing.
+    turbopackFileSystemCacheForDev: false,
     // Without this, dev's proxy.ts rewrite buffers the request body and
     // silently drops everything past ~10MiB — WebDAV PUTs > 10MiB via the
     // /webdav mount ended up truncated (verified: direct /api/webdav was

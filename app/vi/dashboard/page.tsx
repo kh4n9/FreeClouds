@@ -7,11 +7,13 @@ import {
   HardDrive, FileIcon, FolderIcon, LogOut, Settings, Grid3X3,
   List, ChevronLeft, ChevronRight, ChevronDown, Sidebar, Trash2, FileText,
   RotateCcw, Clock, Star, Sun, Moon, FolderOpen, Download, Copy,
+  Youtube,
   type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 const DynamicFileGrid = dynamic(() => import("@/components/FileGrid"), { ssr: false });
 const DynamicUploadDropzone = dynamic(() => import("@/components/UploadDropzone"), { ssr: false });
+const DynamicYoutubeModal = dynamic(() => import("@/components/YoutubeModal"), { ssr: false });
 const DynamicUserProfile = dynamic(() => import("@/components/UserProfile"), { ssr: false });
 const DynamicShareModal = dynamic(() => import("@/components/ShareModal"), { ssr: false });
 const DynamicMoveModal = dynamic(() => import("@/components/MoveModal"), { ssr: false });
@@ -251,6 +253,7 @@ export default function DashboardPage() {
   const [trashLoading, setTrashLoading] = useState(false);
   const [emptyingTrash, setEmptyingTrash] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [showYoutube, setShowYoutube] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [shareFile, setShareFile] = useState<FileData | null>(null);
@@ -717,6 +720,10 @@ export default function DashboardPage() {
                     className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-accent/10 border border-accent/25 text-accent hover:bg-accent/20 hover:border-accent/30 transition-all text-sm font-medium min-h-[44px]">
                     <Upload className="w-4 h-4" /> Tải lên
                   </button>
+                  <button onClick={() => { setShowYoutube(true); setSidebarOpen(false); }}
+                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-card border border-line text-foreground hover:bg-card-hover hover:border-line-hover transition-all text-sm font-medium min-h-[44px]">
+                    <Youtube className="w-4 h-4 text-error" /> YouTube
+                  </button>
                   <button onClick={() => { handleCreateFolder(selectedFolderId); setSidebarOpen(false); }}
                     className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-card border border-line text-foreground hover:bg-card-hover hover:border-line-hover transition-all text-sm font-medium min-h-[44px]">
                     <FolderPlus className="w-4 h-4" /> Mới
@@ -788,6 +795,10 @@ export default function DashboardPage() {
               <button onClick={() => setShowUpload(true)}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-accent hover:bg-card-hover transition-all" title="Tải lên">
                 <Upload className="w-4 h-4" />
+              </button>
+              <button onClick={() => setShowYoutube(true)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all" title="Tải từ YouTube">
+                <Youtube className="w-4 h-4" />
               </button>
               <button onClick={() => handleCreateFolder(selectedFolderId)}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all" title="Thư mục mới">
@@ -876,6 +887,10 @@ export default function DashboardPage() {
                     className="btn-secondary px-3 py-2 rounded-xl text-sm flex items-center gap-2 border-line hover:border-line-hover">
                     <RefreshCw className={`w-4 h-4 ${filesLoading || foldersLoading ? "animate-spin" : ""}`} />
                     <span className="hidden sm:inline">Làm mới</span>
+                  </button>
+                  <button onClick={() => setShowYoutube(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-line bg-card text-foreground hover:bg-card-hover hover:border-line-hover transition-colors">
+                    <Youtube className="w-4 h-4 text-error" /> <span className="hidden sm:inline">YouTube</span>
                   </button>
                   <button onClick={() => setShowUpload(true)}
                     className="btn-primary px-4 py-2 rounded-xl text-sm flex items-center gap-2">
@@ -1172,6 +1187,14 @@ export default function DashboardPage() {
 
       <Modal show={showUpload} onClose={() => setShowUpload(false)} title="Tải files lên">
         <DynamicUploadDropzone onUpload={(files) => handleUpload(files, selectedFolderId)} folderId={selectedFolderId} />
+      </Modal>
+
+      <Modal show={showYoutube} onClose={() => setShowYoutube(false)} title="Tải từ YouTube">
+        <DynamicYoutubeModal
+          folderId={selectedFolderId}
+          onClose={() => setShowYoutube(false)}
+          onUploaded={() => { fileCache.current.clear(); loadFiles(selectedFolderId, debouncedSearch, false); refreshFolders(); }}
+        />
       </Modal>
       <Modal show={showUserProfile} onClose={() => setShowUserProfile(false)} title="Thông tin cá nhân">
         <Suspense fallback={<div className="text-center py-4 text-muted">Đang tải...</div>}>

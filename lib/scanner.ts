@@ -22,8 +22,9 @@ export interface ScanSettings {
   jpegQuality: number; // 0..1
 }
 
-export const OPENCV_SCRIPT =
-  "https://unpkg.com/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js";
+export const OPENCV_SCRIPT = "/opencv.js";
+
+const OPENCV_LOAD_TIMEOUT_MS = 30000;
 
 export function dpiToMaxDim(dpi: number): number {
   // A4 is 210mm x 297mm -> pixels = inches * dpi
@@ -88,6 +89,18 @@ export function loadOpenCV(): Promise<any> {
       reject(new Error("Failed to load OpenCV.js"));
     };
     document.head.appendChild(script);
+
+    setTimeout(() => {
+      const cv = (window as any).cv;
+      if (cv?.Mat) {
+        resolve(cv);
+        return;
+      }
+      if (openCvPromise) {
+        openCvPromise = null;
+        reject(new Error("OpenCV load timed out"));
+      }
+    }, OPENCV_LOAD_TIMEOUT_MS);
   });
 
   return openCvPromise;

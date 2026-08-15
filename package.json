@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/clean-dev-lock.js && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -16,6 +16,7 @@
     "test:email": "node scripts/run-tests.js email"
   },
   "dependencies": {
+    "@distube/ytdl-core": "^4.16.12",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@vercel/blob": "^2.6.1",

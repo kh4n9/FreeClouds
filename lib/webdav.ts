@@ -165,6 +165,9 @@ export function sendStatus(res: ServerResponse, status: number = 200) {
   res.writeHead(status, {
     "Content-Type": "text/plain; charset=utf-8",
     "Content-Length": "0",
+    // Windows WebDAV mini-redirector cannot decode gzip'd DAV responses;
+    // declaring identity stops the server compression layer from gzip'ing.
+    "Content-Encoding": "identity",
   });
   res.end();
 }
@@ -176,12 +179,18 @@ export function sendXml(
   body: string,
   extraHeaders: Record<string, string> = {},
 ): void {
-  const headers: Record<string, string> = {
-    "Content-Type": 'application/xml; charset="utf-8"',
-    "Content-Length": String(Buffer.byteLength(body, "utf8")),
-    ...extraHeaders,
-  };
-  res.writeHead(status, headers);
+  // Headers must be set via res.setHeader (not writeHead): the dev-server
+  // compression layer honors pre-set Content-Encoding and skips the response.
+  res.setHeader("Content-Type", 'application/xml; charset="utf-8"');
+  res.setHeader("Content-Length", String(Buffer.byteLength(body, "utf8")));
+  // Windows WebDAV mini-redirector cannot decode gzip'd 207 Multi-Status
+  // (shows "Could not find this item"); declaring identity stops the
+  // server compression layer from gzip'ing these responses.
+  res.setHeader("Content-Encoding", "identity");
+  for (const [k, v] of Object.entries(extraHeaders)) {
+    res.setHeader(k, v);
+  }
+  res.statusCode = status;
   res.end(body);
 }
 

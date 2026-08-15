@@ -43,6 +43,8 @@ const CRLF = "\r\n";
 
 function sendPlain(res: NextApiResponse, status: number, message: string) {
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  // Windows WebDAV mini-redirector cannot decode gzip'd responses.
+  res.setHeader("Content-Encoding", "identity");
   res.status(status).end(message + CRLF);
 }
 

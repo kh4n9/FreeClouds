@@ -556,4 +556,76 @@ export const commonTranslations = {
     en: "You haven't enabled WebDAV yet. Generate a token to get started.",
     vi: "Bạn chưa bật WebDAV. Hãy tạo mã token để bắt đầu.",
   },
+
+  // YouTube downloader
+  close: { en: "Close", vi: "Đóng" },
+  youtube: { en: "YouTube", vi: "YouTube" },
+  youtubeDownloader: {
+    en: "Download from YouTube",
+    vi: "Tải video từ YouTube",
+  },
+  youtubeUrlPlaceholder: {
+    en: "Paste a YouTube link (https://youtube.com/watch?v=...)",
+    vi: "Dán link YouTube (https://youtube.com/watch?v=...)",
+  },
+  youtubeFetch: { en: "Fetch", vi: "Tìm kiếm" },
+  youtubeFetching: {
+    en: "Fetching video info...",
+    vi: "Đang lấy thông tin video...",
+  },
+  youtubeInvalidUrl: {
+    en: "Enter a valid YouTube link first",
+    vi: "Nhập link YouTube hợp lệ trước",
+  },
+  youtubeNotAvailable: {
+    en: "Video is unavailable or has been removed",
+    vi: "Video không khả dụng hoặc đã bị gỡ",
+  },
+  youtubeBlocked: {
+    en: "YouTube blocked the request from this server. The video may be age-restricted or region-locked.",
+    vi: "YouTube từ chối yêu cầu từ máy chủ này. Video có thể bị giới hạn độ tuổi hoặc khu vực.",
+  },
+  youtubeNoFormats: {
+    en: "No downloadable format was found for this video",
+    vi: "Không tìm thấy định dạng tải được cho video này",
+  },
+  youtubeTooLarge: {
+    en: "This format is too large to download",
+    vi: "Định dạng này quá lớn để tải về",
+  },
+  youtubeFailed: {
+    en: "Something went wrong. Check the link or try again later.",
+    vi: "Đã xảy ra lỗi. Kiểm tra link hoặc thử lại sau.",
+  },
+  youtubeQuality: { en: "Quality", vi: "Chất lượng" },
+  youtubeBitrate: { en: "Audio quality", vi: "Chất lượng âm thanh" },
+  youtubeDirect: { en: "fast", vi: "nhanh" },
+  youtubeDownload: {
+    en: "Download & save to storage",
+    vi: "Tải về & lưu vào kho",
+  },
+  youtubeDownloading: {
+    en: "Downloading from YouTube...",
+    vi: "Đang tải từ YouTube...",
+  },
+  youtubeConverting: {
+    en: "Converting to MP3... This may take a while for long videos.",
+    vi: "Đang chuyển đổi MP3... Có thể mất một lúc với video dài.",
+  },
+  youtubeMerging: {
+    en: "Merging video & audio...",
+    vi: "Đang ghép video & audio...",
+  },
+  youtubeUploading: {
+    en: "Uploading to your storage...",
+    vi: "Đang tải lên kho lưu trữ...",
+  },
+  youtubeDone: {
+    en: "Saved to your storage!",
+    vi: "Đã lưu vào kho lưu trữ!",
+  },
+  youtubeSavedToFolder: {
+    en: "The file was saved to the current folder.",
+    vi: "Tệp đã được lưu vào thư mục hiện tại.",
+  },
 };
