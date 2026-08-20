@@ -139,13 +139,19 @@ export async function resolvePath(
       owner: userId,
       parent: parentId,
       name: seg,
+      isHidden: { $ne: true },
     });
     if (!folder) return { kind: "missing", parentId, name: seg };
     parentId = folder._id.toString();
   }
 
   const name = segments[segments.length - 1]!;
-  const folder = await Folder.findOne({ owner: userId, parent: parentId, name });
+  const folder = await Folder.findOne({
+    owner: userId,
+    parent: parentId,
+    name,
+    isHidden: { $ne: true },
+  });
   if (folder) return { kind: "folder", folder };
 
   const file = await File.findOne({
@@ -324,43 +330,17 @@ export async function streamFileBody(
 
   const chunked = file.chunkedId && file.totalChunks && file.totalChunks > 1;
 
-  // Chunked files are assembled from their Telegram parts on demand; a
-  // ranged request slices the assembled buffer (same as /api/files download).
+  // Chunked files are assembled from their Telegram parts on demand.
+  // Instead of buffering the entire file in memory, we stream chunks
+  // sequentially so memory usage stays bounded regardless of file size.
   if (chunked) {
+    if (res.req.method === "HEAD") {
+      res.writeHead(status, headers);
+      res.end();
+      return;
+    }
     try {
-      const chunks = await File.find({
-        chunkedId: file.chunkedId,
-        chunkIndex: { $gte: 0 },
-        owner: file.owner,
-        deletedAt: null,
-      }).sort({ chunkIndex: 1 });
-      if (chunks.length !== file.totalChunks) throw new DavError("File chunks not found", 404);
-      const ranges = await Promise.all(
-        chunks.map(async (c) => {
-          const result = await telegramAPI.getFileStream(c.fileId, c.telegramFilePath || undefined);
-          if (!c.telegramFilePath && result.filePath) {
-            File.updateOne({ _id: c._id }, { telegramFilePath: result.filePath }).catch(() => {});
-          }
-          const reader = result.stream.getReader();
-          const buf: Uint8Array[] = [];
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buf.push(value);
-          }
-          reader.releaseLock();
-          return Buffer.concat(buf);
-        }),
-      );
-      const assembled = Buffer.concat(ranges);
-      if (parsedRange) {
-        const sliced = assembled.subarray(parsedRange.start, parsedRange.end + 1);
-        res.writeHead(206, headers);
-        res.end(sliced);
-      } else {
-        res.writeHead(200, headers);
-        res.end(assembled);
-      }
+      await streamChunkedFile(res, file, parsedRange);
       return;
     } catch (error) {
       if (error instanceof DavError) throw error;
@@ -419,4 +399,103 @@ export function parsePropfindProps(body: string): string[] {
     found.add(match[1]!);
   }
   return Array.from(found);
+}
+
+/**
+ * Stream a chunked file from its Telegram parts sequentially, so memory
+ * stays bounded (only one part is buffered at a time). Supports optional
+ * byte-range requests by skipping bytes before the range start.
+ */
+async function streamChunkedFile(
+  res: ServerResponse,
+  file: IFile,
+  parsedRange: { start: number; end: number } | null,
+): Promise<void> {
+  const chunks = await File.find({
+    chunkedId: file.chunkedId!,
+    chunkIndex: { $gte: 0 },
+    owner: file.owner,
+    deletedAt: null,
+  }).sort({ chunkIndex: 1 });
+  if (chunks.length !== file.totalChunks) {
+    throw new DavError("File chunks not found", 404);
+  }
+
+  const chunkInfos: Array<{
+    fileId: string;
+    telegramFilePath: string | null;
+    fileDoc: IFile;
+  }> = chunks.map((c) => ({
+    fileId: c.fileId,
+    telegramFilePath: c.telegramFilePath || null,
+    fileDoc: c,
+  }));
+
+  // Async generator (as arrow-assigned generator) that yields chunk buffers
+  // in order.
+  const streamChunks = async function* (): AsyncGenerator<Buffer> {
+    for (let i = 0; i < chunkInfos.length; i++) {
+      const cInfo = chunkInfos[i]!;
+      try {
+        const result = await telegramAPI.getFileStream(
+          cInfo.fileId,
+          cInfo.telegramFilePath || undefined,
+        );
+        if (!cInfo.telegramFilePath && result.filePath) {
+          File.updateOne(
+            { _id: cInfo.fileDoc._id },
+            { telegramFilePath: result.filePath },
+          ).catch(() => {});
+        }
+        const reader = result.stream.getReader();
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            yield Buffer.from(value);
+          }
+        } finally {
+          reader.releaseLock();
+        }
+      } catch (error) {
+        console.error(
+          `WebDAV chunked download failed at part ${i + 1}:`,
+          error,
+        );
+        throw new DavError("File temporarily unavailable", 503);
+      }
+    }
+  };
+
+  if (parsedRange) {
+    const rangeLen = parsedRange.end - parsedRange.start + 1;
+    const targetSkip = parsedRange.start;
+    let sent = 0;
+    let skipped = 0;
+    for await (const buf of streamChunks()) {
+      if (skipped < targetSkip) {
+        const toSkip = Math.min(buf.length, targetSkip - skipped);
+        skipped += toSkip;
+        const remaining = buf.subarray(toSkip);
+        if (remaining.length === 0) continue;
+        const toSend = Math.min(remaining.length, rangeLen - sent);
+        res.write(remaining.subarray(0, toSend));
+        sent += toSend;
+        if (sent >= rangeLen) break;
+      } else {
+        const toSend = Math.min(buf.length, rangeLen - sent);
+        res.write(buf.subarray(0, toSend));
+        sent += toSend;
+        if (sent >= rangeLen) break;
+      }
+    }
+    res.end();
+  } else {
+    for await (const buf of streamChunks()) {
+      if (!res.write(buf)) {
+        await new Promise<void>((resolve) => res.once("drain", () => resolve()));
+      }
+    }
+    res.end();
+  }
 }

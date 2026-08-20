@@ -41,6 +41,11 @@ export const config = {
 
 const CRLF = "\r\n";
 
+// In-memory lock store: maps a lock-scoped path to its active lock token.
+// Locks are per-request-process and reset on restart (consistent with the
+// rest of the in-memory rate limiter in lib/auth.ts).
+const lockMap = new Map<string, string>();
+
 function sendPlain(res: NextApiResponse, status: number, message: string) {
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
   // Windows WebDAV mini-redirector cannot decode gzip'd responses.
@@ -170,7 +175,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           if (depth === "1" || depth === "infinity") {
             const parentId = isRoot ? null : folder!._id.toString();
             const [subFolders, subFiles] = await Promise.all([
-              Folder.find({ owner: userId, parent: parentId }).sort({ name: 1 }),
+              Folder.find({ owner: userId, parent: parentId, isHidden: { $ne: true } }).sort({ name: 1 }),
               File.find({
                 owner: userId,
                 folder: parentId,
@@ -594,13 +599,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       case "LOCK": {
-        const token = `opaquelocktoken:${crypto.randomUUID()}`;
+        const resourcePath = `/${segments.join("/")}`;
+        const existingToken = lockMap.get(resourcePath);
+        const lockToken = existingToken
+          ? existingToken
+          : `opaquetlocktoken:${crypto.randomUUID()}`;
+        lockMap.set(resourcePath, lockToken);
+        res.setHeader("Lock-Token", lockToken);
         const body =
           '<?xml version="1.0" encoding="utf-8"?>' + CRLF +
           '<D:prop xmlns:D="DAV:">' + CRLF +
           "<D:lockdiscovery>" + CRLF +
           "<D:activelock>" + CRLF +
-          `<D:locktoken><D:href>${escapeXml(token)}</D:href></D:locktoken>` + CRLF +
+          `<D:locktoken><D:href>${escapeXml(lockToken)}</D:href></D:locktoken>` + CRLF +
           `<D:lockroot><D:href>${escapeXml(hrefFor(segments))}</D:href></D:lockroot>` + CRLF +
           `<D:depth>${escapeXml(getDepth(req))}</D:depth>` + CRLF +
           `<D:owner>${escapeXml(user.email)}</D:owner>` + CRLF +
@@ -612,6 +623,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       case "UNLOCK": {
+        const token = req.headers["lock-token"];
+        const resourcePath = `/${segments.join("/")}`;
+        const current = lockMap.get(resourcePath);
+        if (typeof token !== "string") {
+          sendPlain(res, 400, "Bad Request: Lock-Token header required for UNLOCK");
+          return;
+        }
+        if (!current) {
+          sendPlain(res, 409, "Conflict: no active lock on this resource");
+          return;
+        }
+        if (token !== current) {
+          sendPlain(res, 409, "Conflict: lock token mismatch");
+          return;
+        }
+        lockMap.delete(resourcePath);
         sendStatus(res, 204);
         return;
       }
@@ -662,7 +689,8 @@ async function resolveParentId(
   if (segments.length <= 1) return null;
   let parentId: string | null = null;
   for (const name of segments.slice(0, -1)) {
-    const folder: IFolder | null = await Folder.findOne({ owner: userId, parent: parentId, name });
+    // Hidden folders are invisible to WebDAV (PIN-gated vault).
+    const folder: IFolder | null = await Folder.findOne({ owner: userId, parent: parentId, name, isHidden: { $ne: true } });
     if (!folder) throw new DavError("Parent collection not found", 409);
     parentId = folder._id.toString();
   }
