@@ -4,6 +4,10 @@ import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import "@/models/Folder";
 import { requireAuth, AuthError, createAuthResponse } from "@/lib/auth";
+import {
+  getAccessibleFolder,
+  getInaccessibleFolderIds,
+} from "@/lib/vault";
 
 const querySchema = z.object({
   folderId: z.string().nullable().optional(),
@@ -54,8 +58,13 @@ export async function GET(request: NextRequest) {
     // Recent view: files across all folders sorted by newest first
     if (view === "recent") {
       const files = await File.findRecent(user.id, Math.min(limit, 100));
+      // Hide files that live inside locked hidden chains
+      const inaccessible = await getInaccessibleFolderIds(request, user.id);
+      const visibleFiles = inaccessible.length > 0
+        ? files.filter((f) => !f.folder || !inaccessible.includes(f.folder.toString()))
+        : files;
       return NextResponse.json(
-        { files, total: files.length, page: 1, limit: files.length, totalPages: 1 },
+        { files: visibleFiles, total: visibleFiles.length, page: 1, limit: visibleFiles.length, totalPages: 1 },
         { status: 200 },
       );
     }
@@ -80,6 +89,26 @@ export async function GET(request: NextRequest) {
         : folderId
       : undefined;
 
+    // When browsing a specific folder, that folder must not sit inside a
+    // locked hidden chain.
+    if (finalFolderId !== undefined && finalFolderId !== null) {
+      const folder = await getAccessibleFolder(request, finalFolderId, user.id);
+      if (!folder) {
+        return NextResponse.json(
+          { error: "Folder not found or access denied" },
+          { status: 403 },
+        );
+      }
+    }
+
+    // Cross-folder views (All Files, search, favorites) must exclude files
+    // in locked hidden chains.
+    let excludeFolderIds: string[] | undefined;
+    if (finalFolderId === undefined) {
+      const inaccessible = await getInaccessibleFolderIds(request, user.id);
+      if (inaccessible.length > 0) excludeFolderIds = inaccessible;
+    }
+
     // Build options object conditionally to avoid passing `undefined` for exact optional property types
     const options: {
       page: number;
@@ -87,6 +116,7 @@ export async function GET(request: NextRequest) {
       folderId?: string | null;
       search?: string;
       favorite?: boolean;
+      excludeFolderIds?: string[];
     } = { page, limit };
     if (finalFolderId !== undefined) {
       options.folderId = finalFolderId;
@@ -96,6 +126,9 @@ export async function GET(request: NextRequest) {
     }
     if (favorite !== undefined && favorite !== null) {
       options.favorite = favorite === "true";
+    }
+    if (excludeFolderIds) {
+      options.excludeFolderIds = excludeFolderIds;
     }
 
     const result = await File.findByOwnerWithCount(user.id, options);

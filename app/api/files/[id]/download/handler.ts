@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
+import { Folder } from "@/models/Folder";
 import { env } from "@/lib/env";
 import {
   requireAuth,
@@ -9,7 +10,19 @@ import {
   createAuthResponse,
   verifyOwnership,
 } from "@/lib/auth";
+import { isFolderUnlocked } from "@/lib/vault";
 import { buildDownloadResponse } from "@/lib/download-file";
+
+async function validateFileAccess(request: NextRequest, file: { folder: unknown }) {
+  // Files inside hidden chains are only downloadable when the chain is unlocked.
+  if (file.folder) {
+    const folder = await Folder.findById(file.folder).catch(() => null);
+    if (folder && !(await isFolderUnlocked(request, folder))) {
+      return false;
+    }
+  }
+  return true;
+}
 
 export async function handleDownload(request: NextRequest, paramsPromise: Promise<{ id: string }>) {
   try {
@@ -47,6 +60,9 @@ export async function handleDownload(request: NextRequest, paramsPromise: Promis
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
     if (!(await verifyOwnership(user.id, file))) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+    if (!(await validateFileAccess(request, file))) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 

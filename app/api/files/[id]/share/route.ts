@@ -5,12 +5,14 @@ import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { ShareLink } from "@/models/ShareLink";
 import { File } from "@/models/File";
+import { Folder } from "@/models/Folder";
 import {
   requireAuth,
   AuthError,
   createAuthResponse,
   verifyOwnership,
 } from "@/lib/auth";
+import { isFolderUnlocked } from "@/lib/vault";
 
 const createSchema = z.object({
   password: z.string().min(1).max(200).nullable().optional(),
@@ -43,6 +45,14 @@ export async function POST(
     }
     if (!(await verifyOwnership(user.id, file))) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    // Files inside a locked hidden chain must not be shared publicly.
+    if (file.folder) {
+      const folder = await Folder.findById(file.folder).catch(() => null);
+      if (folder && !(await isFolderUnlocked(request, folder))) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      }
     }
 
     const body = await request.json().catch(() => ({}));

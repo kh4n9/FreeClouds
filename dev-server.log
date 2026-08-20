@@ -1,0 +1,258 @@
+
+> free-clouds-nextjs@1.0.0 dev
+> next dev
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.102.76.17:3000
+- Environments: .env.local
+✓ Ready in 389ms
+- Experiments (use with caution):
+  · proxyClientMaxBodySize: 268435456
+
+ GET /login?redirect=%2Fdashboard 200 in 3.1s (next.js: 2.9s, proxy.ts: 3ms, application-code: 177ms)
+ GET /dashboard 200 in 1673ms (next.js: 1595ms, proxy.ts: 7ms, application-code: 71ms)
+ GET / 200 in 757ms (next.js: 491ms, proxy.ts: 4ms, application-code: 262ms)
+ GET /login 200 in 52ms (next.js: 5ms, proxy.ts: 4ms, application-code: 43ms)
+✅ Connected to MongoDB
+ GET /api/auth/me 200 in 1928ms (next.js: 507ms, application-code: 1421ms)
+ GET /admin 200 in 511ms (next.js: 485ms, proxy.ts: 3ms, application-code: 23ms)
+ GET /api/auth/me 200 in 157ms (next.js: 4ms, application-code: 153ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /api/auth/me 200 in 234ms (next.js: 3ms, application-code: 231ms)
+ GET /api/admin/stats 200 in 1032ms (next.js: 185ms, application-code: 847ms)
+ GET /api/admin/stats 200 in 840ms (next.js: 4ms, application-code: 836ms)
+ GET /dashboard 200 in 36ms (next.js: 5ms, proxy.ts: 4ms, application-code: 27ms)
+ GET /api/auth/me 200 in 236ms (next.js: 4ms, application-code: 233ms)
+ GET /api/folders 200 in 303ms (next.js: 180ms, application-code: 122ms)
+ GET /api/files?page=1&limit=50 200 in 373ms (next.js: 173ms, application-code: 201ms)
+ GET /api/files?folderId=6a7a2830333ab9fd9f7a1980&page=1&limit=50 200 in 239ms (next.js: 4ms, application-code: 236ms)
+ GET /dashboard 200 in 47ms (next.js: 6ms, proxy.ts: 4ms, application-code: 37ms)
+ GET /dashboard 200 in 47ms (next.js: 4ms, proxy.ts: 3ms, application-code: 40ms)
+ GET / 200 in 124ms (next.js: 6ms, proxy.ts: 3ms, application-code: 116ms)
+ GET /dashboard 200 in 40ms (next.js: 6ms, proxy.ts: 4ms, application-code: 31ms)
+ GET /api/folders 200 in 138ms (next.js: 12ms, application-code: 126ms)
+ GET /api/auth/me 200 in 193ms (next.js: 4ms, application-code: 190ms)
+ GET /api/files?page=1&limit=50 200 in 167ms (next.js: 3ms, application-code: 164ms)
+Failed to download file from Telegram: Error [TelegramError]: Failed to download file: 404 
+    at TelegramAPI.downloadFile (lib\telegram.ts:243:15)
+    at async TelegramAPI.getFileStream (lib\telegram.ts:280:26)
+    at async buildDownloadResponse (lib\download-file.ts:165:24)
+  241 |
+  242 |       if (!response.ok) {
+> 243 |         throw new TelegramError(
+      |               ^
+  244 |           `Failed to download file: ${response.status} ${response.statusText}`,
+  245 |         );
+  246 |       } {
+  errorCode: undefined,
+  description: undefined
+}
+Cached file path unavailable (documents/file_989), refreshing from getFile
+ GET /api/files/6a703e81109b083b0b548b73/download 200 in 5.7s (next.js: 8ms, application-code: 5.7s)
+ GET / 200 in 114ms (next.js: 4ms, proxy.ts: 3ms, application-code: 107ms)
+ GET /api/files/6a703e81109b083b0b548b73/download 200 in 16.0min (next.js: 1009ms, application-code: 16.0min)
+⨯ Error: failed to pipe response
+    at ignore-listed frames {
+  [cause]: TypeError: terminated
+      at ignore-listed frames {
+    [cause]: Error: Stream closed with error code NGHTTP2_PROTOCOL_ERROR
+        at ignore-listed frames {
+      code: 'ERR_HTTP2_STREAM_ERROR'
+    }
+  }
+}
+ GET / 200 in 2.8s (next.js: 1015ms, proxy.ts: 452ms, application-code: 1371ms)
+ GET /login 200 in 876ms (next.js: 251ms, proxy.ts: 6ms, application-code: 619ms)
+ GET /api/auth/me 200 in 1969ms (next.js: 471ms, application-code: 1497ms)
+ GET /admin 200 in 314ms (next.js: 180ms, proxy.ts: 6ms, application-code: 128ms)
+ GET /api/auth/me 200 in 247ms (next.js: 13ms, application-code: 235ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /api/auth/me 200 in 998ms (next.js: 11ms, application-code: 988ms)
+ GET /api/admin/stats 200 in 1992ms (next.js: 270ms, application-code: 1722ms)
+ GET /api/admin/stats 200 in 1211ms (next.js: 9ms, application-code: 1202ms)
+ GET /des 404 in 919ms (next.js: 834ms, proxy.ts: 8ms, application-code: 77ms)
+ GET /desktop 404 in 73ms (next.js: 21ms, proxy.ts: 6ms, application-code: 46ms)
+ GET /dashboard 200 in 603ms (next.js: 268ms, proxy.ts: 4ms, application-code: 331ms)
+ GET /api/folders 200 in 586ms (next.js: 406ms, application-code: 180ms)
+ GET /api/auth/me 200 in 590ms (next.js: 5ms, application-code: 585ms)
+ GET /api/files?page=1&limit=50 200 in 613ms (next.js: 293ms, application-code: 320ms)
+[33mWARNING:[0m Could not parse decipher function.
+Stream URLs will be missing.
+Please report this issue by uploading the "1786774787256-player-script.js" file on https://github.com/distubejs/ytdl-core/issues/144.
+[33mWARNING:[0m Could not parse n transform function.
+Please report this issue by uploading the "1786774787275-player-script.js" file on https://github.com/distubejs/ytdl-core/issues/144.
+ POST /api/youtube/info 200 in 21.7s (next.js: 1096ms, application-code: 20.6s)
+ GET /dashboard 200 in 113ms (next.js: 5ms, proxy.ts: 3ms, application-code: 105ms)
+ GET /api/youtube/download?videoId=zJR5GDc-5YU&itag=18 200 in 8.5s (next.js: 352ms, application-code: 8.1s)
+ GET /api/folders 200 in 410ms (next.js: 16ms, application-code: 394ms)
+ GET /api/auth/me 200 in 523ms (next.js: 4ms, application-code: 519ms)
+ GET /api/files?page=1&limit=50 200 in 480ms (next.js: 18ms, application-code: 461ms)
+[youtube] download stream error: Error: Status code: 403
+    at ignore-listed frames {
+  statusCode: 403
+}
+ POST /api/youtube/info 200 in 12.1s (next.js: 7ms, application-code: 12.1s)
+ GET /dashboard 200 in 226ms (next.js: 123ms, proxy.ts: 55ms, application-code: 48ms)
+ GET /dashboard 200 in 168ms (next.js: 66ms, proxy.ts: 48ms, application-code: 55ms)
+ GET /dashboard 200 in 96ms (next.js: 27ms, proxy.ts: 9ms, application-code: 60ms)
+ GET /dashboard 200 in 31ms (next.js: 5ms, proxy.ts: 6ms, application-code: 20ms)
+ GET /dashboard 200 in 167ms (next.js: 72ms, proxy.ts: 51ms, application-code: 44ms)
+✓ Compiled in 80ms
+✓ Compiled in 75ms
+⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.102.76.17:3000
+- Environments: .env.local
+✓ Ready in 337ms
+- Experiments (use with caution):
+  · proxyClientMaxBodySize: 268435456
+
+ GET /dashboard 200 in 1136ms (next.js: 159ms, proxy.ts: 629ms, application-code: 348ms)
+✅ Connected to MongoDB
+ GET /api/folders 200 in 11.1s (next.js: 9.4s, application-code: 1767ms)
+ GET /api/auth/me 200 in 11.5s (next.js: 9.3s, application-code: 2.2s)
+ GET /api/files?page=1&limit=50 200 in 518ms (next.js: 52ms, application-code: 466ms)
+⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.102.76.17:3000
+- Environments: .env.local
+✓ Ready in 307ms
+- Experiments (use with caution):
+  · proxyClientMaxBodySize: 268435456
+  ⨯ turbopackFileSystemCacheForDev
+
+○ Compiling /dashboard ...
+ GET /dashboard 200 in 5.7s (next.js: 5.2s, proxy.ts: 109ms, application-code: 340ms)
+✅ Connected to MongoDB
+ GET /api/folders 200 in 2.4s (next.js: 818ms, application-code: 1623ms)
+ GET /api/auth/me 200 in 2.7s (next.js: 894ms, application-code: 1770ms)
+ GET /api/files?page=1&limit=50 200 in 344ms (next.js: 154ms, application-code: 191ms)
+⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.102.76.17:3000
+- Environments: .env.local
+✓ Ready in 411ms
+- Experiments (use with caution):
+  · proxyClientMaxBodySize: 268435456
+
+⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.102.76.17:3000
+- Environments: .env.local
+✓ Ready in 338ms
+- Experiments (use with caution):
+  · proxyClientMaxBodySize: 268435456
+  ⨯ turbopackFileSystemCacheForDev
+
+○ Compiling /dashboard ...
+ GET /dashboard 200 in 4.1s (next.js: 3.9s, proxy.ts: 104ms, application-code: 178ms)
+✅ Connected to MongoDB
+ GET /api/folders 200 in 1796ms (next.js: 610ms, application-code: 1186ms)
+ GET /api/auth/me 200 in 1995ms (next.js: 568ms, application-code: 1427ms)
+ GET /api/files?page=1&limit=50 200 in 331ms (next.js: 174ms, application-code: 157ms)
+ GET /dashboard 200 in 193ms (next.js: 34ms, proxy.ts: 16ms, application-code: 144ms)
+ GET /api/folders 200 in 1116ms (next.js: 7ms, application-code: 1109ms)
+ GET /api/auth/me 200 in 1650ms (next.js: 39ms, application-code: 1611ms)
+ GET /api/files?page=1&limit=50 200 in 293ms (next.js: 11ms, application-code: 282ms)
+ GET /dashboard 200 in 125ms (next.js: 70ms, proxy.ts: 5ms, application-code: 50ms)
+ GET /api/folders 200 in 159ms (next.js: 15ms, application-code: 144ms)
+ GET /api/auth/me 200 in 588ms (next.js: 5ms, application-code: 583ms)
+ GET /api/files?page=1&limit=50 200 in 91ms (next.js: 5ms, application-code: 86ms)
+ GET /api/files?folderId=6a7a2830333ab9fd9f7a1980&page=1&limit=50 200 in 203ms (next.js: 7ms, application-code: 196ms)
+ GET /api/files?folderId=6a7a29159df8c5bff25c0253&page=1&limit=50 200 in 260ms (next.js: 8ms, application-code: 252ms)
+ GET /api/folders 200 in 212ms (next.js: 15ms, application-code: 197ms)
+ GET /api/files?folderId=6a7a29159df8c5bff25c0253&page=1&limit=50 200 in 266ms (next.js: 5ms, application-code: 261ms)
+ GET /api/auth/me 200 in 578ms (next.js: 24ms, application-code: 554ms)
+ GET /api/files?folderId=6a7a2830333ab9fd9f7a1980&page=1&limit=50 200 in 212ms (next.js: 9ms, application-code: 203ms)
+ GET /api/trash 200 in 1047ms (next.js: 816ms, application-code: 230ms)
+Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+⨯ unhandledRejection: Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+⨯ unhandledRejection:  Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+⨯ unhandledRejection: Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+⨯ unhandledRejection:  Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+⨯ unhandledRejection: Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+⨯ unhandledRejection:  Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+⨯ unhandledRejection: Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+⨯ unhandledRejection:  Error: EACCES: permission denied, stat 'C:\Users\hoang\Desktop\FreeClouds\.next\dev\node_modules\mongoose-8b99e611e7552af3'
+    at ignore-listed frames {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'stat',
+  path: 'C:\\Users\\hoang\\Desktop\\FreeClouds\\.next\\dev\\node_modules\\mongoose-8b99e611e7552af3'
+}
+✓ Compiled in 94ms
+✓ Compiled in 78ms

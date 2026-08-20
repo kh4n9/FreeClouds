@@ -7,7 +7,7 @@ import {
   HardDrive, FileIcon, FolderIcon, LogOut, Settings, Grid3X3,
   List, ChevronLeft, ChevronRight, ChevronDown, Sidebar, Trash2, FileText,
   RotateCcw, Clock, Star, Sun, Moon, FolderOpen, Download, Copy,
-  Youtube,
+  Youtube, Shield,
   type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -19,13 +19,14 @@ const DynamicShareModal = dynamic(() => import("@/components/ShareModal"), { ssr
 const DynamicMoveModal = dynamic(() => import("@/components/MoveModal"), { ssr: false });
 const DynamicVersionHistoryModal = dynamic(() => import("@/components/VersionHistoryModal"), { ssr: false });
 const DynamicDuplicatesModal = dynamic(() => import("@/components/DuplicatesModal"), { ssr: false });
+const DynamicVaultManager = dynamic(() => import("@/components/VaultManager"), { ssr: false });
 import Navbar from "@/components/Navbar";
 import PlainFolderTree from "@/components/PlainFolderTree";
 import ContextMenu from "@/components/ContextMenu";
 import Footer from "@/components/Footer";
 import { clearAuthCookieClientSide } from "@/utils/auth-helpers";
 
-interface User { id: string; email: string; name: string; createdAt: string; updatedAt: string; stats?: { totalFiles: number; totalSize: number; totalFolders: number; }; }
+interface User { id: string; email: string; name: string; role?: string; avatar?: string | null; createdAt: string; updatedAt: string; stats?: { totalFiles: number; totalSize: number; totalFolders: number; }; }
 interface FolderData { id: string; name: string; parent: string | null; createdAt: string; }
 interface FileData { id: string; name: string; displayName?: string; size: number; mime: string; folderId: string | null; folderName?: string | null; createdAt: string; favorite?: boolean; }
 interface TrashFileData { id: string; name: string; displayName?: string; size: number; mime: string; deletedAt: string; trashExpiresAt: string; }
@@ -255,6 +256,7 @@ export default function DashboardPage() {
   const [showUpload, setShowUpload] = useState(false);
   const [showYoutube, setShowYoutube] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
+  const [showVault, setShowVault] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [shareFile, setShareFile] = useState<FileData | null>(null);
   const [createFolderParent, setCreateFolderParent] = useState<string | null>(null);
@@ -701,8 +703,13 @@ export default function DashboardPage() {
             <div className="flex flex-col h-full min-w-72">
               <div className="p-4 border-b border-line">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center flex-shrink-0 shadow-sm">
-                    <span className="text-sm font-bold text-foreground">{user.name.charAt(0).toUpperCase()}</span>
+                  <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+                    {user.avatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-sm font-bold text-foreground">{user.name.charAt(0).toUpperCase()}</span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
@@ -766,6 +773,10 @@ export default function DashboardPage() {
                     className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-muted hover:text-foreground hover:bg-card-hover transition-all min-h-[44px]">
                     <Copy className="w-4 h-4" /> Trùng lặp
                   </button>
+                  <button onClick={() => { setShowVault(true); setSidebarOpen(false); }}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-muted hover:text-foreground hover:bg-card-hover transition-all min-h-[44px]">
+                    <Shield className="w-4 h-4 text-accent" /> Kho bảo mật
+                  </button>
                   <button onClick={() => { setActiveView(activeView === "trash" ? "files" : "trash"); loadTrashFiles(); setSidebarOpen(false); }}
                     className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] ${showTrash ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-card-hover"}`}>
                     <Trash2 className="w-4 h-4" /> Thùng rác
@@ -788,8 +799,13 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="hidden lg:flex flex-col items-center h-full py-4 gap-3">
-              <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center flex-shrink-0 shadow-sm">
-                <span className="text-sm font-bold text-foreground">{user.name.charAt(0).toUpperCase()}</span>
+              <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+                {user.avatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-sm font-bold text-foreground">{user.name.charAt(0).toUpperCase()}</span>
+                )}
               </div>
               <div className="w-8 border-t border-line" />
               <button onClick={() => setShowUpload(true)}
@@ -816,6 +832,10 @@ export default function DashboardPage() {
               <button onClick={() => { setActiveView(activeView === "trash" ? "files" : "trash"); loadTrashFiles(); }}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${showTrash ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-card-hover"}`} title="Thùng rác">
                 <Trash2 className="w-4 h-4" />
+              </button>
+              <button onClick={() => setShowVault(true)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all" title="Kho bảo mật">
+                <Shield className="w-4 h-4 text-accent" />
               </button>
               <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all" title={theme === "dark" ? "Chế độ sáng" : "Chế độ tối"}>
@@ -1085,6 +1105,27 @@ export default function DashboardPage() {
                             { divider: true },
                             { label: "Di chuyển tới...", icon: <FolderOpen className="w-4 h-4" />, onClick: () => handleMoveFolder(child) },
                             { label: "Đổi tên", icon: <FileText className="w-4 h-4" />, onClick: () => { const name = prompt("Đổi tên thư mục:", child.name); if (name && name.trim()) handleRenameFolder(child.id, name.trim()); } },
+                            { divider: true },
+                            { label: "Ẩn trong Kho bảo mật", icon: <Shield className="w-4 h-4" />, onClick: () => {
+                              const pin = window.prompt("Mã PIN tùy chọn (4-8 chữ số) để bảo vệ thư mục ẩn — để trống nếu không cần:");
+                              if (pin !== null && pin !== "" && !/^\d{4,8}$/.test(pin)) { alert("Mã PIN phải gồm 4-8 chữ số"); return; }
+                              void (async () => {
+                                try {
+                                  const res = await fetch(`/api/folders/${child.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "hide", pin: pin || undefined }) });
+                                  if (res.ok) {
+                                    setToast({ type: "success", message: pin ? "Đã ẩn thư mục và bảo vệ bằng mã PIN" : "Đã ẩn thư mục trong Kho bảo mật" });
+                                    fileCache.current.clear();
+                                    refreshFolders();
+                                    if (selectedFolderId === child.id) setSelectedFolderId(null);
+                                    setTimeout(() => setToast(null), 4000);
+                                  } else {
+                                    const data = await res.json().catch(() => ({}));
+                                    setToast({ type: "error", message: data.error || "Không thể ẩn thư mục" });
+                                    setTimeout(() => setToast(null), 4000);
+                                  }
+                                } catch { setToast({ type: "error", message: "Không thể ẩn thư mục" }); setTimeout(() => setToast(null), 4000); }
+                              })();
+                            } },
                             { label: "Xoá", icon: <Trash2 className="w-4 h-4" />, onClick: () => handleDeleteFolder(child.id), danger: true },
                           ]}>
                           <div data-context-menu="true" onClick={() => handleFolderSelect(child.id)}
@@ -1246,6 +1287,13 @@ export default function DashboardPage() {
       )}
 
       <CreateFolderModal show={showCreateFolder} loading={creatingFolder} onClose={() => { setShowCreateFolder(false); setNewFolderName(""); }} onConfirm={confirmCreateFolder} />
+
+      <DynamicVaultManager
+        isOpen={showVault}
+        onClose={() => setShowVault(false)}
+        onToast={(type, message) => { setToast({ type, message }); setTimeout(() => setToast(null), 4000); }}
+        onChanged={() => { setSearchQuery(""); fileCache.current.clear(); refreshData(); refreshFolders(); }}
+        onNavigate={(folderId) => { handleFolderSelect(folderId); setActiveView("files"); }} />
 
       <ConfirmModal show={deleteModal.show} title="Xoá thư mục"
         message={`Xoá vĩnh viễn "${deleteModal.folder?.name}"?${deleteModal.subfolderCount && deleteModal.subfolderCount > 0 ? ` Thao tác này cũng xoá ${deleteModal.subfolderCount} thư mục con.` : ""}`}

@@ -11,6 +11,7 @@ import {
   createCsrfError,
   verifyOwnership,
 } from "@/lib/auth";
+import { isFolderUnlocked } from "@/lib/vault";
 
 interface RouteParams {
   params: Promise<{
@@ -214,6 +215,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         if (!targetFolder) {
           return NextResponse.json({ error: "Target folder not found" }, { status: 404 });
         }
+        if (!(await isFolderUnlocked(request, targetFolder))) {
+          return NextResponse.json({ error: "Target folder is locked" }, { status: 403 });
+        }
         file.folder = targetFolder._id;
       } else {
         file.folder = null;
@@ -235,6 +239,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         const targetFolder = await Folder.findOne({ _id: targetFolderId, owner: user.id });
         if (!targetFolder) {
           return NextResponse.json({ error: "Target folder not found" }, { status: 404 });
+        }
+        if (!(await isFolderUnlocked(request, targetFolder))) {
+          return NextResponse.json({ error: "Target folder is locked" }, { status: 403 });
         }
       }
 

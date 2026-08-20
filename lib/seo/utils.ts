@@ -102,6 +102,13 @@ export function generateMetadata({
       "apple-mobile-web-app-capable": "yes",
       "apple-mobile-web-app-status-bar-style": "default",
       "format-detection": "telephone=no",
+      ...(language === "vi"
+        ? {
+            "geo.region": "VN-HN",
+            "geo.placename": "Vietnam",
+            "og:locale:alternate": "en_US",
+          }
+        : { "og:locale:alternate": "vi_VN" }),
     },
 
     // Verification tags (configure via NEXT_PUBLIC_* env vars)
