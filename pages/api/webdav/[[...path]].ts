@@ -474,13 +474,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!destName) throw new DavError("Invalid destination", 400);
 
         const destResolved = await resolvePath(userId, destination);
-        const destParentId = destination.length === 1 ? null : await resolveParentId(userId, destination);
         const overwrite = shouldOverwrite(req);
 
         // Destination parent must exist (must be an existing folder or root)
         if (destResolved.kind === "missing" && destResolved.name !== destName) {
           throw new DavError("Parent collection not found", 409);
         }
+
+        // Now resolve the destination parent ID (safe: parent verified above)
+        const destParentId = destination.length === 1 ? null : await resolveParentId(userId, destination);
 
         // Destination exists: only proceed when Overwrite: T
         if (destResolved.kind === "file" || destResolved.kind === "folder") {
@@ -547,6 +549,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (destResolved.kind === "missing" && destResolved.name !== destName) {
           throw new DavError("Parent collection not found", 409);
         }
+        // Now resolve the destination parent ID (safe: parent verified above)
+        const destParentId = destination.length === 1 ? null : await resolveParentId(userId, destination);
+
         if (destResolved.kind === "file" || destResolved.kind === "folder") {
           if (!shouldOverwrite(req)) throw new DavError("Precondition failed", 412);
           if (destResolved.kind === "folder") {
@@ -554,7 +559,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
           await deleteTargetFile(destResolved.file._id.toString());
         }
-        const destParentId = destination.length === 1 ? null : await resolveParentId(userId, destination);
 
         // Quota check before duplicating any records.
         const usage = await File.getStorageUsage(userId);
