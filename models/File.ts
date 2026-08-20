@@ -55,6 +55,7 @@ export interface IFileStatics {
       page?: number;
       limit?: number;
       favorite?: boolean;
+      excludeFolderIds?: string[];
     },
   ): Promise<IFile[]>;
   findByOwnerWithCount(
@@ -66,6 +67,7 @@ export interface IFileStatics {
       page?: number;
       limit?: number;
       favorite?: boolean;
+      excludeFolderIds?: string[];
     },
   ): Promise<{
     files: IFile[];
@@ -287,6 +289,7 @@ fileSchema.statics.findByOwner = function (
     page?: number;
     limit?: number;
     favorite?: boolean;
+    excludeFolderIds?: string[];
   } = {},
 ) {
   const {
@@ -296,6 +299,7 @@ fileSchema.statics.findByOwner = function (
     page = 1,
     limit = 50,
     favorite,
+    excludeFolderIds,
   } = options;
 
   const query: FilterQuery<IFile> = { owner: ownerId };
@@ -303,6 +307,9 @@ fileSchema.statics.findByOwner = function (
   // Filter by folder
   if (folderId !== undefined) {
     query.folder = folderId;
+  } else if (excludeFolderIds && excludeFolderIds.length > 0) {
+    // Exclude files inside locked hidden folder chains
+    query.folder = { $nin: excludeFolderIds };
   }
 
   // Filter by deletion status
@@ -344,6 +351,7 @@ fileSchema.statics.findByOwnerWithCount = async function (
     page?: number;
     limit?: number;
     favorite?: boolean;
+    excludeFolderIds?: string[];
   } = {},
 ) {
   const {
@@ -353,12 +361,15 @@ fileSchema.statics.findByOwnerWithCount = async function (
     page = 1,
     limit = 50,
     favorite,
+    excludeFolderIds,
   } = options;
 
   const query: FilterQuery<IFile> = { owner: ownerId };
 
   if (folderId !== undefined) {
     query.folder = folderId;
+  } else if (excludeFolderIds && excludeFolderIds.length > 0) {
+    query.folder = { $nin: excludeFolderIds };
   }
 
   if (!includeDeleted) {

@@ -10,6 +10,13 @@ import {
   createCsrfError,
   verifyOwnership,
 } from "@/lib/auth";
+import {
+  isFolderUnlocked,
+  isInsideUnlockedVault,
+  isValidPin,
+  hashPin,
+  verifyPin,
+} from "@/lib/vault";
 
 interface RouteParams {
   params: Promise<{
@@ -28,6 +35,18 @@ const updateFolderSchema = z.object({
 const moveFolderSchema = z.object({
   action: z.literal("move"),
   targetFolderId: z.string().length(24).nullable(),
+});
+
+const vaultActionSchema = z.object({
+  action: z.enum(["hide", "unhide", "set-pin", "remove-pin"]),
+  pin: z
+    .string()
+    .min(4, "PIN must be 4-8 digits")
+    .max(8, "PIN must be 4-8 digits")
+    .regex(/^\d+$/, "PIN must be digits only")
+    .optional()
+    .nullable(),
+  currentPin: z.string().optional().nullable(),
 });
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
@@ -64,8 +83,127 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
+    // Vault actions: hide / unhide / set-pin / remove-pin
+    if (body.action === "hide" || body.action === "unhide" || body.action === "set-pin" || body.action === "remove-pin") {
+      const vaultValidation = vaultActionSchema.safeParse(body);
+      if (!vaultValidation.success) {
+        return NextResponse.json(
+          { error: "Invalid vault action", details: vaultValidation.error.message },
+          { status: 400 },
+        );
+      }
+
+      const { action, pin = null, currentPin = null } = vaultValidation.data;
+
+      // Unhiding a folder needs its chain unlocked (so the folder can be
+      // seen in normal listings afterwards).
+      if (action === "unhide") {
+        if (!(await isFolderUnlocked(request, folder))) {
+          return NextResponse.json(
+            { error: "Unlock the folder before unhiding it" },
+            { status: 403 },
+          );
+        }
+        folder.isHidden = false;
+        folder.pinHash = null;
+        await folder.save();
+        return NextResponse.json(
+          { id: folder._id.toString(), isHidden: false },
+          { status: 200 },
+        );
+      }
+
+      if (action === "hide") {
+        if (pin !== null && pin !== undefined && !isValidPin(pin)) {
+          return NextResponse.json(
+            { error: "PIN must be 4-8 digits" },
+            { status: 400 },
+          );
+        }
+        folder.isHidden = true;
+        if (pin) {
+          folder.pinHash = await hashPin(pin);
+        }
+        await folder.save();
+        return NextResponse.json(
+          {
+            id: folder._id.toString(),
+            isHidden: true,
+            hasPin: !!folder.pinHash,
+          },
+          { status: 200 },
+        );
+      }
+
+      if (action === "set-pin") {
+        if (!pin || !isValidPin(pin)) {
+          return NextResponse.json(
+            { error: "PIN must be 4-8 digits" },
+            { status: 400 },
+          );
+        }
+        // Changing an existing PIN requires the current one; setting a first
+        // PIN requires the folder to be unlocked.
+        if (folder.pinHash) {
+          if (!currentPin) {
+            return NextResponse.json(
+              { error: "Current PIN required" },
+              { status: 400 },
+            );
+          }
+          if (!(await verifyPin(currentPin, folder.pinHash))) {
+            return NextResponse.json(
+              { error: "Incorrect current PIN" },
+              { status: 403 },
+            );
+          }
+        } else if (!(await isFolderUnlocked(request, folder))) {
+          return NextResponse.json(
+            { error: "Folder is not accessible" },
+            { status: 403 },
+          );
+        }
+        folder.pinHash = await hashPin(pin);
+        await folder.save();
+        return NextResponse.json(
+          { id: folder._id.toString(), hasPin: true },
+          { status: 200 },
+        );
+      }
+
+      // remove-pin
+      if (folder.pinHash) {
+        if (!currentPin) {
+          return NextResponse.json(
+            { error: "Current PIN required" },
+            { status: 400 },
+          );
+        }
+        if (!(await verifyPin(currentPin, folder.pinHash))) {
+          return NextResponse.json(
+            { error: "Incorrect current PIN" },
+            { status: 403 },
+          );
+        }
+      }
+      folder.pinHash = null;
+      await folder.save();
+      return NextResponse.json(
+        { id: folder._id.toString(), hasPin: false },
+        { status: 200 },
+      );
+    }
+
     // Move action: relocate this folder under another folder (or root)
     if (body.action === "move") {
+      // Moving a hidden folder requires its chain to be unlocked.
+      if (!(await isFolderUnlocked(request, folder))) {
+        return NextResponse.json(
+          { error: "Unlock the folder before moving it" },
+          { status: 403 },
+        );
+      }
+
       const moveValidation = moveFolderSchema.safeParse(body);
       if (!moveValidation.success) {
         return NextResponse.json(
@@ -86,6 +224,22 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           return NextResponse.json(
             { error: "Target folder not found" },
             { status: 404 },
+          );
+        }
+        // Target inside a locked hidden chain is off-limits.
+        if (!(await isFolderUnlocked(request, target))) {
+          return NextResponse.json(
+            { error: "Target folder is locked" },
+            { status: 403 },
+          );
+        }
+        // Moving an existing hidden folder into a non-hidden chain would make
+        // it unreachable from the vault section — require it to stay inside
+        // an unlocked vault chain (root included).
+        if (folder.isHidden && !(await isInsideUnlockedVault(request, target))) {
+          return NextResponse.json(
+            { error: "Hidden folders must stay inside the vault" },
+            { status: 403 },
           );
         }
         // Moving into itself or its own descendant is a cycle — reject early
@@ -174,6 +328,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const { name } = validation.data;
+
+    // Renaming a hidden folder requires the chain to be unlocked.
+    if (folder.isHidden && !(await isFolderUnlocked(request, folder))) {
+      return NextResponse.json(
+        { error: "Unlock the folder before renaming it" },
+        { status: 403 },
+      );
+    }
 
     // Check for duplicate folder name in the same parent
     const existingFolder = await Folder.findOne({
@@ -268,6 +430,14 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // Verify ownership
     if (!(await verifyOwnership(user.id, folder))) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    // Deleting a hidden folder requires the chain to be unlocked.
+    if (folder.isHidden && !(await isFolderUnlocked(request, folder))) {
+      return NextResponse.json(
+        { error: "Unlock the folder before deleting it" },
+        { status: 403 },
+      );
     }
 
     // Recursively delete the folder and all its contents

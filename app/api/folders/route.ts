@@ -10,6 +10,13 @@ import {
   createCsrfError,
   verifyOwnership,
 } from "@/lib/auth";
+import {
+  filterVisibleFolders,
+  getAccessibleFolder,
+  isInsideUnlockedVault,
+  isValidPin,
+  hashPin,
+} from "@/lib/vault";
 
 const createFolderSchema = z.object({
   name: z
@@ -18,6 +25,14 @@ const createFolderSchema = z.object({
     .max(100, "Folder name too long")
     .trim(),
   parent: z.string().optional().nullable(),
+  isHidden: z.boolean().optional(),
+  pin: z
+    .string()
+    .min(4, "PIN must be 4-8 digits")
+    .max(8, "PIN must be 4-8 digits")
+    .regex(/^\d+$/, "PIN must be digits only")
+    .optional()
+    .nullable(),
 });
 
 const querySchema = z.object({
@@ -48,10 +63,10 @@ export async function GET(request: NextRequest) {
 
     const { parent } = validation.data;
 
-    // Verify parent folder ownership if parent is specified
+    // Verify parent folder ownership + vault access if parent is specified
     if (parent && parent !== "null") {
-      const parentFolder = await Folder.findById(parent);
-      if (!parentFolder || !(await verifyOwnership(user.id, parentFolder))) {
+      const parentFolder = await getAccessibleFolder(request, parent, user.id);
+      if (!parentFolder) {
         return NextResponse.json(
           { error: "Parent folder not found or access denied" },
           { status: 404 },
@@ -73,7 +88,11 @@ export async function GET(request: NextRequest) {
       finalParentValue,
     );
 
-    return NextResponse.json(folders, { status: 200 });
+    // Filter out locked hidden folders (and hidden folders without an
+    // unlocked ancestor)
+    const visibleFolders = await filterVisibleFolders(request, folders);
+
+    return NextResponse.json(visibleFolders, { status: 200 });
   } catch (error) {
     console.error("Get folders error:", error);
 
@@ -118,17 +137,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, parent } = validation.data;
+    const { name, parent, isHidden = false, pin = null } = validation.data;
 
     // Verify parent folder ownership if parent is specified
     if (parent) {
-      const parentFolder = await Folder.findById(parent);
-      if (!parentFolder || !(await verifyOwnership(user.id, parentFolder))) {
+      const parentFolder = await Folder.findById(parent).catch(() => null);
+      if (
+        !parentFolder ||
+        !(await verifyOwnership(user.id, parentFolder))
+      ) {
         return NextResponse.json(
           { error: "Parent folder not found or access denied" },
           { status: 404 },
         );
       }
+      // Hidden folders may only be placed where the requester can currently
+      // reach (root or inside an unlocked hidden chain), otherwise they would
+      // become unreachable.
+      if (isHidden) {
+        if (!(await isInsideUnlockedVault(request, parentFolder))) {
+          return NextResponse.json(
+            { error: "Cannot create a hidden folder here" },
+            { status: 403 },
+          );
+        }
+      }
+    }
+
+    if (isHidden && pin !== null && !isValidPin(pin)) {
+      return NextResponse.json(
+        { error: "PIN must be 4-8 digits" },
+        { status: 400 },
+      );
     }
 
     // Check for duplicate folder name in the same parent
@@ -148,11 +188,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create folder
     const folder = new Folder({
       name,
       owner: user.id,
       parent: parent || null,
+      ...(isHidden ? { isHidden: true } : {}),
+      ...(isHidden && pin
+        ? { pinHash: await hashPin(pin) }
+        : {}),
     });
 
     await folder.save();
@@ -163,6 +206,7 @@ export async function POST(request: NextRequest) {
       name: folder.name,
       parent: folder.parent?.toString() || null,
       createdAt: folder.createdAt,
+      ...(folder.isHidden ? { isHidden: true, hasPin: !!folder.pinHash } : {}),
     };
 
     return NextResponse.json(response, { status: 201 });

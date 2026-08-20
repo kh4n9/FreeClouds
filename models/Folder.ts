@@ -6,6 +6,11 @@ export interface IFolder extends Document {
   owner: Types.ObjectId;
   parent: Types.ObjectId | null;
   createdAt: Date;
+  // Vault (hidden folder) support: hidden folders are excluded from normal
+  // listings unless unlocked via the vault cookie; pinHash (bcrypt) gates
+  // access to hidden folders, recoverable via email.
+  isHidden: boolean;
+  pinHash?: string | null;
 
   // Instance methods (defined on schema)
   getFullPath(): Promise<string>;
@@ -68,11 +73,21 @@ const folderSchema = new Schema<IFolder>({
     type: Date,
     default: Date.now,
   },
+  isHidden: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
+  pinHash: {
+    type: String,
+    default: null,
+  },
 });
 
 // Compound indexes for better query performance
 folderSchema.index({ owner: 1, parent: 1 });
 folderSchema.index({ owner: 1, name: 1, parent: 1 }, { unique: true });
+folderSchema.index({ owner: 1, isHidden: 1 });
 folderSchema.index({ createdAt: -1 });
 
 // Virtual for id
@@ -88,9 +103,12 @@ folderSchema.set("toJSON", {
       _id?: unknown;
       __v?: unknown;
       parent?: unknown;
+      pinHash?: unknown;
     };
     delete obj._id;
     delete obj.__v;
+    // Never expose the PIN hash
+    delete obj.pinHash;
     // Convert parent ObjectId to string
     if (obj.parent) {
       obj.parent = (obj.parent as { toString(): string }).toString();

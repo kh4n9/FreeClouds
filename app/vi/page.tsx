@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { Shield, Zap, Cloud, Lock, Users, Globe, ArrowRight, Check, Upload, FolderPlus, Share2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,13 +12,14 @@ import {
   generateBreadcrumbs,
 } from "@/lib/seo/utils";
 import { BASE_URL } from "@/lib/seo/config";
+import { getLoggedInRedirectPath } from "@/lib/auth";
 
 export async function generateMetadata(): Promise<Metadata> {
   return generateSEOMetadata({
     language: "vi",
-    title: "Free Clouds - Lưu Trữ Đám Mây An Toàn & Chia Sẻ File",
+    title: "Free Clouds - Lưu Trữ Đám Mây Miễn Phí, An Toàn & Chia Sẻ File",
     description:
-      "Lưu trữ đám mây miễn phí và bảo mật được hỗ trợ bởi Telegram. Tải lên, tổ chức và chia sẻ file với bảo mật cấp doanh nghiệp. Giới hạn file 50MB, thư mục không giới hạn.",
+      "Lưu trữ đám mây miễn phí bằng tiếng Việt, được hỗ trợ bởi Telegram. Tải lên, tổ chức, tìm kiếm và chia sẻ file với bảo mật cấp doanh nghiệp: xác thực JWT, chống CSRF, thư mục ẩn bảo vệ bằng mã PIN. Giới hạn file 50MB, thư mục không giới hạn, hỗ trợ WebDAV.",
     keywords: [
       "lưu trữ đám mây miễn phí",
       "chia sẻ file an toàn",
@@ -29,6 +31,11 @@ export async function generateMetadata(): Promise<Metadata> {
       "tải file lên an toàn",
       "quản lý file online",
       "sao lưu dữ liệu online",
+      "thư mục ẩn bảo mật mã pin",
+      "webdav cloud storage",
+      "dịch vụ lưu trữ đám mây tiếng việt",
+      "lưu trữ ảnh video online",
+      "backup dữ liệu đám mây",
     ],
     image: `${BASE_URL}/vi/opengraph-image`,
     url: `${BASE_URL}/vi`,
@@ -150,7 +157,11 @@ const pricing = [
   { name: "Doanh Nghiệp", price: "$29", period: "tháng", features: ["Giới hạn 5GB", "Mọi tính năng Pro", "API access", "Quản lý nhóm", "Tích hợp tùy chỉnh"], popular: false },
 ];
 
-export default function VietnameseHomePage() {
+export default async function VietnameseHomePage() {
+  // Logged-in users bounce straight to their dashboard/admin area.
+  const redirectPath = await getLoggedInRedirectPath("/vi");
+  if (redirectPath) redirect(redirectPath);
+
   return (
     <div className="min-h-screen">
       <Navbar />

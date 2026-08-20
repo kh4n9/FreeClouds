@@ -6,6 +6,7 @@ import { requireAuth, AuthError, createAuthResponse, validateOrigin, createCsrfE
 import { telegramAPI, isAllowedFileType, validateFileName, sanitizeFileName } from "@/lib/telegram";
 import { logAction } from "@/lib/activity-log";
 import { getEffectiveStorageLimit } from "@/lib/quota";
+import { getAccessibleFolder } from "@/lib/vault";
 
 export async function handleComplete(request: NextRequest) {
   try {
@@ -18,6 +19,17 @@ export async function handleComplete(request: NextRequest) {
 
     if (!chunkedId || !originalName || !totalSize) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const folderId = rawFolderId && rawFolderId !== "null" && rawFolderId !== "" ? rawFolderId : null;
+    if (folderId) {
+      const folder = await getAccessibleFolder(request, folderId, user.id);
+      if (!folder) {
+        return NextResponse.json(
+          { error: "Folder not found or access denied" },
+          { status: 403 },
+        );
+      }
     }
 
     const totalChunks = Number(clientTotalChunks);
@@ -97,8 +109,6 @@ export async function handleComplete(request: NextRequest) {
         fileName = fileName + ".bin";
       }
     }
-
-    const folderId = rawFolderId && rawFolderId !== "null" && rawFolderId !== "" ? rawFolderId : null;
 
     // Handle duplicate name
     const existingFile = await File.findOne({

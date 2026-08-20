@@ -8,6 +8,7 @@ import {
   validateOrigin,
   createCsrfError,
 } from "@/lib/auth";
+import { getInaccessibleFolderIds } from "@/lib/vault";
 
 // Guard so expired-trash cleanup (incl. Telegram message deletion) runs at most once per hour per instance
 let lastCleanupRun = 0;
@@ -28,17 +29,21 @@ export async function GET(request: NextRequest) {
 
     const result = await File.findTrashByOwnerWithCount(user.id, page, 50);
 
-    const files = result.files.map((f) => ({
-      id: f._id.toString(),
-      name: f.name,
-      displayName: f.displayName,
-      size: f.size,
-      mime: f.mime,
-      deletedAt: f.deletedAt,
-      trashExpiresAt: f.trashExpiresAt,
-    }));
+    // Hide trashed files that lived inside locked hidden chains
+    const inaccessible = await getInaccessibleFolderIds(request, user.id);
+    const files = result.files
+      .filter((f) => !f.folder || !inaccessible.includes(f.folder.toString()))
+      .map((f) => ({
+        id: f._id.toString(),
+        name: f.name,
+        displayName: f.displayName,
+        size: f.size,
+        mime: f.mime,
+        deletedAt: f.deletedAt,
+        trashExpiresAt: f.trashExpiresAt,
+      }));
 
-    return NextResponse.json({ files, total: result.total, page: result.page, totalPages: result.totalPages }, { status: 200 });
+    return NextResponse.json({ files, total: files.length, page: result.page, totalPages: Math.ceil(files.length / 50) || 1 }, { status: 200 });
   } catch (error) {
     console.error("Trash list error:", error);
     if (error instanceof AuthError) return createAuthResponse(error);

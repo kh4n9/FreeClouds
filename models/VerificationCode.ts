@@ -11,7 +11,8 @@ import mongoose, {
 export type VerificationType =
   | "password_reset"
   | "account_deletion"
-  | "email_verification";
+  | "email_verification"
+  | "vault_pin_reset";
 
 export interface IVerificationCode extends Document {
   _id: Types.ObjectId;
@@ -56,7 +57,12 @@ const VerificationCodeSchema = new Schema<IVerificationCode>(
     type: {
       type: String,
       required: [true, "Verification type is required"],
-      enum: ["password_reset", "account_deletion", "email_verification"],
+      enum: [
+        "password_reset",
+        "account_deletion",
+        "email_verification",
+        "vault_pin_reset",
+      ],
     },
     expiresAt: {
       type: Date,

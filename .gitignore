@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local dev logs
+dev-server.log
+*.log
+
+# ytdl-core / youtube extractor debug dumps (accidentally committed once, ~69MB)
+*-player-script.js

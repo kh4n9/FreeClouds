@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { connectToDatabase } from "./db";
-import { verifyJwt, extractTokenFromRequest, JwtPayload } from "./jwt";
+import { verifyJwt, extractTokenFromRequest } from "./jwt";
 import { User } from "@/models/User";
 import { env } from "./env";
 
@@ -40,7 +40,9 @@ export async function getUserFromRequest(
       name: user.name,
       role: user.role,
       emailVerified: Boolean(user.emailVerified),
-      avatar: user.avatar || null,
+      avatar: user.avatarFileId
+        ? "/api/user/avatar?v=" + (user.avatarUpdatedAt?.getTime() || Date.now())
+        : user.avatar || null,
     };
   } catch (error) {
     console.error("Error getting user from request:", error);
@@ -256,4 +258,26 @@ export function createForbiddenResponse() {
       },
     },
   );
+}
+
+/**
+ * Server-component helper: return the dashboard path a logged-in user
+ * should be redirected to on the public homepage (`/dashboard` for users,
+ * `/admin` for admins), or null when not authenticated.
+ */
+export async function getLoggedInRedirectPath(
+  basePath: string = "",
+): Promise<string | null> {
+  const { cookies } = await import("next/headers");
+  const token = (await cookies()).get("token")?.value;
+  if (!token) return null;
+
+  const payload = verifyJwt(token);
+  if (!payload) return null;
+
+  await connectToDatabase();
+  const user = await User.findById(payload.userId).select("role isActive");
+  if (!user || !user.isActive) return null;
+
+  return user.role === "admin" ? `${basePath}/admin` : `${basePath}/dashboard`;
 }

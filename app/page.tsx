@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { Shield, Zap, Cloud, Lock, Users, Globe, ArrowRight, Check, Upload, FolderPlus, Share2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,6 +12,7 @@ import {
   generateBreadcrumbs,
 } from "@/lib/seo/utils";
 import { BASE_URL } from "@/lib/seo/config";
+import { getLoggedInRedirectPath } from "@/lib/auth";
 
 export async function generateMetadata(): Promise<Metadata> {
   return generateSEOMetadata({
@@ -148,7 +150,11 @@ const pricing = [
   { name: "Enterprise", price: "$29", period: "month", features: ["5GB file limit", "Everything in Pro", "API access", "Team management", "Custom integration"], popular: false },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Logged-in users bounce straight to their dashboard/admin area.
+  const redirectPath = await getLoggedInRedirectPath();
+  if (redirectPath) redirect(redirectPath);
+
   return (
     <div className="min-h-screen">
       <Navbar />
