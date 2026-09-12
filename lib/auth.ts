@@ -228,23 +228,6 @@ export async function requireAdmin(request: NextRequest): Promise<AuthUser> {
   return user;
 }
 
-export async function isAdmin(request: NextRequest): Promise<boolean> {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
-      return false;
-    }
-
-    await connectToDatabase();
-    const userDoc = await User.findById(user.id);
-
-    return userDoc?.role === "admin" && userDoc?.isActive === true;
-  } catch (error) {
-    console.error("isAdmin: Error:", error);
-    return false;
-  }
-}
-
 export function createForbiddenResponse() {
   return new Response(
     JSON.stringify({

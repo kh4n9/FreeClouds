@@ -1,7 +1,6 @@
-import { useEffect, useRef } from "react";
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   AlertTriangle,
   ChevronLeft,

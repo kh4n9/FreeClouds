@@ -38,8 +38,6 @@ export interface IFolder extends Document {
 
 export interface IFolderModel extends mongoose.Model<IFolder> {
   findByOwner(ownerId: string, parentId?: string | null): Promise<IFolder[]>;
-  findByPath(ownerId: string, folderPath: string[]): Promise<IFolder | null>;
-  getFolderTree(ownerId: string): Promise<FolderTreeEntry[]>;
   getFolderPath(folderId: string | Types.ObjectId): Promise<string[]>;
   /**
    * Re-live the soft-deleted ancestor chain of a folder. Called when a file is
@@ -52,14 +50,6 @@ export interface IFolderModel extends mongoose.Model<IFolder> {
   ): Promise<string[]>;
 }
 
-interface FolderTreeEntry {
-  _id: Types.ObjectId;
-  name: string;
-  owner: Types.ObjectId;
-  parent: Types.ObjectId | null;
-  createdAt: Date;
-  children: FolderTreeEntry[];
-}
 
 const folderSchema = new Schema<IFolder>({
   name: {
@@ -230,64 +220,7 @@ folderSchema.statics.findByOwner = function (
   return this.find(query).sort({ name: 1 });
 };
 
-folderSchema.statics.findByPath = async function (
-  ownerId: string,
-  folderPath: string[],
-): Promise<IFolder | null> {
-  if (folderPath.length === 0) return null;
 
-  let currentParent = null;
-  let folder = null;
-
-  for (const folderName of folderPath) {
-    folder = await this.findOne({
-      owner: ownerId,
-      parent: currentParent,
-      name: folderName,
-      deletedAt: null,
-    });
-
-    if (!folder) return null;
-    currentParent = folder._id;
-  }
-
-  return folder;
-};
-
-folderSchema.statics.getFolderTree = async function (ownerId: string) {
-  const folders = await this.find({
-    owner: ownerId,
-    deletedAt: null,
-  }).sort({ name: 1 });
-
-  const folderMap = new Map<string, FolderTreeEntry>();
-  const rootFolders: FolderTreeEntry[] = [];
-
-  // Create folder map
-  folders.forEach((folder: IFolder) => {
-    const data = folder.toJSON() as unknown as Record<string, unknown>;
-    folderMap.set(folder._id.toString(), {
-      ...(data as unknown as FolderTreeEntry),
-      children: [],
-    });
-  });
-
-  // Build tree structure
-  folders.forEach((folder: IFolder) => {
-    const folderData = folderMap.get(folder._id.toString())!;
-
-    if (folder.parent) {
-      const parent = folderMap.get(folder.parent.toString());
-      if (parent) {
-        parent.children.push(folderData);
-      }
-    } else {
-      rootFolders.push(folderData);
-    }
-  });
-
-  return rootFolders;
-};
 
 folderSchema.statics.getFolderPath = async function (
   folderId: string,

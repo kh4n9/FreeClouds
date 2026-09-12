@@ -346,28 +346,6 @@ class TelegramAPI {
     }
   }
 
-  async verifyBotToken(): Promise<boolean> {
-    try {
-      const response = await this.makeRequest("getMe");
-      return response.ok;
-    } catch (error) {
-      console.error("Bot token verification failed:", error);
-      return false;
-    }
-  }
-
-  async testChatAccess(): Promise<boolean> {
-    try {
-      const response = await this.makeRequest("getChat", {
-        chat_id: this.chatId,
-      });
-      return response.ok;
-    } catch (error) {
-      console.error("Chat access test failed:", error);
-      return false;
-    }
-  }
-
   /**
    * Best-effort deletion of a bot-sent message. Bots can delete their own
    * messages at any time. Returns false if the message could not be deleted.

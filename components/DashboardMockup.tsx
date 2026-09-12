@@ -23,9 +23,37 @@ const files = [
   { icon: FileText, name: "report-q2.docx", size: "1.1 MB", tint: "text-accent bg-accent/10" },
 ];
 
-const folders = ["My Files", "Shared", "Recent", "Trash"];
+const COPY = {
+  en: {
+    folders: ["My Files", "Shared", "Recent", "Trash"],
+    storage: "Storage",
+    myFiles: "My Files",
+    counts: "6 files · 3 folders",
+    search: "{t.search}",
+    upload: "Upload",
+    totalStorage: "Total storage",
+    recentFiles: "Recent files",
+  },
+  vi: {
+    folders: ["Tệp của tôi", "Được chia sẻ", "Gần đây", "Thùng rác"],
+    storage: "Dung lượng",
+    myFiles: "Tệp của tôi",
+    counts: "6 tệp · 3 thư mục",
+    search: "Tìm tệp...",
+    upload: "Tải lên",
+    totalStorage: "Tổng dung lượng",
+    recentFiles: "Tệp gần đây",
+  },
+} as const;
 
-export default function DashboardMockup() {
+export type MockupLocale = keyof typeof COPY;
+
+export default function DashboardMockup({
+  locale = "en",
+}: {
+  locale?: MockupLocale;
+} = {}) {
+  const t = COPY[locale];
   return (
     <div className="relative mx-auto max-w-5xl">
       <div className="relative rounded-2xl border border-line bg-card shadow-[0_24px_64px_-32px_rgba(23,25,31,0.35)] overflow-hidden">
@@ -49,7 +77,7 @@ export default function DashboardMockup() {
               </div>
               <span className="text-sm font-semibold text-foreground">Free Clouds</span>
             </div>
-            {folders.map((item, i) => (
+            {t.folders.map((item, i) => (
               <div
                 key={item}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs ${
@@ -63,7 +91,7 @@ export default function DashboardMockup() {
               </div>
             ))}
             <div className="mt-6 pt-4 border-t border-line">
-              <div className="text-[10px] text-muted mb-2 px-3 uppercase tracking-wider">Storage</div>
+              <div className="text-[10px] text-muted mb-2 px-3 uppercase tracking-wider">{t.storage}</div>
               <div className="px-3">
                 <div className="h-1.5 rounded-full bg-line overflow-hidden mb-1.5">
                   <div className="h-full w-3/5 rounded-full bg-accent" />
@@ -76,24 +104,24 @@ export default function DashboardMockup() {
           <div className="flex-1 p-5">
             <div className="flex items-center justify-between gap-3 mb-5">
               <div>
-                <div className="text-sm font-semibold text-foreground">My Files</div>
-                <div className="text-[10px] text-muted">6 files · 3 folders</div>
+                <div className="text-sm font-semibold text-foreground">{t.myFiles}</div>
+                <div className="text-[10px] text-muted">{t.counts}</div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-background border border-line text-muted text-xs">
                   <Search className="w-3.5 h-3.5" />
-                  Search files...
+                  {t.search}
                 </div>
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium">
                   <Upload className="w-3.5 h-3.5" />
-                  Upload
+                  {t.upload}
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
               {[
-                { icon: HardDrive, label: "Total storage", value: "312 MB", sub: "of 500 MB" },
+                { icon: HardDrive, label: t.totalStorage, value: "312 MB", sub: "of 500 MB" },
                 { icon: Folder, label: "Folders", value: "12", sub: "+2 this week" },
                 { icon: FileText, label: "Files", value: "146", sub: "+18 this week" },
                 { icon: Download, label: "Downloads", value: "1.2k", sub: "this month" },
@@ -109,7 +137,7 @@ export default function DashboardMockup() {
               ))}
             </div>
 
-            <div className="text-[10px] text-muted uppercase tracking-wider mb-2">Recent files</div>
+            <div className="text-[10px] text-muted uppercase tracking-wider mb-2">{t.recentFiles}</div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               {files.map((file) => (
                 <div

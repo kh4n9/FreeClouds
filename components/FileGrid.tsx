@@ -52,7 +52,6 @@ import dynamic from "next/dynamic";
 const DynamicFilePreview = dynamic(() => import("./FilePreview"), {
   ssr: false,
 });
-import PreviewIndicator, { PreviewStatusBadge } from "./PreviewIndicator";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 import ContextMenu, { type ContextMenuAction } from "./ContextMenu";
 import { ListStagger, ListStaggerItem } from "./motion/Reveal";

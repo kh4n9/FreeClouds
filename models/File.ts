@@ -88,17 +88,9 @@ export interface IFileStatics {
   getStorageUsage(
     ownerId: string,
   ): Promise<{ totalSize: number; totalFiles: number }>;
-  findDuplicates(ownerId: string): Promise<
-    Array<{
-      _id: { name: string; size: number };
-      files: IFile[];
-      count: number;
-    }>
-  >;
 }
 
 export interface IFileModel extends mongoose.Model<IFile>, IFileStatics {
-  findTrashByOwner(ownerId: string): Promise<IFile[]>;
   findTrashByOwnerWithCount(ownerId: string, page?: number, limit?: number): Promise<{ files: IFile[]; total: number; page: number; limit: number; totalPages: number }>;
   cleanupExpiredTrash(): Promise<number>;
   purgeStoredResources(file: IFile): Promise<number>;
@@ -491,26 +483,6 @@ fileSchema.statics.getStorageUsage = async function (ownerId: string) {
   };
 };
 
-fileSchema.statics.findDuplicates = function (ownerId: string) {
-  return this.aggregate([
-    {
-      $match: {
-        owner: new mongoose.Types.ObjectId(ownerId),
-        deletedAt: null,
-      },
-    },
-    {
-      $group: {
-        _id: { name: "$name", size: "$size" },
-        files: { $push: "$$ROOT" },
-        count: { $sum: 1 },
-      },
-    },
-    {
-      $match: { count: { $gt: 1 } },
-    },
-  ]);
-};
 
 // Instance methods
 fileSchema.methods.softDelete = function () {
@@ -573,16 +545,6 @@ fileSchema.statics.findRecent = function (ownerId: string, limit = 30) {
 };
 
 // Static methods for trash
-fileSchema.statics.findTrashByOwner = function (ownerId: string) {
-  return this.find({
-    owner: ownerId,
-    deletedAt: { $ne: null },
-    $or: [
-      { chunkedId: null },
-      { chunkIndex: -1 },
-    ],
-  }).sort({ deletedAt: -1 });
-};
 
 fileSchema.statics.findTrashByOwnerWithCount = async function (ownerId: string, page = 1, limit = 50) {
   const query: FilterQuery<IFile> = {

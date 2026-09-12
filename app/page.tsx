@@ -215,7 +215,7 @@ export default async function HomePage() {
               </Stagger>
             </div>
             <Reveal delay={0.15} className="lg:pl-6">
-              <DashboardMockup />
+              <DashboardMockup locale="en" />
             </Reveal>
           </div>
         </div>

@@ -222,7 +222,7 @@ export default async function VietnameseHomePage() {
               </Stagger>
             </div>
             <Reveal delay={0.15} className="lg:pl-6">
-              <DashboardMockup />
+              <DashboardMockup locale="vi" />
             </Reveal>
           </div>
         </div>
