@@ -10,6 +10,7 @@ import type { ILock } from "@/models/Lock";
 import { telegramAPI } from "./telegram";
 import { checkRateLimitByIdentifier, RATE_LIMITS } from "./ratelimit";
 import { parseRangeHeader } from "./file-utils";
+import { iterateChunkBytes, type ChunkRef } from "./chunk-stream";
 
 // Re-exported so existing importers keep working; the implementation is
 // shared with lib/download-file.ts (it used to be duplicated verbatim, and
@@ -666,86 +667,55 @@ async function streamChunkedFile(
     throw new DavError("File chunks not found", 404);
   }
 
-  const chunkInfos: Array<{
-    fileId: string;
-    telegramFilePath: string | null;
-    fileDoc: IFile;
-  }> = chunks.map((c) => ({
+  const chunkRefs: ChunkRef[] = chunks.map((c) => ({
     fileId: c.fileId,
     telegramFilePath: c.telegramFilePath || null,
-    fileDoc: c,
+    size: c.size || 0,
   }));
-
-  // Async generator (as arrow-assigned generator) that yields chunk buffers
-  // in order.
-  const streamChunks = async function* (): AsyncGenerator<Buffer> {
-    for (let i = 0; i < chunkInfos.length; i++) {
-      const cInfo = chunkInfos[i]!;
-      try {
-        const result = await telegramAPI.getFileStream(
-          cInfo.fileId,
-          cInfo.telegramFilePath || undefined,
-        );
-        if (!cInfo.telegramFilePath && result.filePath) {
-          File.updateOne(
-            { _id: cInfo.fileDoc._id },
-            { telegramFilePath: result.filePath },
-          ).catch(() => {});
-        }
-        const reader = result.stream.getReader();
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            yield Buffer.from(value);
-          }
-        } finally {
-          reader.releaseLock();
-        }
-      } catch (error) {
-        console.error(
-          `WebDAV chunked download failed at part ${i + 1}:`,
-          error,
-        );
-        throw new DavError("File temporarily unavailable", 503);
-      }
-    }
-  };
 
   // Headers only once the chunk set is known to be complete: a DavError thrown
   // above still needs to reach the caller's error handler so it can send a
   // proper 404 rather than a half-written response.
   res.writeHead(status, headers);
 
-  if (parsedRange) {
-    const rangeLen = parsedRange.end - parsedRange.start + 1;
-    const targetSkip = parsedRange.start;
-    let sent = 0;
-    let skipped = 0;
-    for await (const buf of streamChunks()) {
-      if (skipped < targetSkip) {
-        const toSkip = Math.min(buf.length, targetSkip - skipped);
-        skipped += toSkip;
-        const remaining = buf.subarray(toSkip);
-        if (remaining.length === 0) continue;
-        const toSend = Math.min(remaining.length, rangeLen - sent);
-        res.write(remaining.subarray(0, toSend));
-        sent += toSend;
-        if (sent >= rangeLen) break;
-      } else {
-        const toSend = Math.min(buf.length, rangeLen - sent);
-        res.write(buf.subarray(0, toSend));
-        sent += toSend;
-        if (sent >= rangeLen) break;
-      }
-    }
-    res.end();
-  } else {
-    for await (const buf of streamChunks()) {
+  // Sequential read via the shared helper, honouring backpressure with an
+  // explicit drain wait. Range handling (suffix ranges included) now lives in
+  // planChunkSlices() and is shared with the HTTP download path instead of
+  // being reimplemented here.
+  try {
+    for await (const buf of iterateChunkBytes(
+      chunkRefs,
+      parsedRange,
+      async (chunk, index) => {
+        const result = await telegramAPI.getFileStream(
+          chunk.fileId,
+          chunk.telegramFilePath || undefined,
+        );
+        if (!chunk.telegramFilePath && result.filePath) {
+          const doc = chunks[index];
+          if (doc) {
+            File.updateOne(
+              { _id: doc._id },
+              { telegramFilePath: result.filePath },
+            ).catch(() => {});
+          }
+        }
+        return { stream: result.stream, filePath: result.filePath ?? null };
+      },
+    )) {
       if (!res.write(buf)) {
-        await new Promise<void>((resolve) => res.once("drain", () => resolve()));
+        await new Promise<void>((resolve) =>
+          res.once("drain", () => resolve()),
+        );
       }
     }
     res.end();
+  } catch (error) {
+    if (error instanceof DavError) throw error;
+    console.error("WebDAV chunked stream failed:", error);
+    // The status line and headers are already on the wire, so the only honest
+    // signal left is to abort the connection — a truncated body with a
+    // Content-Length would otherwise look like a complete download.
+    res.destroy();
   }
 }

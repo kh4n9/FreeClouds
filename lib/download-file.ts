@@ -3,6 +3,7 @@ import { File, type IFile } from "@/models/File";
 import { telegramAPI, TelegramError } from "@/lib/telegram";
 import { bufferToStream } from "@/lib/download-utils";
 import { parseRangeHeader } from "@/lib/file-utils";
+import { chunkedReadableStream, type ChunkRef } from "@/lib/chunk-stream";
 import { put as blobPut } from "@vercel/blob";
 
 // Limit concurrent Telegram connections to avoid connect timeouts when
@@ -222,7 +223,78 @@ export async function buildDownloadResponse(
     return new Response(null, { status: 302, headers: redirectHeaders });
   }
 
-  // Download all chunks and assemble into buffer
+  // Reads one part on demand, caching the Telegram file_path it discovers.
+  // Takes a ChunkRef (not the document) because that is what the shared
+  // stream helper passes; the document is recovered by index for its _id.
+  const loadChunk = async (chunk: ChunkRef, index: number) => {
+    const cachedPath = chunk.telegramFilePath;
+    const result = await telegramAPI.getFileStream(chunk.fileId, cachedPath || undefined);
+    const doc = chunks[index];
+    if (doc && result.filePath !== cachedPath) {
+      File.updateOne({ _id: doc._id }, { telegramFilePath: result.filePath }).catch(() => {});
+    }
+    return { stream: result.stream, filePath: result.filePath ?? null };
+  };
+
+  const chunkRefs = chunks.map((c) => ({
+    fileId: c.fileId,
+    telegramFilePath: c.telegramFilePath || null,
+    size: c.size || 0,
+  }));
+
+  const totalSize =
+    file.size || chunkRefs.reduce((sum, c) => sum + c.size, 0);
+
+  // Range requests (video seek, resumable downloads) only need the parts that
+  // overlap the range. This used to download and assemble the ENTIRE file —
+  // up to 2GB in memory — just to slice out a few bytes.
+  const requestedRange = request.headers.get("range");
+  if (requestedRange) {
+    const parsed = parseRangeHeader(requestedRange, totalSize);
+    if (!parsed) {
+      return new Response(null, {
+        status: 416,
+        headers: { "Content-Range": `bytes */${totalSize}` },
+      });
+    }
+
+    const rangeHeaders = new Headers();
+    rangeHeaders.set("Content-Type", file.mime || "application/octet-stream");
+    rangeHeaders.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
+    rangeHeaders.set("Content-Range", `bytes ${parsed.start}-${parsed.end}/${totalSize}`);
+    rangeHeaders.set("Content-Length", String(parsed.end - parsed.start + 1));
+    rangeHeaders.set("Accept-Ranges", "bytes");
+    rangeHeaders.set("Cache-Control", "private, max-age=3600");
+    rangeHeaders.set("X-Content-Type-Options", "nosniff");
+    rangeHeaders.set("X-Frame-Options", "DENY");
+
+    return new Response(
+      chunkedReadableStream(chunkRefs, parsed, loadChunk),
+      { status: 206, headers: rangeHeaders },
+    );
+  }
+
+  // No Blob cache configured: stream the parts in order instead of assembling
+  // the whole file first. The assembly below exists only because blobPut()
+  // needs the complete bytes.
+  const blobToken = process.env?.BLOB_READ_WRITE_TOKEN;
+  if (!blobToken) {
+    const streamHeaders = new Headers();
+    streamHeaders.set("Content-Type", file.mime || "application/octet-stream");
+    streamHeaders.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
+    if (totalSize > 0) streamHeaders.set("Content-Length", String(totalSize));
+    streamHeaders.set("Accept-Ranges", "bytes");
+    streamHeaders.set("Cache-Control", "private, max-age=3600");
+    streamHeaders.set("X-Content-Type-Options", "nosniff");
+    streamHeaders.set("X-Frame-Options", "DENY");
+
+    return new Response(
+      chunkedReadableStream(chunkRefs, null, loadChunk),
+      { status: 200, headers: streamHeaders },
+    );
+  }
+
+  // Blob caching enabled — the bytes are needed whole for the upload.
   let assembled: Buffer;
   let elapsed = 0;
   let fileSizeMB = "0";
@@ -262,29 +334,7 @@ export async function buildDownloadResponse(
     return NextResponse.json({ error: "File temporarily unavailable" }, { status: 503 });
   }
 
-  // Support range requests on the assembled buffer (video seek, etc.)
-  const range = request.headers.get("range");
-  if (range && assembled.length > 0) {
-    const match = range.match(/bytes=(\d+)-(\d*)/);
-    if (match) {
-      const [, startStr, endStr] = match;
-      const start = parseInt(startStr!, 10);
-      const end = endStr ? parseInt(endStr, 10) : assembled.length - 1;
-      if (start < assembled.length && end < assembled.length && start <= end) {
-        const sliced = Buffer.from(assembled.subarray(start, end + 1));
-        const rangeHeaders = new Headers();
-        rangeHeaders.set("Content-Type", file.mime || "application/octet-stream");
-        rangeHeaders.set("Content-Disposition", `attachment; filename*=UTF-8''${encodedFileName}`);
-        rangeHeaders.set("Content-Range", `bytes ${start}-${end}/${assembled.length}`);
-        rangeHeaders.set("Content-Length", sliced.length.toString());
-        rangeHeaders.set("Accept-Ranges", "bytes");
-        rangeHeaders.set("Cache-Control", "private, max-age=3600");
-        rangeHeaders.set("X-Content-Type-Options", "nosniff");
-        rangeHeaders.set("X-Frame-Options", "DENY");
-        return new Response(bufferToStream(sliced), { status: 206, headers: rangeHeaders });
-      }
-    }
-  }
+  // (Range requests are answered above, straight from the parts.)
 
   // Try to cache in Vercel Blob (must complete within function timeout)
   const blobBudget = Math.max(1000, 9500 - elapsed);

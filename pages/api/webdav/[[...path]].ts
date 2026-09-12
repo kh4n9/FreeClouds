@@ -697,7 +697,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const parent = await Folder.findById(cursor);
             cursor = parent?.parent?.toString() || null;
           }
-          const destId = await referenceCopyFolder(
+          await referenceCopyFolder(
             resolved.folder._id.toString(),
             userId,
             destParentId,
