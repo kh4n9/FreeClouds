@@ -1,0 +1,585 @@
+<title>FreeClouds Audit Ledger</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+  :root {
+    --ground: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #eef1f5;
+    --ink: #151a21;
+    --ink-2: #4a5462;
+    --ink-3: #6d7889;
+    --rule: #dfe3e9;
+    --rule-strong: #c3cad4;
+    --accent: #2b4c7e;
+    --critical: #a32118;
+    --critical-bg: #fbeceb;
+    --high: #8a5a00;
+    --high-bg: #fbf3e3;
+    --ok: #1c6b47;
+    --ok-bg: #e9f4ee;
+    --defer: #5b4a8a;
+    --defer-bg: #f0edf8;
+
+    --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --serif: "Spectral", ui-serif, Georgia, "Times New Roman", serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --measure: 68ch;
+    --gutter: 24px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #12151a;
+      --surface: #191d24;
+      --surface-2: #212730;
+      --ink: #e8ebf0;
+      --ink-2: #9aa5b4;
+      --ink-3: #7d8896;
+      --rule: #2a313b;
+      --rule-strong: #3b444f;
+      --accent: #8fb4e8;
+      --critical: #f0918a;
+      --critical-bg: #331d1b;
+      --high: #ddb264;
+      --high-bg: #302716;
+      --ok: #7cc9a3;
+      --ok-bg: #17301f;
+      --defer: #b3a4e0;
+      --defer-bg: #241f36;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #12151a;
+    --surface: #191d24;
+    --surface-2: #212730;
+    --ink: #e8ebf0;
+    --ink-2: #9aa5b4;
+    --ink-3: #7d8896;
+    --rule: #2a313b;
+    --rule-strong: #3b444f;
+    --accent: #8fb4e8;
+    --critical: #f0918a;
+    --critical-bg: #331d1b;
+    --high: #ddb264;
+    --high-bg: #302716;
+    --ok: #7cc9a3;
+    --ok-bg: #17301f;
+    --defer: #b3a4e0;
+    --defer-bg: #241f36;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding-block: 0 96px;
+    padding-inline: var(--gutter);
+  }
+
+  /* ---- masthead ---- */
+  .masthead {
+    border-bottom: 1px solid var(--rule-strong);
+    padding-block: 56px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(30px, 5vw, 46px);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .standfirst {
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    max-width: var(--measure);
+    margin: 0;
+  }
+  .repo {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+  }
+  .repo b { color: var(--ink-2); font-weight: 500; }
+
+  /* ---- summary tiles ---- */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-block: 32px;
+  }
+  .tile { background: var(--surface); padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+  .tile .n {
+    font-family: var(--mono);
+    font-size: 27px;
+    font-weight: 500;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .tile .k {
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .n.ok { color: var(--ok); }
+  .n.crit { color: var(--critical); }
+  .n.defer { color: var(--defer); }
+
+  /* ---- sections ---- */
+  section { margin-block: 56px 0; }
+  h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    text-wrap: balance;
+  }
+  h2 .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  h3 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 15px;
+    margin: 0;
+  }
+  p { max-width: var(--measure); }
+
+  .lede { color: var(--ink-2); margin-block: 14px 24px; max-width: var(--measure); }
+
+  /* ---- finding rows: the ledger ---- */
+  .ledger { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+  .row {
+    background: var(--surface);
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 0 20px;
+    padding: 20px 20px 22px;
+    align-items: start;
+  }
+  .row > .meta { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .sev {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    padding: 3px 7px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .sev.p0 { color: var(--critical); background: var(--critical-bg); }
+  .sev.p1 { color: var(--high); background: var(--high-bg); }
+  .sev.p2 { color: var(--defer); background: var(--defer-bg); }
+  .row .body { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+  .where {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    background: none;
+    padding: 0;
+    overflow-wrap: anywhere;
+  }
+  .was { color: var(--ink-2); font-size: 15px; margin: 0; }
+  .fix { font-size: 15px; margin: 0; color: var(--ink); }
+  .fix b { font-weight: 600; }
+  .status {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    align-self: flex-start;
+    padding: 3px 7px;
+    border-radius: 2px;
+  }
+  .status.done { color: var(--ok); background: var(--ok-bg); }
+  .status.kept { color: var(--defer); background: var(--defer-bg); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.875em;
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 2px;
+    overflow-wrap: anywhere;
+  }
+  .row code { background: var(--surface-2); }
+
+  /* ---- prose lists ---- */
+  ul.plain { max-width: var(--measure); padding-left: 0; list-style: none; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  ul.plain li { padding-left: 20px; position: relative; color: var(--ink-2); }
+  ul.plain li::before { content: "—"; position: absolute; left: 0; color: var(--rule-strong); }
+  ul.plain li b { color: var(--ink); font-weight: 600; }
+
+  /* ---- deferred block ---- */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--defer);
+    border-radius: 3px;
+    padding: 22px 24px;
+    margin-block: 18px;
+  }
+  .panel.crit { border-left-color: var(--critical); }
+  .panel h3 { margin-bottom: 10px; font-size: 15.5px; }
+  .panel p { margin: 0 0 12px; color: var(--ink-2); font-size: 15px; }
+  .panel p:last-child { margin-bottom: 0; }
+  .panel .now { color: var(--ink); }
+
+  .pull {
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding-block: 18px;
+    margin-block: 28px;
+    max-width: var(--measure);
+  }
+
+  footer {
+    margin-top: 72px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+  }
+
+  @media (max-width: 560px) {
+    :root { --gutter: 18px; }
+    .row { grid-template-columns: 1fr; gap: 12px; }
+    .row > .meta { flex-direction: row; align-items: center; gap: 10px; }
+    h2 { flex-wrap: wrap; }
+    h2 .tag { margin-left: 0; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Code audit &amp; remediation</div>
+    <h1>FreeClouds Audit Ledger</h1>
+    <p class="standfirst">A full pass over the codebase — what would lose data or money, what was quietly broken, and what was deliberately left alone. Every finding below was read in source and confirmed before it was touched.</p>
+    <div class="repo">
+      <span><b>16</b> commits</span>
+      <span><b>89</b> files changed</span>
+      <span><b>+10,584 / −1,028</b> lines</span>
+      <span><b>Type-check</b> clean</span>
+      <span><b>Lint</b> 227,016 → 42 problems</span>
+      <span><b>Build</b> passing</span>
+    </div>
+  </header>
+
+  <div class="tiles">
+    <div class="tile"><span class="n crit">5</span><span class="k">P0 fixed</span></div>
+    <div class="tile"><span class="n">9</span><span class="k">P1 fixed</span></div>
+    <div class="tile"><span class="n">24</span><span class="k">P2 fixed</span></div>
+    <div class="tile"><span class="n defer">4</span><span class="k">Deliberately kept</span></div>
+    <div class="tile"><span class="n">69 MB</span><span class="k">Reclaimed</span></div>
+  </div>
+
+  <!-- ============ P0 ============ -->
+  <section>
+    <h2>Data loss &amp; storage leaks <span class="tag">P0 · all fixed</span></h2>
+    <p class="lede">Five defects that silently destroyed user data or leaked paid storage forever. These were the reason for the whole exercise.</p>
+
+    <div class="ledger">
+
+      <div class="row">
+        <div class="meta"><span class="sev p0">P0-1</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>Deleting a folder permanently destroyed every file inside it</h3>
+          <div class="where">app/api/folders/[id]/route.ts:444 → models/Folder.ts:293</div>
+          <p class="was">Folder delete ran a bare <code>File.deleteMany({ folder })</code> — no soft delete, no <code>deleteMessage</code>, no version cleanup, no Blob cleanup. Files vanished instantly and irreversibly, while single-file delete correctly went to trash. Every file in the folder also orphaned its Telegram document.</p>
+          <p class="fix"><b>Now:</b> <code>softDeleteRecursively()</code> stamps the whole subtree — folders, files and chunk parts — with one <code>trashExpiresAt</code>, so it expires together and is restorable. Every listing, resolution and duplicate-check path was audited to filter <code>deletedAt</code>. Restoring a file brings its folder chain back too, so it doesn't return invisible.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p0">P0-2</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>A Mongo TTL index was racing the cleanup job and eating the cleanup</h3>
+          <div class="where">models/File.ts:207</div>
+          <p class="was">A TTL index on <code>trashExpiresAt</code> meant the mongod TTL monitor deleted rows on its own schedule — without running <code>deleteMessage</code>. Trash cleanup only ran opportunistically when a user opened their trash page. Any file trashed by someone who never revisited it orphaned its Telegram document permanently.</p>
+          <p class="fix"><b>Now:</b> no TTL index. Expiry has exactly one owner — the sweep in the new <code>lib/maintenance.ts</code>, started once from <code>lib/db.ts</code>. It also reaps expired share links, which had no cleanup at all.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p0">P0-3</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>“Delete my account” deleted nothing</h3>
+          <div class="where">app/api/auth/confirm-deletion/route.ts:84,90,95,99</div>
+          <p class="was">The transaction filtered on <code>userId</code>. Neither schema has that field — it is <code>owner</code>. Mongoose passes unknown keys through, so it matched <b>zero</b> documents: the User and the verification codes were deleted and the transaction committed, while every file, folder, version and Telegram document survived, unreachable by any UI and billed indefinitely.</p>
+          <p class="fix"><b>Now:</b> filters on <code>owner</code>, and reclaims storage through the shared purge. The admin user-delete path had the same leak and now collects documents before its transaction and reclaims after it commits.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p0">P0-4</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>“Delete forever” leaked the cached Blob</h3>
+          <div class="where">models/File.ts:565 → purgeStoredResources()</div>
+          <p class="was">Four different paths each re-implemented a <i>subset</i> of “delete chunks → delete messages → delete rows”. Only two of them deleted the Blob, so deleting a file from the trash view leaked its cached object. Whatever each copy forgot, it leaked silently.</p>
+          <p class="fix"><b>Now:</b> one primitive — <code>File.purgeStoredResources()</code> — reclaims Telegram documents, Blob cache, chunk parts and version rows. Every “delete forever” path calls it: trash empty, trash single-delete, admin trash, the expiry sweep and both account-deletion routes. Failures are logged instead of swallowed.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p0">P0-5</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>Versions were invisible to quota and never pruned</h3>
+          <div class="where">models/File.ts:408 · app/api/files/[id]/versions/route.ts</div>
+          <p class="was"><code>getStorageUsage</code> summed only live files. Version rows are separate Telegram documents, so a user could hold unbounded history for free, consuming storage no limit accounted for.</p>
+          <p class="fix"><b>Now:</b> versions count toward quota, capped at 10 per file — oldest pruned with their Telegram messages, so the cap doesn't trade a quota leak for a storage leak.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ P1 ============ -->
+  <section>
+    <h2>Broken behaviour &amp; security <span class="tag">P1 · all fixed</span></h2>
+    <p class="lede">Things that did work — just not the way anyone reading the code would assume.</p>
+
+    <div class="ledger">
+
+      <div class="row">
+        <div class="meta"><span class="sev p1">P1-1</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>WebDAV ranged reads silently didn't work for any large file</h3>
+          <div class="where">lib/webdav.ts:336</div>
+          <p class="was">The chunked branch called <code>streamChunkedFile()</code> without ever calling <code>writeHead</code>. Every file over 50MB came back as an implicit <code>200</code> with no <code>Content-Type</code>, <code>Content-Length</code>, <code>ETag</code> or <code>Accept-Ranges</code> — and a ranged request was answered <code>200</code> instead of <code>206</code>. Resumable and ranged reads are the entire reason to mount a cloud drive.</p>
+          <p class="fix"><b>Now:</b> headers are written once the chunk set is verified complete (so a missing-chunks 404 can still be sent), and the 206 status and <code>Content-Range</code> are correct.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p1">P1-2</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>Version-uploading a &gt;50MB file silently did nothing</h3>
+          <div class="where">app/api/files/[id]/versions/route.ts:181</div>
+          <p class="was">It pointed <code>fileId</code> at a new Telegram document but left <code>chunkedId</code>/<code>totalChunks</code> intact, so downloads kept assembling the <b>old</b> parts while <code>size</code> claimed the new ones. The uploaded document was orphaned and the old bytes were never snapshotted either.</p>
+          <p class="fix"><b>Now:</b> an honest <code>400 CHUNKED_VERSION_UNSUPPORTED</code> before anything is uploaded. Real chunked re-versioning remains unimplemented — that is a known, documented limitation rather than a lie.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p1">P1-3</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>Verification codes were logged in plaintext, in production</h3>
+          <div class="where">forgot-password · request-deletion · vault/recover-request</div>
+          <p class="was"><code>console.log(... ${code})</code> ran unconditionally, so password-reset codes went to the production log — anyone with log access could take over any account. Codes were also generated with <code>Math.random()</code> and stored in plaintext, and the only brute-force brake was an IP limiter trusting a client-supplied <code>X-Forwarded-For</code>.</p>
+          <p class="fix"><b>Now:</b> logging removed; the dev-only body echo reads the validated env; generation is <code>crypto.randomInt</code>; codes are stored as an HMAC-SHA256 digest via a pre-save hook (so no creation site changed); and each code stops matching after 5 failed attempts, which travels with the code rather than the IP.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p1">P1-4</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>WebDAV auth had no rate limiting at all</h3>
+          <div class="where">lib/webdav.ts:107</div>
+          <p class="was">The handler ran <code>bcrypt.compare</code> and never consulted any limiter — unthrottled brute force against a mounted-drive endpoint.</p>
+          <p class="fix"><b>Now:</b> throttled by the account being attacked rather than client IP, since the Pages Router handler only has an <code>IncomingMessage</code> and a spoofable header should not be able to rotate the bucket.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p1">P1-5</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>WebDAV LOCK was decorative</h3>
+          <div class="where">pages/api/webdav/[[...path]].ts:47</div>
+          <p class="was">Locks lived in a module-level <code>Map</code> keyed by path alone — so one user's lock blocked another's — and <b>no handler ever consulted it</b>. PUT, DELETE, MOVE and PROPPATCH wrote through locks freely. No timeout, and every lock evaporated on restart: precisely when a client that had locked a resource expected it to still be there.</p>
+          <p class="fix"><b>Now:</b> a <code>Lock</code> collection keyed by owner+path with a TTL index. LOCK refreshes rather than duplicating and refuses to steal another principal's lock; UNLOCK validates the token; all four mutating methods enforce it and answer <code>423</code>.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p1">P1-6</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>69MB of debug dumps, committed and pushed — and lint couldn't see the source</h3>
+          <div class="where">commit ad2ac8b · eslint.config.mjs</div>
+          <p class="was">28 byte-identical <code>*-player-script.js</code> files (~2.5MB each) landed in the tip commit, plus a 9.9MB vendored <code>opencv.js</code> being linted. ESLint reported <b>227,016</b> problems, of which exactly <b>one</b> was real source. That one hid behind the noise.</p>
+          <p class="fix"><b>Now:</b> files removed, patterns ignored, history rewritten and force-pushed (you approved this explicitly). Lint is <b>0 errors, 42 warnings</b> — all genuine. Repo working tree: 76MB → 23MB.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p1">P1-7</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>WebDAV conformance gaps that broke real clients</h3>
+          <div class="where">lib/webdav.ts · pages/api/webdav/[[...path]].ts</div>
+          <p class="was"><code>getlastmodified</code> reported <code>createdAt</code> and <code>File</code> had no <code>updatedAt</code> at all — so a PUT-overwrite never changed the timestamp and sync clients missed updates entirely. PROPFIND's ETag was the escaped href while GET's was the <code>_id</code>. PROPPATCH parsed a <code>&lt;propertyupdate&gt;</code> body with the PROPFIND parser, so it always refused 403 with the container names (“propertyupdate”, “set”, “prop”). Malformed <code>%</code>-encoding threw URIError → 500. COPY/MOVE onto a name held by a <i>hidden</i> folder surfaced a raw E11000 → 500. And range parsing was duplicated verbatim in two files, neither handling suffix ranges (<code>bytes=-N</code>).</p>
+          <p class="fix"><b>Now:</b> a Mongoose-managed <code>updatedAt</code> on both schemas; unified ETag; a real <code>parseProppatchProps()</code> echoing the client's own qualified names; 400 for bad encoding; explicit 409 for collisions; and one shared range parser with suffix support, verified across 14 cases.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p1">P1-8</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>YouTube calls could hang forever, and ignored client disconnects</h3>
+          <div class="where">lib/youtube.ts · app/api/youtube/download/route.ts</div>
+          <p class="was">Every innerTube call used a bare <code>fetch</code> with no <code>AbortController</code>, so a stalled CDN connection pinned the request open indefinitely. The download route never read <code>request.signal</code>, so a client who navigated away left the server downloading and rotating URLs to completion. The fallback chain could run 2 VR + 1 ANDROID + 6 ytdl attempts unbounded. The 1GB cap was only checked against a known <code>Content-Length</code>, so an unknown-length stream bypassed it. And redirects were followed without re-validating the host, making the SSRF guard a formality.</p>
+          <p class="fix"><b>Now:</b> per-request timeouts, the client's abort signal propagated through resolution, rotation and both streaming paths (including destroying the ytdl stream), a 45s budget on the chain, a byte-counted size cap, and manual redirect following that re-validates every hop.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="meta"><span class="sev p1">P1-9</span><span class="status done">Fixed</span></div>
+        <div class="body">
+          <h3>Telegram's <code>retry_after</code> was ignored server-side</h3>
+          <div class="where">lib/telegram.ts:66,115</div>
+          <p class="was"><code>makeRequest</code> threw immediately on a 429 without reading <code>parameters.retry_after</code>. Only the <i>browser-side</i> chunk uploader honoured it, so multi-part uploads and large downloads through the server failed avoidably under rate limiting.</p>
+          <p class="fix"><b>Now:</b> the server waits the interval Telegram asked for and retries once; <code>TelegramError</code> surfaces <code>retryAfter</code>.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ P2 ============ -->
+  <section>
+    <h2>Robustness, correctness &amp; duplication <span class="tag">P2 · 24 fixed</span></h2>
+    <p class="lede">The long tail. Grouped by theme rather than listed one by one.</p>
+
+    <ul class="plain">
+      <li><b>Regex injection in search.</b> 11 sites interpolated user input straight into a Mongo <code>$regex</code>. “(“ made Mongo throw (a 500 instead of 400); “(a+)+$” could backtrack catastrophically; and metacharacters silently changed the query — searching <code>report.pdf</code> also matched <code>reportXpdf</code>. Now escaped and length-capped.</li>
+      <li><b>Internal errors returned to clients.</b> Seven handlers echoed <code>error.message</code> — Mongoose and driver internals. Replaced with a generic message plus a code, detail left in the log.</li>
+      <li><b>Unbounded admin queries.</b> The user export loaded every matching user plus an aggregation over all their files, and the computed-column sort loaded every user into memory. Both capped (10k / 5k) and report truncation — via headers for the export, since its body is a file.</li>
+      <li><b>ID validation.</b> <code>id.length !== 24</code> accepted 24 characters of any kind, so <code>zzzz…</code> passed and died as a CastError. Replaced with a hex check in 14 places.</li>
+      <li><b>Chunked downloads buffered the whole file in RAM.</b> Up to 2GB resident per request — and a range request for a 1MB video header still fetched and assembled the entire file. New <code>lib/chunk-stream.ts</code> holds one implementation, shared by three callers, with a pure slicing planner verified against 35 window positions over unequal chunk sizes.</li>
+      <li><b>Failed and overwritten uploads orphaned Telegram documents.</b> Three separate escape routes, including one where the 2GB cap throws mid-body and bypassed cleanup entirely.</li>
+      <li><b>Frontend:</b> a thumbnail effect that re-fetched forever on failure; localStorage read in a <code>useState</code> initialiser causing hydration mismatches (now <code>useSyncExternalStore</code>); PDFs downloaded and parsed twice and re-parsed on every page turn; pdfjs statically imported into the chunk for <i>all</i> previews; Vietnamese users navigated out of the Vietnamese tree by five separate routes.</li>
+      <li><b>Accessibility:</b> 10 password toggles with no accessible name, file and folder cards as bare <code>&lt;div onClick&gt;</code> (unopenable by keyboard), and two modals with no role, no Escape and no focus management.</li>
+      <li><b>Vietnamese parity:</b> the document scanner was missing entirely from the Vietnamese dashboard — 15 wiring points present in English, zero in Vietnamese. Ported.</li>
+      <li><b>Dead code removed:</b> <code>LanguageBadge.tsx</code> (119 lines), two never-called Telegram diagnostics, <code>File.findDuplicates</code>, <code>File.findTrashByOwner</code>, <code>Folder.findByPath</code>, <code>Folder.getFolderTree</code>, an unused <code>isAdmin()</code>, an unreachable success banner, a dead <code>&lt;Head&gt;</code> block that looked like working SEO, and a write-only validation state.</li>
+      <li><b>Duplication collapsed:</b> two rate limiters into one; five copies of <code>formatFileSize</code> into one (three of them couldn't render TB, so 2TiB printed as “2048 GB”); two range parsers into one.</li>
+      <li><b>Docs:</b> corrected Next.js 14 / React 18 claims to 16 / 19, fixed prerequisites, removed a Prettier claim with no Prettier, and documented the required migrations.</li>
+    </ul>
+  </section>
+
+  <!-- ============ corrections ============ -->
+  <section>
+    <h2>Corrections to the audit itself <span class="tag">Verified, then revised</span></h2>
+    <p class="lede">Three findings from the initial survey did not survive contact with the source. Worth recording, because acting on the wrong version would have made things worse.</p>
+
+    <div class="panel">
+      <h3>Cookie-token logging was not a leak</h3>
+      <p>Reported as leaking the session token to the console. The token cookie is <code>HttpOnly</code>, so <code>document.cookie</code> cannot read it. It was noisy and logged user data, but not a credential leak. Severity downgraded, logging removed.</p>
+    </div>
+
+    <div class="panel">
+      <h3>“Missing <code>validateOrigin</code>” was not exploitable CSRF</h3>
+      <p>The session cookie is <code>SameSite=Lax</code>, so a cross-site form POST does not carry it. Real severity: a consistency gap, not a live hole. The check is now applied uniformly anyway — it is cheap and its absence was the actual problem.</p>
+    </div>
+
+    <div class="panel">
+      <h3><code>PreviewIndicator</code> renders nowhere at all</h3>
+      <p>Reported as showing English strings on the Vietnamese dashboard. It is imported by FileGrid but never rendered anywhere — those strings appear on no page. The dead import is gone; the orphaned component is left in place rather than deleted unasked.</p>
+    </div>
+  </section>
+
+  <!-- ============ deferred ============ -->
+  <section>
+    <h2>Deliberately not changed <span class="tag">Reasoning, not neglect</span></h2>
+
+    <div class="panel">
+      <h3>The quota check-then-write race remains</h3>
+      <p>Every upload path reads usage then writes with no transaction, so two concurrent uploads can both pass and slightly exceed the limit.</p>
+      <p class="now"><b>Why I stopped:</b> closing it properly means an atomic storage counter on the User — a new field every write path must maintain, including deletes, restores, versioning and the trash lifecycle. Getting that subtly wrong produces <i>permanent quota drift</i>, which is worse than a bounded overage that self-corrects on the next check. This needs its own focused change with its own tests, not a rushed tail-end edit.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Concurrent same-name uploads can still duplicate a name</h3>
+      <p>Uploads avoid collisions with a name check plus a <code>Date.now()</code> suffix, which is not atomic. Two simultaneous PUTs to one path can both land.</p>
+      <p class="now"><b>Why I stopped:</b> the fix is a unique index on <code>File</code>, which will refuse to build on any existing install that already has duplicate names — it needs a data audit first. Impact today is a duplicate listing, not corruption.</p>
+    </div>
+
+    <div class="panel">
+      <h3>The COPY “quota double-count” was not a bug</h3>
+      <p>Reported as a bug because reference copies share one Telegram document yet consume quota. But <code>getStorageUsage</code> sums every live row, so the check is <i>consistent</i> with how usage is computed. Making quota physical-only would change what every user's quota reads. That is a product decision, not a bug fix — flagged rather than made unilaterally.</p>
+    </div>
+
+    <div class="panel">
+      <h3>The two register pages are still different implementations</h3>
+      <p>The English page has a success screen; the Vietnamese page has a password-strength meter and live field validation. Converging them means picking one and losing features from the other — your call, not mine.</p>
+    </div>
+  </section>
+
+  <!-- ============ required action ============ -->
+  <section>
+    <h2>What you need to run <span class="tag">Required</span></h2>
+
+    <div class="panel crit">
+      <h3><code>npm run migrate</code></h3>
+      <p>Two schema changes cannot apply themselves, and skipping them leaves folder naming and trash behaviour broken on a database that already has data:</p>
+      <ul class="plain" style="margin-top:12px">
+        <li>The <code>folders</code> unique index gains <code>deletedAt</code> — without it, a trashed folder keeps blocking its own name and recreating it fails with a duplicate-key error.</li>
+        <li>The <code>files</code> <code>trashExpiresAt</code> TTL index is dropped — it deleted rows without running the Telegram cleanup.</li>
+      </ul>
+      <p style="margin-top:12px">The script is idempotent, deletes no data, and tells you if duplicates block the new index.</p>
+    </div>
+
+    <p class="pull">Restart the dev server before testing. Turbopack's watcher does not pick up edits on this mount — stale builds will make correct fixes look broken.</p>
+  </section>
+
+  <footer>
+    <span>Verified: type-check clean · lint 0 errors · build passing</span>
+    <span>16 commits, one per logical change</span>
+    <span>Force-pushed to rewrite the 69MB commit</span>
+  </footer>
+
+</div>
