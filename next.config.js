@@ -59,10 +59,10 @@ let nextConfig = {
             key: "X-Frame-Options",
             value: "DENY",
           },
-          {
-            key: "X-XSS-Protection",
-            value: "1; mode=block",
-          },
+          // No X-XSS-Protection: the legacy auditor is obsolete, ignored by
+          // modern browsers, and was itself a source of bypasses. Content-Type
+          // sniffing is already blocked by X-Content-Type-Options below, which
+          // is what actually mitigates reflected-XSS injection.
           {
             key: "Referrer-Policy",
             value: "strict-origin-when-cross-origin",

@@ -760,10 +760,11 @@ We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.
 5. Open Pull Request
 
 ### Code Standards
-- **TypeScript** - Strict mode enabled
-- **ESLint** - Code quality enforcement
-- **Prettier** - Code formatting
-- **Testing** - Unit and integration tests required
+- **TypeScript** - Strict mode enabled (`npm run type-check`)
+- **ESLint** - Code quality enforcement (`npm run lint`)
+- **Testing** - `scripts/tests/*.js` are live-server smoke scripts, not unit
+  tests; there is no test framework and no CI, so changes are verified by
+  running the app (see AGENTS.md)
 
 ## 📞 Support & Community
 
@@ -837,8 +838,7 @@ npm run lint
 # Type checking
 npm run type-check
 
-# Format code (if Prettier is configured)
-npm run format
+# Note: no Prettier is configured, so there is no `npm run format`.
 ```
 
 **Code Style Guidelines:**

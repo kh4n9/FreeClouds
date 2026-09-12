@@ -2,7 +2,7 @@
 
 ## Overview
 
-Free Clouds is a comprehensive cloud storage solution built with Next.js 14, featuring advanced file management, intelligent preview system, and robust security measures. This document outlines all available features and capabilities.
+Free Clouds is a comprehensive cloud storage solution built with Next.js 16, featuring advanced file management, intelligent preview system, and robust security measures. This document outlines all available features and capabilities.
 
 ---
 

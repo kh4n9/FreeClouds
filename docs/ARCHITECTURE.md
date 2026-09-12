@@ -2,9 +2,9 @@
 
 ## Overview
 
-Free Clouds is a modern, full-stack cloud storage application built with Next.js 14, featuring a comprehensive file preview system, secure authentication, and scalable architecture. This document outlines the technical architecture, design patterns, and implementation details.
+Free Clouds is a modern, full-stack cloud storage application built with Next.js 16, featuring a comprehensive file preview system, secure authentication, and scalable architecture. This document outlines the technical architecture, design patterns, and implementation details.
 
-**Tech Stack**: Next.js 14, React 18, TypeScript, MongoDB, Tailwind CSS, Telegram API
+**Tech Stack**: Next.js 16 (App Router, Turbopack), React 19, TypeScript, MongoDB (Mongoose 8), Tailwind CSS 3, Telegram Bot API
 **Architecture Pattern**: Full-Stack Monolith with API Routes
 **Deployment**: Vercel-ready with Docker support
 
@@ -21,7 +21,7 @@ Free Clouds is a modern, full-stack cloud storage application built with Next.js
 - **♿ Accessibility** - WCAG compliant and keyboard navigation support
 
 ### Technology Choices
-- **Next.js 14** - Full-stack React framework with App Router
+- **Next.js 16** - Full-stack React framework with App Router (see AGENTS.md for the load-bearing config quirks)
 - **TypeScript** - Type safety and better developer experience
 - **MongoDB** - Document database for flexible data modeling
 - **Tailwind CSS** - Utility-first CSS for rapid UI development
@@ -647,14 +647,20 @@ interface EnvironmentConfig {
 ### Technology Evolution
 
 ```typescript
-// Future Tech Stack
+// Current stack (all of it is what the repository actually runs today)
+interface CurrentTechStack {
+  frontend: 'React 19' | 'Next.js 16';
+  backend: 'Node.js 20.9+';
+  database: 'MongoDB (Mongoose 8)';
+  storage: 'Telegram Bot API (private channel)';
+  cache: 'in-memory (per instance)';
+}
+
+// Candidate next steps — speculative, nothing here is implemented
 interface FutureTechStack {
-  frontend: 'React 19' | 'Next.js 15';
-  backend: 'Node.js 22' | 'Deno 2.0';
-  database: 'MongoDB 8.0' | 'PostgreSQL 17';
   cache: 'Redis 7.0' | 'KeyDB';
   search: 'Elasticsearch' | 'MeiliSearch';
-  ai: 'OpenAI GPT-5' | 'Local LLM';
+  queue: 'BullMQ' | 'SQS';
   deployment: 'Kubernetes' | 'Docker Swarm';
 }
 ```

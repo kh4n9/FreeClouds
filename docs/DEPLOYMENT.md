@@ -12,12 +12,64 @@ This guide provides comprehensive instructions for deploying Free Clouds to vari
 
 ---
 
+## ⚠️ Upgrading an existing deployment (required migrations)
+
+Two schema changes are not applied automatically. Skipping them leaves the
+folder-name and trash behaviour broken on a database that already has data.
+
+Run:
+
+```bash
+npm run migrate
+```
+
+That script (`scripts/migrate-folder-trash-index.js`) is idempotent and does two
+things:
+
+1. **Drops the old 3-field unique index on `folders`** (`{owner, name, parent}`)
+   and creates `{owner, name, parent, deletedAt}`.
+
+   Why: folders are now soft-deleted (moved to trash) rather than destroyed.
+   With the old index, a trashed folder kept occupying its name, so recreating a
+   folder with the same name failed with a duplicate-key error. Mongoose does not
+   drop indexes that are no longer in the schema, so this has to be done by hand.
+
+   If the new index cannot be built, you have duplicate `(owner, name, parent)`
+   rows among *live* folders — resolve those and re-run.
+
+2. **Drops the `trashExpiresAt` TTL index on `files`.**
+
+   Why: the mongod TTL monitor was deleting trashed file rows on its own schedule
+   without running any cleanup, so every file trashed by a user who never reopened
+   their trash page orphaned its Telegram document permanently. Expiry is now
+   driven solely by `File.cleanupExpiredTrash()` via the background sweep in
+   `lib/maintenance.ts`.
+
+**Also run, if your `files` collection predates reference copies:**
+
+```js
+// mongosh, once: reference copies share one Telegram document, so fileId must
+// not be unique.
+db.files.dropIndex({ fileId: 1 })
+```
+
+No data is deleted by any of the above.
+
+### Behaviour change to be aware of
+
+Deleting a **folder** now moves it and its contents to the trash (recoverable
+for 30 days) instead of destroying them immediately. Over WebDAV a `DELETE` on a
+collection therefore no longer removes it outright — the collection disappears
+from listings immediately, but is recoverable from the trash until it expires.
+
+---
+
 ## 📋 Prerequisites
 
 ### System Requirements
-- **Node.js**: 18.0 or higher
-- **npm**: 8.0 or higher (or yarn 1.22+)
-- **MongoDB**: 5.0 or higher
+- **Node.js**: 20.9 or higher (enforced by `engines` in package.json)
+- **npm**: 10 or higher
+- **MongoDB**: 6.0 or higher (Mongoose 8)
 - **Memory**: Minimum 512MB RAM (1GB+ recommended)
 - **Storage**: 1GB+ available space
 
