@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidObjectId } from "@/lib/file-utils";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import { FileVersion } from "@/models/FileVersion";
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
 
     const { id: fileId } = await params;
-    if (!fileId || fileId.length !== 24) {
+    if (!isValidObjectId(fileId)) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
 
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
 
     const { id: fileId } = await params;
-    if (!fileId || fileId.length !== 24) {
+    if (!isValidObjectId(fileId)) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
 

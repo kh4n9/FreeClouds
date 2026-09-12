@@ -1,3 +1,4 @@
+import { escapeRegex } from "@/lib/file-utils";
 import mongoose, { Document, Schema, Model, FilterQuery, Types } from "mongoose";
 
 export interface IActivityLog extends Document {
@@ -81,8 +82,8 @@ activityLogSchema.statics.listLogs = async function (
   if (action) query.action = action;
   if (search) {
     query.$or = [
-      { email: { $regex: search, $options: "i" } },
-      { action: { $regex: search, $options: "i" } },
+      { email: { $regex: escapeRegex(search), $options: "i" } },
+      { action: { $regex: escapeRegex(search), $options: "i" } },
     ];
   }
 

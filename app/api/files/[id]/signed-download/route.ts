@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidObjectId } from "@/lib/file-utils";
 import jwt from "jsonwebtoken";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
@@ -21,7 +22,7 @@ export async function GET(
     await connectToDatabase();
 
     const { id: fileId } = await params;
-    if (!fileId || fileId.length !== 24) {
+    if (!isValidObjectId(fileId)) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
 

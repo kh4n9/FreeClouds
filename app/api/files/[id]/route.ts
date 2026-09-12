@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidObjectId } from "@/lib/file-utils";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import { z } from "zod";
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Validate file ID
     const { id: fileId } = await params;
-    if (!fileId || fileId.length !== 24) {
+    if (!isValidObjectId(fileId)) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
 
@@ -92,7 +93,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     // Validate file ID
     const { id: fileId } = await params;
-    if (!fileId || fileId.length !== 24) {
+    if (!isValidObjectId(fileId)) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
 
@@ -199,7 +200,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     if (action === "move") {
       const targetFolderId = body.folderId === null ? null : String(body.folderId || "");
-      if (body.folderId !== null && targetFolderId && targetFolderId.length !== 24) {
+      if (body.folderId !== null && targetFolderId && !isValidObjectId(targetFolderId)) {
         return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
       }
       const file = await File.findById(fileId);
@@ -229,7 +230,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     if (action === "copy") {
       const targetFolderId = body.folderId === null ? null : String(body.folderId || "");
-      if (body.folderId !== null && targetFolderId && targetFolderId.length !== 24) {
+      if (body.folderId !== null && targetFolderId && !isValidObjectId(targetFolderId)) {
         return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
       }
       const file = await File.findById(fileId);

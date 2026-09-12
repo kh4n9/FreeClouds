@@ -1,3 +1,4 @@
+import { escapeRegex } from "@/lib/file-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
 
     // Search functionality
     if (search) {
-      matchConditions.push({ name: { $regex: search, $options: "i" } });
+      matchConditions.push({ name: { $regex: escapeRegex(search), $options: "i" } });
     }
 
     const matchStage: FilterQuery<IFile> = { $and: matchConditions };

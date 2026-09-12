@@ -141,9 +141,11 @@ export async function GET(request: NextRequest) {
       return createAuthResponse(error);
     }
 
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error("Get files error details:", msg);
-    return NextResponse.json({ error: "Failed to get files", details: msg }, { status: 500 });
+    // Logged above; not returned — error.message can carry Mongoose internals.
+    return NextResponse.json(
+      { error: "Failed to get files", code: "INTERNAL" },
+      { status: 500 },
+    );
   }
 }
 

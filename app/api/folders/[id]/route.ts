@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidObjectId } from "@/lib/file-utils";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { Folder } from "@/models/Folder";
@@ -64,7 +65,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // Validate folder ID
     const { id: folderId } = await params;
-    if (!folderId || folderId.length !== 24) {
+    if (!isValidObjectId(folderId)) {
       return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
     }
 
@@ -419,7 +420,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     // Validate folder ID
     const { id: folderId } = await params;
-    if (!folderId || folderId.length !== 24) {
+    if (!isValidObjectId(folderId)) {
       return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
     }
 

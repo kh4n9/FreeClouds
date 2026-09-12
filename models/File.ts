@@ -1,3 +1,4 @@
+import { escapeRegex } from "@/lib/file-utils";
 import mongoose, { Document, FilterQuery, Schema, Types } from "mongoose";
 
 export interface IFile extends Document {
@@ -362,7 +363,7 @@ fileSchema.statics.findByOwner = function (
 
   // Search functionality
   if (search) {
-    query.name = { $regex: search, $options: "i" };
+    query.name = { $regex: escapeRegex(search), $options: "i" };
   }
 
   const skip = (page - 1) * limit;
@@ -413,7 +414,7 @@ fileSchema.statics.findByOwnerWithCount = async function (
   }
 
   if (search) {
-    query.name = { $regex: search, $options: "i" };
+    query.name = { $regex: escapeRegex(search), $options: "i" };
   }
 
   // Also exclude chunks from the count

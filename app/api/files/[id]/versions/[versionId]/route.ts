@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidObjectId } from "@/lib/file-utils";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
 import { FileVersion } from "@/models/FileVersion";
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
 
     const { id: fileId, versionId } = await params;
-    if (fileId.length !== 24 || versionId.length !== 24) {
+    if (!isValidObjectId(fileId) || !isValidObjectId(versionId)) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
 
     const { id: fileId, versionId } = await params;
-    if (fileId.length !== 24 || versionId.length !== 24) {
+    if (!isValidObjectId(fileId) || !isValidObjectId(versionId)) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
@@ -189,7 +190,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
 
     const { id: fileId, versionId } = await params;
-    if (fileId.length !== 24 || versionId.length !== 24) {
+    if (!isValidObjectId(fileId) || !isValidObjectId(versionId)) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 

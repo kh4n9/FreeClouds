@@ -1,3 +1,4 @@
+import { escapeRegex } from "@/lib/file-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import {
@@ -46,8 +47,8 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
+        { name: { $regex: escapeRegex(search), $options: "i" } },
+        { email: { $regex: escapeRegex(search), $options: "i" } },
       ];
     }
 
@@ -79,10 +80,28 @@ export async function GET(request: NextRequest) {
 
     let users;
     let usersWithStats: UserStatsRow[];
+    // Set when a computed-column sort had to work from a capped candidate set.
+    let sortTruncated = false;
+    let sortCandidates = 0;
+    let sortTotalMatching = 0;
 
     if (isComputedSort) {
-      // For computed fields, get all users with stats and sort in memory
-      const allUsers = await User.find(query).select("-passwordHash").lean();
+      // Sorting by a computed column (file/folder counts) needs every matching
+      // user in memory, because the value comes from an aggregation rather than
+      // a field Mongo can sort on. That is inherently unbounded, so cap the
+      // candidate set and tell the caller when it was truncated instead of
+      // silently loading an entire user table into one request.
+      const COMPUTED_SORT_ROW_CAP = 5000;
+
+      const totalMatching = await User.countDocuments(query);
+      const truncated = totalMatching > COMPUTED_SORT_ROW_CAP;
+
+      const allUsers = await User.find(query)
+        .select("-passwordHash")
+        // Newest first, so a truncated set is the most relevant slice.
+        .sort({ createdAt: -1 })
+        .limit(COMPUTED_SORT_ROW_CAP)
+        .lean();
       const userIds = allUsers.map(
         (user) => new mongoose.Types.ObjectId(user._id.toString()),
       );
@@ -158,6 +177,9 @@ export async function GET(request: NextRequest) {
 
       // Apply pagination to sorted results
       usersWithStats = usersWithStats.slice(skip, skip + limit);
+      sortTruncated = truncated;
+      sortCandidates = allUsers.length;
+      sortTotalMatching = totalMatching;
     } else {
       // For regular fields, use database sorting
       users = await User.find(query)
@@ -248,6 +270,17 @@ export async function GET(request: NextRequest) {
           hasNextPage: page < totalPages,
           hasPrevPage: page > 1,
         },
+        // Set only for computed-column sorts, so the UI can say the ranking is
+        // based on a most-recent slice rather than every matching user.
+        ...(sortTruncated
+          ? {
+              sortNotice: {
+                truncated: true,
+                candidatesConsidered: sortCandidates,
+                totalMatching: sortTotalMatching,
+              },
+            }
+          : {}),
       },
       { status: 200 },
     );

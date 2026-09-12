@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidObjectId } from "@/lib/file-utils";
 import jwt from "jsonwebtoken";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
@@ -27,7 +28,7 @@ async function validateFileAccess(request: NextRequest, file: { folder: unknown 
 export async function handleDownload(request: NextRequest, paramsPromise: Promise<{ id: string }>) {
   try {
     const { id: fileId } = await paramsPromise;
-    if (!fileId || fileId.length !== 24) {
+    if (!isValidObjectId(fileId)) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
 

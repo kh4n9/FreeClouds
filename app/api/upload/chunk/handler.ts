@@ -106,7 +106,16 @@ export async function handleChunk(request: NextRequest) {
   } catch (error) {
     console.error("Chunk upload error:", error);
     if (error instanceof AuthError) return createAuthResponse(error);
+    // Telegram's own description is surfaced for chunk failures (it is
+    // actionable) but arbitrary error.message is not.
+    const isTelegram = error instanceof TelegramError;
     const msg = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: "Chunk upload failed", details: msg }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Chunk upload failed",
+        ...(isTelegram ? { details: msg } : { code: "INTERNAL" }),
+      },
+      { status: 500 },
+    );
   }
 }

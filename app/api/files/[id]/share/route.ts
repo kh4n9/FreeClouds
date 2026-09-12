@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidObjectId } from "@/lib/file-utils";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -38,7 +39,7 @@ export async function POST(
     await connectToDatabase();
 
     const { id: fileId } = await params;
-    if (!fileId || fileId.length !== 24) {
+    if (!isValidObjectId(fileId)) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
 
@@ -117,7 +118,7 @@ export async function DELETE(
     await connectToDatabase();
 
     const { id: fileId } = await params;
-    if (!fileId || fileId.length !== 24) {
+    if (!isValidObjectId(fileId)) {
       return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
     }
 

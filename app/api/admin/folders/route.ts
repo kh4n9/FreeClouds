@@ -1,3 +1,4 @@
+import { escapeRegex } from "@/lib/file-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
@@ -182,9 +183,9 @@ export async function GET(request: NextRequest) {
       pipeline.push({
         $match: {
           $or: [
-            { name: { $regex: search, $options: "i" } },
-            { ownerName: { $regex: search, $options: "i" } },
-            { ownerEmail: { $regex: search, $options: "i" } },
+            { name: { $regex: escapeRegex(search), $options: "i" } },
+            { ownerName: { $regex: escapeRegex(search), $options: "i" } },
+            { ownerEmail: { $regex: escapeRegex(search), $options: "i" } },
           ],
         },
       });

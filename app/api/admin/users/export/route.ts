@@ -1,3 +1,4 @@
+import { escapeRegex } from "@/lib/file-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { requireAdmin, AuthError, createAuthResponse } from "@/lib/auth";
@@ -27,8 +28,8 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } }
+        { name: { $regex: escapeRegex(search), $options: "i" } },
+        { email: { $regex: escapeRegex(search), $options: "i" } }
       ];
     }
 
@@ -40,10 +41,18 @@ export async function GET(request: NextRequest) {
       query.isActive = status === "active";
     }
 
-    // Get all users matching criteria
+    // Cap the export. This used to load every matching user (plus an
+    // aggregation over all of their files) with no bound at all, so a large
+    // install could OOM the request. `truncated` is reported so the caller can
+    // narrow the filter rather than believing the file is complete.
+    const EXPORT_ROW_CAP = 10000;
+    const totalMatching = await User.countDocuments(query);
+    const truncated = totalMatching > EXPORT_ROW_CAP;
+
     const users = await User.find(query)
       .select("-passwordHash")
       .sort({ createdAt: -1 })
+      .limit(EXPORT_ROW_CAP)
       .lean();
 
     // Compute live storage/file stats (exclude deleted files)
@@ -144,6 +153,13 @@ export async function GET(request: NextRequest) {
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
           "Content-Disposition": `attachment; filename="users-export-${new Date().toISOString().split("T")[0]}.csv"`,
+          // Signal truncation to the caller (headers, since the body is a file).
+          ...(truncated
+            ? {
+                "X-Export-Truncated": "true",
+                "X-Export-Total-Matching": String(totalMatching),
+              }
+            : {}),
           "Cache-Control": "no-cache"
         }
       });
@@ -183,6 +199,13 @@ export async function GET(request: NextRequest) {
         headers: {
           "Content-Type": "application/json",
           "Content-Disposition": `attachment; filename="users-export-${new Date().toISOString().split("T")[0]}.json"`,
+          // Signal truncation to the caller (headers, since the body is a file).
+          ...(truncated
+            ? {
+                "X-Export-Truncated": "true",
+                "X-Export-Total-Matching": String(totalMatching),
+              }
+            : {}),
           "Cache-Control": "no-cache"
         }
       });

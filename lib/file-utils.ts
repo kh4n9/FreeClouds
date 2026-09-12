@@ -361,3 +361,31 @@ export function parseRangeHeader(
 
   return { start, end: Math.min(end, size - 1) };
 }
+
+/**
+ * Is this a syntactically valid MongoDB ObjectId string?
+ *
+ * Route handlers used `id.length !== 24`, which accepts 24 characters of any
+ * kind — "zzzzzzzzzzzzzzzzzzzzzzzz" passed the check and then blew up inside
+ * Mongoose as a CastError, surfacing as a 500 instead of a clean 400.
+ */
+export function isValidObjectId(value: unknown): value is string {
+  return typeof value === "string" && /^[0-9a-fA-F]{24}$/.test(value);
+}
+
+/**
+ * Escape a user-supplied search string for use inside a MongoDB `$regex`.
+ *
+ * Search inputs were interpolated into `$regex` raw, which meant:
+ *  - a pattern like "(" or "[a" made Mongo throw, surfacing as a 500;
+ *  - a nested-quantifier pattern like "(a+)+$" could backtrack catastrophically
+ *    (Mongo evaluates PCRE, which has no timeout);
+ *  - regex metacharacters silently changed what the user asked for — searching
+ *    "report.pdf" also matched "reportXpdf".
+ *
+ * Callers pass the result the same way: `{ name: { $regex: escapeRegex(q), $options: "i" } }`.
+ */
+export function escapeRegex(input: string): string {
+  // Cap the length too: a very long pattern is its own denial-of-service vector.
+  return input.slice(0, 200).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

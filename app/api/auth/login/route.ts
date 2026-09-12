@@ -130,10 +130,13 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
+    // error.message was returned verbatim; a driver or JWT error could leak
+    // internals. The specific failure is in the log.
     console.error("Login error:", error);
-    const message =
-      error instanceof Error ? error.message : "Login failed. Please try again.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Login failed. Please try again.", code: "INTERNAL" },
+      { status: 500 },
+    );
   }
 }
 
