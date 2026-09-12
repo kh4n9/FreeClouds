@@ -1,5 +1,6 @@
 import { escapeRegex } from "@/lib/file-utils";
 import mongoose, { Document, FilterQuery, Schema, Types } from "mongoose";
+import { formatFileSize } from "@/lib/file-utils";
 
 export interface IFile extends Document {
   _id: Types.ObjectId;
@@ -522,13 +523,6 @@ fileSchema.methods.canBeAccessed = function (userId: string): boolean {
 };
 
 // Helper function to format file size
-function formatFileSize(bytes: number): string {
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  if (bytes === 0) return "0 Bytes";
-
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
-}
 
 fileSchema.statics.findRecent = function (ownerId: string, limit = 30) {
   return this.find({

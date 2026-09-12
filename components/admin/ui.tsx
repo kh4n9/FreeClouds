@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { formatFileSize as formatFileSizeShared } from "@/lib/file-utils";
 import {
   AlertTriangle,
   ChevronLeft,
@@ -11,13 +12,12 @@ import {
 } from "lucide-react";
 import { getDict, Lang } from "./i18n";
 
-export const formatFileSize = (bytes: number): string => {
-  if (!bytes || bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-};
+/**
+ * Re-exported from lib/file-utils (which was one of five copies of this
+ * function), keeping the short "B" unit the admin UI renders.
+ */
+export const formatFileSize = (bytes: number): string =>
+  formatFileSizeShared(bytes).replace(/Bytes/, "B");
 
 export const formatDate = (
   dateString: string | null | undefined,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { formatFileSize } from "@/lib/file-utils";
 import { Upload, X, File, AlertCircle, CheckCircle } from "lucide-react";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
 import {
@@ -26,14 +27,6 @@ interface UploadDropzoneProps {
 }
 
 
-
-function formatFileSize(bytes: number): string {
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  if (bytes === 0) return "0 Bytes";
-
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
-}
 
 function validateFile(
   file: File,
