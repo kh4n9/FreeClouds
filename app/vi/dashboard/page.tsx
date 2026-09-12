@@ -163,7 +163,7 @@ function SearchBar({ value, onChange, onClear }: { value: string; onChange: (v: 
         onChange={(e) => onChange(e.target.value)}
         className="input-modern w-full pl-10 pr-10 py-2.5 rounded-xl text-sm transition-all" />
       {value && (
-        <button onClick={onClear} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors">
+        <button onClick={onClear} aria-label="Xoá tìm kiếm" title="Xoá tìm kiếm" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors">
           <X className="w-4 h-4" />
         </button>
       )}
@@ -1133,8 +1133,19 @@ export default function DashboardPage() {
                             } },
                             { label: "Xoá", icon: <Trash2 className="w-4 h-4" />, onClick: () => handleDeleteFolder(child.id), danger: true },
                           ]}>
-                          <div data-context-menu="true" onClick={() => handleFolderSelect(child.id)}
-                            className="group relative flex items-center gap-3 p-3 rounded-xl bg-card border border-line hover:border-accent/30 hover:bg-card-hover cursor-pointer transition-all">
+                          <div data-context-menu="true"
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Open folder ${child.name}`}
+                            onClick={() => handleFolderSelect(child.id)}
+                            onKeyDown={(e) => {
+                              // Keyboard equivalent of the click handler above.
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                handleFolderSelect(child.id);
+                              }
+                            }}
+                            className="group relative flex items-center gap-3 p-3 rounded-xl bg-card border border-line hover:border-accent/30 hover:bg-card-hover cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60">
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
                               <FolderIcon className="w-5 h-5 text-accent" />
                             </div>

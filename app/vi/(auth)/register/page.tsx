@@ -277,6 +277,8 @@ export default function RegisterPage() {
                 }`}
                 placeholder="Tạo mật khẩu" disabled={loading} />
               <button type="button" onClick={() => togglePasswordVisibility('password')}
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -330,6 +332,8 @@ export default function RegisterPage() {
                 }`}
                 placeholder="Xác nhận mật khẩu của bạn" disabled={loading} />
               <button type="button" onClick={() => togglePasswordVisibility('confirmPassword')}
+                aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                title={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>

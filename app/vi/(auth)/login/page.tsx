@@ -167,6 +167,8 @@ export default function VietnameseLoginPage() {
                   }`}
                   placeholder="Nhập mật khẩu của bạn" disabled={loading} />
                 <button type="button" onClick={togglePasswordVisibility}
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors">
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>

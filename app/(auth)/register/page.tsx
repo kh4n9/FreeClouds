@@ -160,6 +160,8 @@ export default function RegisterPage() {
                 className={`input-modern w-full pl-10 pr-12 py-3 rounded-xl ${error?.field === "password" ? "border-error/50 bg-error/5" : ""}`}
                 placeholder="Enter your password" disabled={loading} />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors">
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -179,6 +181,8 @@ export default function RegisterPage() {
                 className={`input-modern w-full pl-10 pr-12 py-3 rounded-xl ${error?.field === "confirmPassword" ? "border-error/50 bg-error/5" : ""}`}
                 placeholder="Confirm your password" disabled={loading} />
               <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                title={showConfirmPassword ? "Hide password" : "Show password"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors">
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>

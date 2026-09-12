@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 "use client";
 
 import React from "react";
@@ -343,18 +344,40 @@ export function Modal({
   children: React.ReactNode;
   maxWidth?: string;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Escape closes, and focus moves into the dialog on open so keyboard users
+  // are not left behind the overlay. Previously the dialog had no role, no
+  // aria-modal and no keyboard affordance at all.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    dialogRef.current?.focus();
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" onClick={onClose} />
       <div className="min-h-full flex items-start justify-center p-6">
         <div
-          className={`relative w-full ${maxWidth} border border-line rounded-xl bg-card shadow-xl`}
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+          tabIndex={-1}
+          className={`relative w-full ${maxWidth} border border-line rounded-xl bg-card shadow-xl outline-none`}
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-line">
             <h3 className="text-lg font-semibold text-foreground">{title}</h3>
             <button
               onClick={onClose}
+              aria-label="Close dialog"
+              title="Close"
               className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all"
             >
               <X className="w-4 h-4" />

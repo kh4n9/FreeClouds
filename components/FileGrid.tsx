@@ -5,7 +5,9 @@ import {
   Download,
   Trash2,
   File,
-  Image,
+  // Aliased: a bare `Image` is parsed as an <img> element by
+  // jsx-a11y/alt-text, and reads like next/image.
+  Image as ImageIcon,
   Video,
   Music,
   Archive,
@@ -113,7 +115,7 @@ function getFileIcon(fileName: string, mimeType: string) {
 
   switch (fileInfo.icon) {
     case "Image":
-      return <Image className={iconProps} />;
+      return <ImageIcon className={iconProps} />;
     case "Video":
       return <Video className={iconProps} />;
     case "Music":
@@ -351,8 +353,19 @@ function FileItem({
     return (
       <ContextMenu items={contextMenuItems}>
         <div data-context-menu="true"
-          className={`group relative bg-white/5 border border-white/10 rounded-xl p-4 hover:border-accent/30 hover:bg-white/[0.07] transition-all cursor-pointer ${selected ? "ring-2 ring-blue-500/50 border-accent/30" : ""}`}
+          role="button"
+          tabIndex={0}
+          aria-label={`Preview ${file.displayName || file.name}`}
+          className={`group relative bg-white/5 border border-white/10 rounded-xl p-4 hover:border-accent/30 hover:bg-white/[0.07] transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${selected ? "ring-2 ring-blue-500/50 border-accent/30" : ""}`}
           onClick={handlePreview}
+          onKeyDown={(e) => {
+            // The whole card was a bare <div onClick>, so the file could not be
+            // opened from the keyboard at all.
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handlePreview();
+            }
+          }}
         >
           {/* Selection checkbox (top-left) */}
           <div className="absolute top-2.5 left-2.5 z-20">
@@ -377,7 +390,7 @@ function FileItem({
                 {imageLoading ? (
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-sky-400 border-t-transparent" />
                 ) : (
-                  <Image className="w-8 h-8 text-accent" />
+                  <ImageIcon className="w-8 h-8 text-accent" />
                 )}
               </div>
             ) : (
@@ -447,8 +460,17 @@ function FileItem({
   return (
     <ContextMenu items={contextMenuItems}>
       <div
-        className={`group flex items-center gap-3 p-3 border-b border-line hover:bg-white/[0.03] transition-colors cursor-pointer ${selected ? "bg-blue-500/5" : ""}`}
+        role="button"
+        tabIndex={0}
+        aria-label={`Preview ${file.displayName || file.name}`}
+        className={`group flex items-center gap-3 p-3 border-b border-line hover:bg-white/[0.03] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${selected ? "bg-blue-500/5" : ""}`}
         onClick={handlePreview}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handlePreview();
+          }
+        }}
       >
         {/* Selection checkbox */}
         <div className="flex-shrink-0">
@@ -473,7 +495,7 @@ function FileItem({
               {imageLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-sky-400 border-t-transparent" />
               ) : (
-                <Image className="w-6 h-6 text-accent" />
+                <ImageIcon className="w-6 h-6 text-accent" />
               )}
             </div>
           ) : (
