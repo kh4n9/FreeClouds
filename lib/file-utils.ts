@@ -315,3 +315,49 @@ export function getFileColorClasses(fileName: string, mimeType?: string): {
     borderColor: fileInfo.borderColor,
   };
 }
+
+/**
+ * Parse a single-range `Range` request header against a known resource size.
+ *
+ * Supports all three RFC 9110 forms:
+ *   bytes=0-499      explicit range
+ *   bytes=500-       open-ended range
+ *   bytes=-500       suffix range — the LAST 500 bytes
+ *
+ * Suffix ranges were previously rejected outright, which broke clients that
+ * probe the tail of a file (media players reading the MP4/MKV index, resumable
+ * download managers verifying the final chunk).
+ *
+ * Returns null for anything unparseable or unsatisfiable, letting the caller
+ * fall back to a full 200 response. Multi-range requests are deliberately not
+ * supported (the response would need multipart/byteranges); the first range is
+ * not silently used because a wrong-but-200 answer is worse than a full body.
+ */
+export function parseRangeHeader(
+  header: string | string[] | undefined,
+  size: number,
+): { start: number; end: number } | null {
+  if (typeof header !== "string" || size <= 0) return null;
+
+  const match = header.match(/^bytes=(-?\d*)-(\d*)$/);
+  if (!match) return null;
+
+  const [, rawStart, rawEnd] = match;
+  if (rawStart === "" && rawEnd === "") return null;
+
+  // Suffix form: bytes=-N means the final N bytes.
+  if (rawStart === "") {
+    const suffixLength = parseInt(rawEnd!, 10);
+    if (!Number.isFinite(suffixLength) || suffixLength <= 0) return null;
+    const start = Math.max(0, size - suffixLength);
+    return { start, end: size - 1 };
+  }
+
+  const start = parseInt(rawStart!, 10);
+  if (!Number.isFinite(start) || start >= size) return null;
+
+  const end = rawEnd === "" ? size - 1 : parseInt(rawEnd!, 10);
+  if (!Number.isFinite(end) || start > end) return null;
+
+  return { start, end: Math.min(end, size - 1) };
+}

@@ -12,6 +12,13 @@ export interface IFile extends Document {
   folder: Types.ObjectId | null;
   deletedAt: Date | null;
   createdAt: Date;
+  /**
+   * Managed by Mongoose (see the schema's `timestamps` option). WebDAV
+   * PROPFIND reports this as getlastmodified — it previously reported
+   * createdAt, so a PUT-overwrite never changed the timestamp and clients
+   * syncing on Last-Modified silently missed the update.
+   */
+  updatedAt: Date;
   originalExt?: string | null;     // restored on download when set
 
   // Chunked file support
@@ -173,6 +180,10 @@ const fileSchema = new Schema<IFile>({
     type: Date,
     default: Date.now,
   },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
   originalExt: {
     type: String,
     default: null,
@@ -204,6 +215,12 @@ const fileSchema = new Schema<IFile>({
     default: 1,
     min: 1,
   },
+}, {
+  // Mongoose maintains updatedAt on every save() and update*() so WebDAV
+  // PROPFIND can report a meaningful getlastmodified. createdAt keeps its own
+  // explicit default (createdAt: false) rather than being managed, so existing
+  // documents and their historical timestamps are untouched.
+  timestamps: { createdAt: false, updatedAt: true },
 });
 
 // Compound indexes for better query performance

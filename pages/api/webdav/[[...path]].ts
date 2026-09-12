@@ -15,16 +15,21 @@ import { uploadBodyToTelegram, MAX_PUT_BYTES } from "@/lib/upload-chunks";
 import { referenceCopyFile, referenceCopyFolder, sumFolderSize } from "@/lib/file-copy";
 import {
   DavError,
+  acquireLock,
   authenticateWebDav,
+  enforceLock,
   getDepth,
   getPathSegments,
   hrefFor,
+  parseLockTimeout,
   propfindResponse,
+  releaseLock,
   resolvePath,
   sendStatus,
   sendXml,
   streamFileBody,
   parsePropfindProps,
+  parseProppatchProps,
   escapeXml,
 } from "@/lib/webdav";
 
@@ -41,10 +46,6 @@ export const config = {
 
 const CRLF = "\r\n";
 
-// In-memory lock store: maps a lock-scoped path to its active lock token.
-// Locks are per-request-process and reset on restart (consistent with the
-// rest of the in-memory rate limiter in lib/auth.ts).
-const lockMap = new Map<string, string>();
 
 function sendPlain(res: NextApiResponse, status: number, message: string) {
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
@@ -84,7 +85,14 @@ function parseDestinationPath(header: string | string[] | undefined): string[] {
       break;
     }
   }
-  return rest.split("/").filter(Boolean).map(decodeURIComponent);
+  return rest.split("/").filter(Boolean).map((seg) => {
+    try {
+      return decodeURIComponent(seg);
+    } catch {
+      // Malformed %-encoding: a clean 400 rather than a URIError-driven 500.
+      throw new DavError("Malformed percent-encoding in Destination", 400);
+    }
+  });
 }
 
 function shouldOverwrite(req: NextApiRequest): boolean {
@@ -147,6 +155,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           mime?: string;
           lastModified: Date;
           createdAt: Date;
+          etag: string;
         }> = [];
 
         const baseSegments = segments;
@@ -158,8 +167,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             displayName: resolved.file.name,
             size: resolved.file.size,
             mime: resolved.file.mime,
-            lastModified: resolved.file.createdAt,
+            // updatedAt, not createdAt: a PUT-overwrite must change
+            // getlastmodified or sync clients miss the update entirely.
+            lastModified: resolved.file.updatedAt ?? resolved.file.createdAt,
             createdAt: resolved.file.createdAt,
+            etag: resolved.file._id.toString(),
           });
         } else {
           const isRoot = resolved.kind === "root";
@@ -168,8 +180,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             href: hrefFor(baseSegments),
             isCollection: true,
             displayName: isRoot ? "/" : folder!.name,
-            lastModified: folder?.createdAt || new Date(),
+            lastModified:
+              folder?.updatedAt ?? folder?.createdAt ?? new Date(),
             createdAt: folder?.createdAt || new Date(),
+            etag: folder ? folder._id.toString() : "root",
           });
 
           if (depth === "1" || depth === "infinity") {
@@ -196,8 +210,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 href: hrefFor([...baseSegments, child.name]),
                 isCollection: true,
                 displayName: child.name,
-                lastModified: child.createdAt,
+                lastModified: child.updatedAt ?? child.createdAt,
                 createdAt: child.createdAt,
+                etag: child._id.toString(),
               });
             }
             for (const child of subFiles) {
@@ -207,8 +222,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 displayName: child.name,
                 size: child.size,
                 mime: child.mime,
-                lastModified: child.createdAt,
+                lastModified: child.updatedAt ?? child.createdAt,
                 createdAt: child.createdAt,
+                etag: child._id.toString(),
               });
             }
           }
@@ -222,6 +238,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case "PUT": {
         const name = segments[segments.length - 1]!;
         if (!name) throw new DavError("No file name provided", 400);
+
+        // A locked resource only accepts writes that present the lock token.
+        await enforceLock(userId, segments, req);
 
         // Some WebDAV clients (Windows Map Drive, curl >= 7.20) send
         // `Expect: 100-continue` and refuse to stream the body until the
@@ -436,6 +455,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (resolved.kind === "missing") {
           throw new DavError("Not found", 404);
         }
+        await enforceLock(userId, segments, req);
         if (resolved.kind === "folder") {
           await resolved.folder.softDeleteRecursively();
         } else if (resolved.kind === "file") {
@@ -475,6 +495,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case "MOVE": {
         if (resolved.kind === "missing") throw new DavError("Not found", 404);
         if (resolved.kind === "root") throw new DavError("Cannot move root", 405);
+
+        // Source must be unlocked by the requester.
+        await enforceLock(userId, segments, req);
 
         const destination = parseDestinationPath(req.headers.destination);
         const destName = destination[destination.length - 1];
@@ -519,6 +542,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             visited.add(cursor);
             const parent = await Folder.findById(cursor);
             cursor = parent?.parent?.toString() || null;
+          }
+          // Same hidden-folder blind spot as COPY: a rename onto a name that
+          // only a hidden collection occupies would otherwise E11000 -> 500.
+          const clash = await Folder.findOne({
+            owner: userId,
+            parent: destParentId,
+            name: destName,
+            deletedAt: null,
+            _id: { $ne: resolved.folder._id },
+          });
+          if (clash) {
+            throw new DavError("Destination already exists", 409);
           }
           resolved.folder.parent = destParentId
             ? new mongoose.Types.ObjectId(destParentId)
@@ -567,7 +602,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           await deleteTargetFile(destResolved.file._id.toString());
         }
 
+        // resolvePath() filters out hidden folders, so a hidden collection at
+        // the destination resolves as "missing". Creating over it would hit the
+        // unique {owner, name, parent} index and surface as a raw E11000 -> 500.
+        // Check explicitly and answer 409.
+        if (resolved.kind === "folder" && destResolved.kind === "missing") {
+          const clash = await Folder.findOne({
+            owner: userId,
+            parent: destParentId,
+            name: destName,
+            deletedAt: null,
+          });
+          if (clash) {
+            throw new DavError("Destination already exists", 409);
+          }
+        }
+
         // Quota check before duplicating any records.
+        //
+        // Note: reference copies share the source's Telegram document, yet
+        // getStorageUsage() sums the size of every live File row, so a copy does
+        // count against quota. That is consistent (the check matches how usage
+        // is computed), so this reserves the copy's logical size rather than
+        // excluding it — making quota physical-only is a product decision, not a
+        // bug fix.
         const usage = await File.getStorageUsage(userId);
         const storageLimit = await getEffectiveStorageLimit(userId);
         const copySize =
@@ -610,53 +668,71 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       case "LOCK": {
-        const resourcePath = `/${segments.join("/")}`;
-        const existingToken = lockMap.get(resourcePath);
-        const lockToken = existingToken
-          ? existingToken
-          : `opaquetlocktoken:${crypto.randomUUID()}`;
-        lockMap.set(resourcePath, lockToken);
-        res.setHeader("Lock-Token", lockToken);
+        // Consume the body (clients send a <lockinfo> element) but we only need
+        // the requested timeout; ownership comes from the authenticated user.
+        const lockBody = await readBodyBuffer(req, 64 * 1024).catch(() => Buffer.alloc(0));
+        const requestedTimeout =
+          parseLockTimeout(req.headers.timeout) ??
+          parseLockTimeout(
+            /<D:timeout>\s*([^<]+?)\s*<\/D:timeout>/i.exec(
+              lockBody.toString("utf8"),
+            )?.[1],
+          );
+
+        const { token, timeoutSeconds, created } = await acquireLock(
+          userId,
+          segments,
+          req,
+          requestedTimeout,
+        );
+
+        res.setHeader("Lock-Token", `<${token}>`);
         const body =
           '<?xml version="1.0" encoding="utf-8"?>' + CRLF +
           '<D:prop xmlns:D="DAV:">' + CRLF +
           "<D:lockdiscovery>" + CRLF +
           "<D:activelock>" + CRLF +
-          `<D:locktoken><D:href>${escapeXml(lockToken)}</D:href></D:locktoken>` + CRLF +
+          `<D:locktoken><D:href>${escapeXml(token)}</D:href></D:locktoken>` + CRLF +
           `<D:lockroot><D:href>${escapeXml(hrefFor(segments))}</D:href></D:lockroot>` + CRLF +
           `<D:depth>${escapeXml(getDepth(req))}</D:depth>` + CRLF +
           `<D:owner>${escapeXml(user.email)}</D:owner>` + CRLF +
+          `<D:timeout>Second-${timeoutSeconds}</D:timeout>` + CRLF +
           "</D:activelock>" + CRLF +
           "</D:lockdiscovery>" + CRLF +
           "</D:prop>";
-        sendXml(res, 200, body);
+        // 200 for a refresh of an existing lock, 201 when newly created.
+        sendXml(res, created ? 201 : 200, body);
         return;
       }
 
       case "UNLOCK": {
         const token = req.headers["lock-token"];
-        const resourcePath = `/${segments.join("/")}`;
-        const current = lockMap.get(resourcePath);
         if (typeof token !== "string") {
           sendPlain(res, 400, "Bad Request: Lock-Token header required for UNLOCK");
           return;
         }
-        if (!current) {
+        const outcome = await releaseLock(userId, segments, token);
+        if (outcome === "no-lock") {
           sendPlain(res, 409, "Conflict: no active lock on this resource");
           return;
         }
-        if (token !== current) {
+        if (outcome === "mismatch") {
           sendPlain(res, 409, "Conflict: lock token mismatch");
           return;
         }
-        lockMap.delete(resourcePath);
         sendStatus(res, 204);
         return;
       }
 
       case "PROPPATCH": {
+        await enforceLock(userId, segments, req);
         const body = await readBodyBuffer(req, 1 * 1024 * 1024);
-        const props = parsePropfindProps(body.toString("utf8"));
+        // PROPPATCH bodies need their own parser: the PROPFIND one returned the
+        // container elements, so clients were told 403 about "propertyupdate".
+        const props = parseProppatchProps(body.toString("utf8"));
+        // This server keeps no writable dead properties, so every requested
+        // property is refused — but it must be refused with the client's own
+        // qualified name under the client's namespace.
         const responses = props.length
           ? props
               .map(
@@ -664,14 +740,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   "<D:response>" + CRLF +
                   `<D:href>${escapeXml(hrefFor(segments))}</D:href>` + CRLF +
                   "<D:propstat>" + CRLF +
-                  `<D:prop><D:${prop}/></D:prop>` + CRLF +
+                  `<D:prop><${prop}/></D:prop>` + CRLF +
                   "<D:status>HTTP/1.1 403 Forbidden</D:status>" + CRLF +
                   "</D:propstat>" + CRLF +
                   "</D:response>",
               )
               .join(CRLF)
           : "";
-        sendXml(res, 207, '<?xml version="1.0" encoding="utf-8"?>' + CRLF + '<D:multistatus xmlns:D="DAV:">' + CRLF + responses + CRLF + "</D:multistatus>");
+        // xmlns:D is declared on the multistatus root; a property using another
+        // prefix would need its namespace declared too, so declare the common
+        // office/vendor prefixes that real clients use.
+        const nsDecls =
+          ' xmlns:D="DAV:"' +
+          ' xmlns:Z="urn:schemas-microsoft-com:"' +
+          ' xmlns:Win32="http://www.microsoft.com/"' +
+          ' xmlns:MAC="http://www.apple.com/webdav/"';
+        sendXml(res, 207, '<?xml version="1.0" encoding="utf-8"?>' + CRLF + `<D:multistatus${nsDecls}>` + CRLF + responses + CRLF + "</D:multistatus>");
         return;
       }
 

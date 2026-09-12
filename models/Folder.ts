@@ -7,6 +7,8 @@ export interface IFolder extends Document {
   owner: Types.ObjectId;
   parent: Types.ObjectId | null;
   createdAt: Date;
+  /** Managed by Mongoose; reported by WebDAV PROPFIND as getlastmodified. */
+  updatedAt: Date;
   // Vault (hidden folder) support: hidden folders are excluded from normal
   // listings unless unlocked via the vault cookie; pinHash (bcrypt) gates
   // access to hidden folders, recoverable via email.
@@ -91,6 +93,10 @@ const folderSchema = new Schema<IFolder>({
     type: Date,
     default: Date.now,
   },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
   isHidden: {
     type: Boolean,
     default: false,
@@ -108,6 +114,12 @@ const folderSchema = new Schema<IFolder>({
     type: Date,
     default: null,
   },
+}, {
+  // Mongoose maintains updatedAt on every save() and update*() so WebDAV
+  // PROPFIND can report a meaningful getlastmodified. createdAt keeps its own
+  // explicit default (createdAt: false) rather than being managed, so existing
+  // documents and their historical timestamps are untouched.
+  timestamps: { createdAt: false, updatedAt: true },
 });
 
 // Compound indexes for better query performance

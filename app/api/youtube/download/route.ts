@@ -29,6 +29,42 @@ const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 
 const DEFAULT_MAX_BYTES = 1024 * 1024 * 1024; // 1GB
 
+/**
+ * fetch() that re-validates every redirect target against isSafeStreamUrl().
+ *
+ * The snapshot URL is validated before the first request, but fetch() followed
+ * redirects by default: a signed googlevideo URL that answered 302 to an
+ * internal address would have been followed without any host check, turning
+ * the SSRF guard into a formality.
+ */
+async function fetchFollowingSafeRedirects(
+  url: string,
+  init: RequestInit,
+  maxHops = 3,
+): Promise<Response> {
+  let current = url;
+
+  for (let hop = 0; hop <= maxHops; hop++) {
+    const res = await fetch(current, { ...init, redirect: "manual" });
+
+    if (res.status < 300 || res.status >= 400) return res;
+
+    const location = res.headers.get("location");
+    if (!location) return res;
+
+    const next = new URL(location, current).toString();
+    if (!isSafeStreamUrl(next)) {
+      console.error(
+        `[youtube] refusing redirect to untrusted host: ${next.slice(0, 120)}`,
+      );
+      throw new Error("Upstream redirected to an untrusted host");
+    }
+    current = next;
+  }
+
+  throw new Error("Too many upstream redirects");
+}
+
 const RANGE_CHUNK = 1024 * 1024; // CDN serves ANDROID-signed URLs in 1MB ranges
 const ROTATE_EVERY_BYTES = 16 * 1024 * 1024; // fresh signed URL before the CDN throttle
 
@@ -44,19 +80,47 @@ function maxBytes(): number {
  * file by fetching consecutive 1MB ranges and forwarding the bytes. The CDN
  * transiently 403s range bursts, so each chunk is retried with backoff.
  */
-async function fetchRange(url: string, offset: number): Promise<Response | null> {
+/** Cap on a single upstream request, so a stalled CDN cannot hang the route. */
+const UPSTREAM_TIMEOUT_MS = 30_000;
+
+async function fetchRange(
+  url: string,
+  offset: number,
+  signal?: AbortSignal,
+): Promise<Response | null> {
   const delays = [500, 1000, 2000];
   for (let attempt = 0; attempt <= delays.length; attempt++) {
-    const res = await fetch(url, {
-      headers: {
-        ...YOUTUBE_FETCH_HEADERS,
-        Range: `bytes=${offset}-${offset + RANGE_CHUNK - 1}`,
-      },
-    });
-    if (res.ok && res.body) return res;
-    if (attempt === 0) {
-      console.error(`[youtube] range fetch ${res.status} at ${offset}, retrying`);
+    if (signal?.aborted) return null;
+
+    // A bare fetch here had no timeout: a stalled CDN connection held the
+    // request (and its bytes) open indefinitely.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+    const forward = () => controller.abort();
+    signal?.addEventListener("abort", forward, { once: true });
+
+    try {
+      const res = await fetch(url, {
+        headers: {
+          ...YOUTUBE_FETCH_HEADERS,
+          Range: `bytes=${offset}-${offset + RANGE_CHUNK - 1}`,
+        },
+        signal: controller.signal,
+      });
+      if (res.ok && res.body) return res;
+      if (attempt === 0) {
+        console.error(`[youtube] range fetch ${res.status} at ${offset}, retrying`);
+      }
+    } catch (error) {
+      if (signal?.aborted) return null;
+      if (attempt === 0) {
+        console.error(`[youtube] range fetch failed at ${offset}:`, error);
+      }
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", forward);
     }
+
     if (attempt < delays.length) {
       await new Promise((resolve) => setTimeout(resolve, delays[attempt]!));
     }
@@ -68,8 +132,9 @@ async function openRangeStream(
   url: string,
   videoId: string,
   itag: number,
+  signal?: AbortSignal,
 ): Promise<{ stream: ReadableStream<Uint8Array>; total: number | null; mimeType: string | null } | null> {
-  const first = await fetchRange(url, 0);
+  const first = await fetchRange(url, 0, signal);
   if (!first || !first.body) return null;
 
   const rangeMatch = first.headers.get("content-range")?.match(/\/(\d+)$/);
@@ -89,6 +154,14 @@ async function openRangeStream(
   let currentUrl = url;
   let finished = total !== null ? offset >= total : firstLen < RANGE_CHUNK;
 
+  // Running byte count. When the CDN omits Content-Range there is no `total`,
+  // and the size cap used to be skipped entirely because it was only ever
+  // checked against a known length — so an unknown-length stream could exceed
+  // YOUTUBE_MAX_BYTES unchecked.
+  const cap = maxBytes();
+  let streamed = firstLen;
+  if (streamed > cap) return null;
+
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       for (const buf of firstBuf) controller.enqueue(buf);
@@ -99,9 +172,14 @@ async function openRangeStream(
         controller.close();
         return;
       }
+      // Client hung up: stop fetching instead of rotating URLs to completion.
+      if (signal?.aborted) {
+        controller.close();
+        return;
+      }
       const pullStart = Date.now();
       if (offset - lastRotate >= ROTATE_EVERY_BYTES) {
-        const fresh = await rotateYoutubeStreamUrl(videoId, itag);
+        const fresh = await rotateYoutubeStreamUrl(videoId, itag, signal ? { signal } : {});
         if (fresh) {
           currentUrl = fresh;
           lastRotate = offset;
@@ -109,19 +187,23 @@ async function openRangeStream(
           console.error("[youtube] URL rotation failed, continuing with old URL");
         }
       }
-      let res = await fetchRange(currentUrl, offset);
+      let res = await fetchRange(currentUrl, offset, signal);
       if (!res || !res.body) {
         // The signed URL died mid-stream (CDN throttle) — rotate once and
         // retry the same offset against the fresh URL before giving up.
         console.error("[youtube] range fetch exhausted, rotating URL");
-        const fresh = await rotateYoutubeStreamUrl(videoId, itag);
+        const fresh = await rotateYoutubeStreamUrl(videoId, itag, signal ? { signal } : {});
         if (fresh) {
           currentUrl = fresh;
           lastRotate = offset;
-          res = await fetchRange(currentUrl, offset);
+          res = await fetchRange(currentUrl, offset, signal);
         }
       }
       if (!res || !res.body) {
+        if (signal?.aborted) {
+          controller.close();
+          return;
+        }
         controller.error(new Error("range fetch failed after retries"));
         return;
       }
@@ -129,6 +211,18 @@ async function openRangeStream(
       while (true) {
         const { done, value } = await chunkReader.read();
         if (done) break;
+        streamed += value.byteLength;
+        if (streamed > cap) {
+          // Stop cleanly at the cap rather than continuing past it; the client
+          // gets a truncated body and will fail its own length check.
+          console.error(
+            `[youtube] stream exceeded YOUTUBE_MAX_BYTES (${cap}); truncating`,
+          );
+          await chunkReader.cancel().catch(() => {});
+          controller.close();
+          finished = true;
+          return;
+        }
         controller.enqueue(value);
       }
       const pulled = offset;
@@ -187,7 +281,12 @@ export async function GET(request: NextRequest) {
       // Bounded 1MB Range requests first: the CDN serves ANDROID/VR-signed
       // URLs quickly via ranges, but plain GETs either 403 or trickle at
       // ~30KB/s (gir=yes URLs).
-      const ranged = await openRangeStream(snapshotUrl, videoId, itag);
+      const ranged = await openRangeStream(
+        snapshotUrl,
+        videoId,
+        itag,
+        request.signal,
+      );
       if (ranged) {
         if (ranged.total !== null && ranged.total > maxBytes()) {
           return NextResponse.json(
@@ -210,8 +309,9 @@ export async function GET(request: NextRequest) {
         return new Response(ranged.stream, { status: 200, headers: rangedHeaders });
       }
 
-      const upstream = await fetch(snapshotUrl, {
+      const upstream = await fetchFollowingSafeRedirects(snapshotUrl, {
         headers: YOUTUBE_FETCH_HEADERS,
+        signal: request.signal,
       });
       if (!upstream.ok || !upstream.body) {
         console.error(
@@ -257,7 +357,9 @@ export async function GET(request: NextRequest) {
 
     let info: YoutubeResolvedInfo;
     try {
-      info = await resolveYoutubeInfo(videoId, "[youtube] download");
+      info = await resolveYoutubeInfo(videoId, "[youtube] download", {
+        signal: request.signal,
+      });
     } catch (error) {
       console.error("[youtube] getInfo failed:", error);
       return NextResponse.json(
@@ -311,6 +413,15 @@ export async function GET(request: NextRequest) {
     stream.on("error", (err) => {
       console.error("[youtube] download stream error:", err);
     });
+
+    // Destroy the upstream ytdl stream when the client goes away. Without this
+    // a disconnected client left the download running to completion, burning
+    // bandwidth for bytes nobody would receive.
+    const onClientAbort = () => stream.destroy();
+    request.signal.addEventListener("abort", onClientAbort, { once: true });
+    stream.on("close", () =>
+      request.signal.removeEventListener("abort", onClientAbort),
+    );
 
     const webStream = Readable.toWeb(stream) as ReadableStream<Uint8Array>;
 

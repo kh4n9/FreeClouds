@@ -1,12 +1,20 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { Readable } from "stream";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { connectToDatabase } from "./db";
 import { User, type IUser } from "@/models/User";
 import { Folder, type IFolder } from "@/models/Folder";
 import { File, type IFile } from "@/models/File";
+import type { ILock } from "@/models/Lock";
 import { telegramAPI } from "./telegram";
 import { checkRateLimitByIdentifier, RATE_LIMITS } from "./ratelimit";
+import { parseRangeHeader } from "./file-utils";
+
+// Re-exported so existing importers keep working; the implementation is
+// shared with lib/download-file.ts (it used to be duplicated verbatim, and
+// neither copy handled suffix ranges).
+export { parseRangeHeader };
 
 export const WEBDAV_PREFIX = "/webdav";
 
@@ -68,7 +76,22 @@ export function getPathSegments(req: IncomingMessage): string[] {
       break;
     }
   }
-  return rest.split("/").filter(Boolean).map(decodeURIComponent);
+  return rest
+    .split("/")
+    .filter(Boolean)
+    .map(decodeSegment);
+}
+
+/**
+ * Percent-decode one path segment, turning malformed encoding into a 400.
+ * A bare `decodeURIComponent` throws URIError, which surfaced as a 500.
+ */
+function decodeSegment(seg: string): string {
+  try {
+    return decodeURIComponent(seg);
+  } catch {
+    throw new DavError("Malformed percent-encoding in path", 400);
+  }
 }
 
 /** Parse a WebDAV Depth header; returns "0" | "1" | "infinity" (default infinity). */
@@ -185,6 +208,164 @@ export async function resolvePath(
   return { kind: "missing", parentId, name };
 }
 
+/** Default LOCK lifetime when the client does not request one. */
+export const DEFAULT_LOCK_TIMEOUT_SECONDS = 30 * 60;
+
+/** Longest lock we will grant, however long the client asks for. */
+const MAX_LOCK_TIMEOUT_SECONDS = 4 * 60 * 60;
+
+/**
+ * Pull the lock token out of an `If` header.
+ *
+ * Clients send the token back either as `If: (<token>)` (the RFC 4918 form) or
+ * wrapped in angle brackets by misbehaving implementations, so accept both.
+ */
+function tokenFromIfHeader(ifHeader: string | string[] | undefined): string | null {
+  if (!ifHeader) return null;
+  const raw = Array.isArray(ifHeader) ? ifHeader.join(" ") : ifHeader;
+  const match = raw.match(/\(<([^>]+)>\)/) ?? raw.match(/<([^>]+)>/);
+  return match?.[1] ?? null;
+}
+
+/**
+ * Is this path writable by the requester, given the lock state?
+ *
+ * Returns the blocking lock when someone else holds one and the request does
+ * not present its token; the caller turns that into a 423 Locked. A request
+ * that supplies the matching token (Lock-Token header, as UNLOCK does, or an
+ * `If` header, as PUT/DELETE do) is allowed through — that is how the lock
+ * owner writes to a resource it has locked.
+ */
+export async function findBlockingLock(
+  ownerId: string,
+  segments: string[],
+  req: IncomingMessage,
+): Promise<ILock | null> {
+  const { Lock } = await import("@/models/Lock");
+  const path = `/${segments.join("/")}`;
+
+  const lock = await Lock.findOne({
+    owner: ownerId,
+    path,
+    expiresAt: { $gt: new Date() },
+  });
+  if (!lock) return null;
+
+  const presented =
+    (typeof req.headers["lock-token"] === "string"
+      ? req.headers["lock-token"]
+      : null) ?? tokenFromIfHeader(req.headers.if);
+
+  // Accept the bare token or the angle-bracketed form clients echo back.
+  if (presented && presented.replace(/[<>]/g, "") === lock.token) return null;
+
+  return lock;
+}
+
+/** Throw 423 if the path is locked by a principal that did not present the token. */
+export async function enforceLock(
+  ownerId: string,
+  segments: string[],
+  req: IncomingMessage,
+): Promise<void> {
+  const blocking = await findBlockingLock(ownerId, segments, req);
+  if (blocking) {
+    throw new DavError("Locked: resource has an active lock", 423);
+  }
+}
+
+/**
+ * Take (or refresh) a lock on a path. Returns the token and its lifetime.
+ *
+ * A second LOCK from a *different* principal on an already-locked path is a
+ * 423 rather than silently stealing the lock.
+ */
+export async function acquireLock(
+  ownerId: string,
+  segments: string[],
+  req: IncomingMessage,
+  requestedTimeoutSeconds?: number,
+): Promise<{ token: string; timeoutSeconds: number; created: boolean }> {
+  const { Lock } = await import("@/models/Lock");
+  const path = `/${segments.join("/")}`;
+  const now = new Date();
+
+  const timeoutSeconds = Math.min(
+    requestedTimeoutSeconds && requestedTimeoutSeconds > 0
+      ? requestedTimeoutSeconds
+      : DEFAULT_LOCK_TIMEOUT_SECONDS,
+    MAX_LOCK_TIMEOUT_SECONDS,
+  );
+  const expiresAt = new Date(now.getTime() + timeoutSeconds * 1000);
+  const presented =
+    (typeof req.headers["lock-token"] === "string"
+      ? req.headers["lock-token"]
+      : null) ?? tokenFromIfHeader(req.headers.if);
+
+  const existing = await Lock.findOne({
+    owner: ownerId,
+    path,
+    expiresAt: { $gt: now },
+  });
+
+  if (existing) {
+    const isOwnerOfLock =
+      presented && presented.replace(/[<>]/g, "") === existing.token;
+    if (!isOwnerOfLock) {
+      throw new DavError("Locked: resource already has an active lock", 423);
+    }
+    existing.expiresAt = expiresAt;
+    existing.depth = getDepth(req);
+    await existing.save();
+    return { token: existing.token, timeoutSeconds, created: false };
+  }
+
+  const token = `opaquelocktoken:${crypto.randomUUID()}`;
+  await Lock.create({
+    owner: ownerId,
+    path,
+    token,
+    depth: getDepth(req),
+    expiresAt,
+  });
+
+  return { token, timeoutSeconds, created: true };
+}
+
+/** Release a lock. Returns false when the token does not match the live lock. */
+export async function releaseLock(
+  ownerId: string,
+  segments: string[],
+  token: string,
+): Promise<"released" | "no-lock" | "mismatch"> {
+  const { Lock } = await import("@/models/Lock");
+  const path = `/${segments.join("/")}`;
+
+  const existing = await Lock.findOne({
+    owner: ownerId,
+    path,
+    expiresAt: { $gt: new Date() },
+  });
+  if (!existing) return "no-lock";
+
+  if (existing.token !== token.replace(/[<>]/g, "")) return "mismatch";
+
+  await existing.deleteOne();
+  return "released";
+}
+
+/** Parse a `Timeout: Second-N` / `Infinite` request header. */
+export function parseLockTimeout(
+  header: string | string[] | undefined,
+): number | undefined {
+  if (!header) return undefined;
+  const raw = Array.isArray(header) ? header[0] : header;
+  const match = raw?.match(/Second-(\d+)/i);
+  if (!match?.[1]) return undefined;
+  const seconds = parseInt(match[1], 10);
+  return Number.isFinite(seconds) ? seconds : undefined;
+}
+
 /** Send a raw status response. */
 export function sendStatus(res: ServerResponse, status: number = 200) {
   res.writeHead(status, {
@@ -233,6 +414,12 @@ interface PropEntry {
   mime?: string;
   lastModified: Date;
   createdAt: Date;
+  /**
+   * Entity tag. Must be the same value GET/HEAD return as their ETag header,
+   * otherwise clients that cache on PROPFIND and revalidate on GET see a
+   * mismatch. Both are the resource's _id.
+   */
+  etag: string;
 }
 
 /** PROPFIND response: all properties when no body, or the requested props. */
@@ -266,7 +453,7 @@ export function propfindResponse(
           props.push(`<D:displayname>${escapeXml(entry.displayName)}</D:displayname>`);
           break;
         case "getetag":
-          props.push(`<D:getetag>"${escapeXml(entry.href)}"</D:getetag>`);
+          props.push(`<D:getetag>"${escapeXml(entry.etag)}"</D:getetag>`);
           break;
         case "creationdate":
           props.push(`<D:creationdate>${toIsoDate(entry.createdAt)}</D:creationdate>`);
@@ -308,18 +495,6 @@ export function propfindResponse(
 }
 
 /** Parse `bytes=a-b` / `bytes=a-` against a known size; null when invalid. */
-export function parseRangeHeader(
-  header: string | string[] | undefined,
-  size: number,
-): { start: number; end: number } | null {
-  if (typeof header !== "string" || size <= 0) return null;
-  const match = header.match(/bytes=(\d+)-(\d*)/);
-  if (!match) return null;
-  const start = parseInt(match[1]!, 10);
-  const end = match[2] ? parseInt(match[2], 10) : size - 1;
-  if (start >= size || start > end) return null;
-  return { start, end: Math.min(end, size - 1) };
-}
 
 /** Stream a file body to the response (used by GET/HEAD). */
 export async function streamFileBody(
@@ -423,6 +598,50 @@ export function parsePropfindProps(body: string): string[] {
     found.add(match[1]!);
   }
   return Array.from(found);
+}
+
+/**
+ * Extract the property names from a PROPPATCH body.
+ *
+ * PROPPATCH uses a different shape from PROPFIND:
+ *   <D:propertyupdate><D:set><D:prop><D:displayname>x</D:displayname></D:prop></D:set>
+ *                      </D:propertyupdate>
+ *
+ * Running parsePropfindProps() over that yields the container elements
+ * ("propertyupdate", "set", "prop") and never the real property names, so the
+ * response used to report 403 for the wrong properties. This walks the <prop>
+ * blocks and returns their direct children instead.
+ *
+ * Names are returned fully qualified (e.g. "D:getlastmodified") so the response
+ * can echo the client's own namespace prefix rather than assuming DAV:.
+ */
+export function parseProppatchProps(body: string): string[] {
+  if (!body || !body.trim()) return [];
+
+  const names: string[] = [];
+  const seen = new Set<string>();
+
+  // Non-greedy match of each <prefix:prop ...> ... </prefix:prop> block.
+  const propBlock = /<\s*([\w-]+:)?prop[^>]*>([\s\S]*?)<\s*\/\s*?prop\s*>/gi;
+  let block: RegExpExecArray | null;
+
+  while ((block = propBlock.exec(body)) !== null) {
+    const inner = block[2] ?? "";
+    // Direct children: either self-closing or with content.
+    const child = /<\s*([\w-]+(?::[\w-]+)?)[^>]*?\/?\s*>/g;
+    let el: RegExpExecArray | null;
+    while ((el = child.exec(inner)) !== null) {
+      const name = el[1]!;
+      // Skip container-looking noise; a real property is never these.
+      if (/^(?:prop|set|remove)$/i.test(name.split(":").pop() ?? "")) continue;
+      if (!seen.has(name)) {
+        seen.add(name);
+        names.push(name);
+      }
+    }
+  }
+
+  return names;
 }
 
 /**

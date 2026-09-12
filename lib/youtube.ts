@@ -94,12 +94,61 @@ export function ytdlRequestOptions() {
 
 let cachedVisitorData: { value: string; expiresAt: number } | null = null;
 
-async function fetchVisitorData(force = false): Promise<string> {
+/** Per-request ceiling for innerTube calls. */
+const INNERTUBE_TIMEOUT_MS = 15_000;
+
+/** Overall budget for the whole fallback chain in resolveYoutubeInfo(). */
+const RESOLVE_DEADLINE_MS = 45_000;
+
+/**
+ * fetch() with a hard timeout.
+ *
+ * Every YouTube call in this module used a bare fetch with no AbortController,
+ * so a hung connection (the CDN does stall connections rather than closing
+ * them) pinned the request open indefinitely — and because the download route
+ * also never observed the client disconnecting, a user who navigated away left
+ * the server downloading to completion.
+ */
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit = {},
+  timeoutMs = INNERTUBE_TIMEOUT_MS,
+  externalSignal?: AbortSignal,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  // Abort the upstream fetch as soon as the caller's signal fires (client
+  // disconnected) rather than waiting out the timeout.
+  const onAbort = () => controller.abort();
+  externalSignal?.addEventListener("abort", onAbort, { once: true });
+
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+    externalSignal?.removeEventListener("abort", onAbort);
+  }
+}
+
+/** True when an error came from an aborted request rather than a real failure. */
+export function isAbortError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.name === "AbortError" || error.message.includes("aborted"))
+  );
+}
+
+
+async function fetchVisitorData(
+  force = false,
+  signal?: AbortSignal,
+): Promise<string> {
   const now = Date.now();
   if (!force && cachedVisitorData && cachedVisitorData.expiresAt > now) {
     return cachedVisitorData.value;
   }
-  const res = await fetch(`${INNERTUBE_API}visitor_id?prettyPrint=false`, {
+  const res = await fetchWithTimeout(`${INNERTUBE_API}visitor_id?prettyPrint=false`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -115,7 +164,7 @@ async function fetchVisitorData(force = false): Promise<string> {
         },
       },
     }),
-  });
+  }, INNERTUBE_TIMEOUT_MS, signal);
   if (!res.ok) {
     throw new Error(`visitor_id failed: ${res.status}`);
   }
@@ -128,9 +177,13 @@ async function fetchVisitorData(force = false): Promise<string> {
   return value;
 }
 
-async function fetchVrPlayer(videoId: string, visitorData?: string) {
-  const visitor = visitorData ?? (await fetchVisitorData());
-  const res = await fetch(`${INNERTUBE_API}player?prettyPrint=false`, {
+async function fetchVrPlayer(
+  videoId: string,
+  visitorData?: string,
+  signal?: AbortSignal,
+) {
+  const visitor = visitorData ?? (await fetchVisitorData(false, signal));
+  const res = await fetchWithTimeout(`${INNERTUBE_API}player?prettyPrint=false`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -142,15 +195,15 @@ async function fetchVrPlayer(videoId: string, visitorData?: string) {
       contentCheckOk: true,
       racyCheckOk: true,
     }),
-  });
+  }, INNERTUBE_TIMEOUT_MS, signal);
   if (!res.ok) {
     throw new Error(`ANDROID_VR player failed: ${res.status}`);
   }
   return (await res.json()) as Record<string, unknown>;
 }
 
-async function fetchAndroidPlayer(videoId: string) {
-  const res = await fetch(`${INNERTUBE_API}player?prettyPrint=false`, {
+async function fetchAndroidPlayer(videoId: string, signal?: AbortSignal) {
+  const res = await fetchWithTimeout(`${INNERTUBE_API}player?prettyPrint=false`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -162,7 +215,7 @@ async function fetchAndroidPlayer(videoId: string) {
       contentCheckOk: true,
       racyCheckOk: true,
     }),
-  });
+  }, INNERTUBE_TIMEOUT_MS, signal);
   if (!res.ok) {
     throw new Error(`ANDROID player failed: ${res.status}`);
   }
@@ -296,12 +349,24 @@ export function isUsableFormat(format: YoutubeStreamFormat): boolean {
 export async function resolveYoutubeInfo(
   videoId: string,
   logPrefix = "[youtube]",
+  options: { signal?: AbortSignal; deadlineMs?: number } = {},
 ): Promise<YoutubeResolvedInfo> {
   const failures: string[] = [];
+  const signal = options.signal;
+  // Overall budget for the fallback chain. Without one, a video that fails
+  // every client could chain 2 VR + 1 ANDROID + 6 ytdl attempts, each with its
+  // own timeout, holding the request open for minutes.
+  const deadline = Date.now() + (options.deadlineMs ?? RESOLVE_DEADLINE_MS);
+
+  const outOfBudget = () => Date.now() > deadline;
 
   const vrJson = await (async () => {
+    if (outOfBudget()) {
+      failures.push("ANDROID_VR: skipped (resolution budget exhausted)");
+      return null;
+    }
     try {
-      const json = await fetchVrPlayer(videoId);
+      const json = await fetchVrPlayer(videoId, undefined, signal);
       const playability = json.playabilityStatus as
         | { status?: string; reason?: string }
         | undefined;
@@ -321,8 +386,16 @@ export async function resolveYoutubeInfo(
   // with a freshly minted token before giving up on VR.
   const vrJson2 =
     vrJson ?? (await (async () => {
+      if (outOfBudget()) {
+        failures.push("ANDROID_VR retry: skipped (resolution budget exhausted)");
+        return null;
+      }
       try {
-        const json = await fetchVrPlayer(videoId, await fetchVisitorData(true));
+        const json = await fetchVrPlayer(
+          videoId,
+          await fetchVisitorData(true, signal),
+          signal,
+        );
         const playability = json.playabilityStatus as
           | { status?: string; reason?: string }
           | undefined;
@@ -354,8 +427,11 @@ export async function resolveYoutubeInfo(
     console.warn(`${logPrefix} ANDROID_VR returned no usable formats`);
   }
 
+  if (outOfBudget()) {
+    failures.push("ANDROID: skipped (resolution budget exhausted)");
+  } else
   try {
-    const json = await fetchAndroidPlayer(videoId);
+    const json = await fetchAndroidPlayer(videoId, signal);
     const playability = json.playabilityStatus as
       | { status?: string; reason?: string }
       | undefined;
@@ -389,6 +465,11 @@ export async function resolveYoutubeInfo(
   const errors: string[] = [];
 
   for (const players of CLIENT_COMBOS) {
+    // The ytdl path can try six client combos; stop once the budget is gone.
+    if (outOfBudget()) {
+      errors.push("ytdl-core: skipped (resolution budget exhausted)");
+      break;
+    }
     try {
       const info = await ytdl.getInfo(videoId, {
         playerClients: players,
@@ -458,10 +539,16 @@ export const YOUTUBE_FETCH_HEADERS: Record<string, string> = {
 export async function rotateYoutubeStreamUrl(
   videoId: string,
   itag: number,
-  logPrefix = "[youtube]",
+  options: { signal?: AbortSignal; logPrefix?: string } = {},
 ): Promise<string | null> {
+  const logPrefix = options.logPrefix ?? "[youtube]";
   try {
-    const info = await resolveYoutubeInfo(videoId, logPrefix);
+    // Rotation re-runs the whole resolver, so it must respect the same abort
+    // signal and budget as the stream that is asking for a fresh URL.
+    const info = await resolveYoutubeInfo(videoId, logPrefix, {
+      // exactOptionalPropertyTypes: only include signal when it is defined.
+      ...(options.signal ? { signal: options.signal } : {}),
+    });
     const format = info.formats.find(
       (f) => f.itag === itag && isUsableFormat(f),
     );

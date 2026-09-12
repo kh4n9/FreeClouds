@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { File, type IFile } from "@/models/File";
 import { telegramAPI, TelegramError } from "@/lib/telegram";
 import { bufferToStream } from "@/lib/download-utils";
+import { parseRangeHeader } from "@/lib/file-utils";
 import { put as blobPut } from "@vercel/blob";
 
 // Limit concurrent Telegram connections to avoid connect timeouts when
@@ -15,18 +16,6 @@ const RANGE_MAX_PARTS = 8;
 const RANGE_MIN_SIZE = 4 * 1024 * 1024; // below this, one connection is fine
 const RANGE_MAX_SIZE = 256 * 1024 * 1024; // stay inside serverless memory
 
-/** Parse `bytes=a-b` / `bytes=a-` against a known size; null when invalid. */
-function parseRangeHeader(
-  header: string,
-  size: number,
-): { start: number; end: number } | null {
-  const match = header.match(/bytes=(\d+)-(\d*)/);
-  if (!match || size <= 0) return null;
-  const start = parseInt(match[1]!, 10);
-  const end = match[2] ? parseInt(match[2], 10) : size - 1;
-  if (start >= size || start > end) return null;
-  return { start, end: Math.min(end, size - 1) };
-}
 
 /**
  * Download a Telegram file via 8 concurrent ranged requests and assemble it
