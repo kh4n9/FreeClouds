@@ -1,6 +1,5 @@
-import { escapeRegex } from "@/lib/file-utils";
 import mongoose, { Document, FilterQuery, Schema, Types } from "mongoose";
-import { formatFileSize } from "@/lib/file-utils";
+import { escapeRegex, formatFileSize } from "@/lib/file-utils";
 
 export interface IFile extends Document {
   _id: Types.ObjectId;
@@ -106,7 +105,12 @@ export interface IFileModel extends mongoose.Model<IFile>, IFileStatics {
 export const TRASH_RETENTION_DAYS = 30;
 export const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
-const fileSchema = new Schema<IFile>({
+// Type the schema with the model interface as well as the document interface.
+// Without the second generic, `statics` are typed against the base
+// mongoose.Model, so `this` inside a static loses every custom static — which
+// is what made people (me) reach for `this.constructor as unknown as IFileModel`
+// and silently break the call at runtime.
+const fileSchema = new Schema<IFile, IFileModel>({
   name: {
     type: String,
     required: [true, "File name is required"],
@@ -569,7 +573,10 @@ fileSchema.statics.findTrashByOwnerWithCount = async function (ownerId: string, 
  * So a folder always expires at or after everything inside it.
  */
 fileSchema.statics.cleanupExpiredTrash = async function () {
-  const model = this.constructor as unknown as IFileModel;
+  // NOTE: inside a static, `this` IS the model — do not hop through
+  // `this.constructor`, which yields the base mongoose.Model class and has
+  // none of this schema's statics. No local alias either: `this` is already
+  // typed as IFileModel thanks to the schema's second generic.
   const now = new Date();
 
   // Only top-level rows: deletePermanently() sweeps each parent's chunks itself.
@@ -581,22 +588,16 @@ fileSchema.statics.cleanupExpiredTrash = async function () {
 
   let count = 0;
   for (const file of expired) {
-    const result = await model.deletePermanently(file._id);
+    const result = await this.deletePermanently(file._id);
     if (result.ok) count++;
   }
 
-  // Folders expire after their contents (see invariant above), so by now every
-  // file that was inside them is already gone.
-  const Folder = mongoose.model("Folder");
-  const expiredFolders = await Folder.deleteMany({
-    trashExpiresAt: { $lte: now },
-    deletedAt: { $ne: null },
-  }).catch((error) => {
-    console.error("Failed to purge expired folders:", error);
-    return { deletedCount: 0 };
-  });
-
-  return count + (expiredFolders.deletedCount ?? 0);
+  // Expired FOLDERS are purged by Folder.purgeExpired(), called alongside this
+  // from lib/maintenance.ts. Not handled here on purpose: this used to reach for
+  // `mongoose.model("Folder")` lazily, which threw MissingSchemaError in any
+  // process that had not already imported models/Folder.ts — it worked only by
+  // accident of import order, and failed in the background sweep.
+  return count;
 };
 
 /**
@@ -691,11 +692,11 @@ fileSchema.statics.purgeStoredResources = async function (
 fileSchema.statics.deletePermanently = async function (
   fileId: string | Types.ObjectId,
 ): Promise<{ ok: boolean; deleted: number }> {
-  const model = this.constructor as unknown as IFileModel;
+  // See the note on cleanupExpiredTrash: static, so `this` is the model.
   const file = await this.findById(fileId);
   if (!file) return { ok: false, deleted: 0 };
 
-  const deleted = await model.purgeStoredResources(file);
+  const deleted = await this.purgeStoredResources(file);
 
   await this.findByIdAndDelete(file._id).catch((error: unknown) => {
     console.error(`Failed to delete file row ${file._id}:`, error);

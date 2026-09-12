@@ -1,4 +1,5 @@
 import { File } from "@/models/File";
+import { Folder } from "@/models/Folder";
 import { ShareLink } from "@/models/ShareLink";
 
 /**
@@ -25,9 +26,15 @@ declare global {
 
 async function runMaintenance(): Promise<void> {
   try {
-    const purgedTrash = await File.cleanupExpiredTrash();
-    if (purgedTrash > 0) {
-      console.log(`🧹 Purged ${purgedTrash} expired trash item(s)`);
+    // Both models are statically imported above on purpose: reaching for them
+    // lazily inside the sweep threw MissingSchemaError depending on which
+    // modules a given process happened to have loaded.
+    const purgedFiles = await File.cleanupExpiredTrash();
+    const purgedFolders = await Folder.purgeExpired();
+    if (purgedFiles + purgedFolders > 0) {
+      console.log(
+        `🧹 Purged ${purgedFiles} expired file(s) and ${purgedFolders} folder(s)`,
+      );
     }
   } catch (error) {
     console.error("Trash cleanup failed:", error);

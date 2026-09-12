@@ -48,6 +48,8 @@ export interface IFolderModel extends mongoose.Model<IFolder> {
     folderId: string | Types.ObjectId,
     ownerId: string | Types.ObjectId,
   ): Promise<string[]>;
+  /** Purge folders whose trash window has elapsed. */
+  purgeExpired(): Promise<number>;
 }
 
 
@@ -219,8 +221,6 @@ folderSchema.statics.findByOwner = function (
 
   return this.find(query).sort({ name: 1 });
 };
-
-
 
 folderSchema.statics.getFolderPath = async function (
   folderId: string,
@@ -420,6 +420,26 @@ folderSchema.methods.softDeleteRecursively = async function (): Promise<{
   }
 
   return stats;
+};
+
+/**
+ * Delete folders whose trash window has elapsed.
+ *
+ * Called by lib/maintenance.ts right after File.cleanupExpiredTrash(). Safe to
+ * order it that way: softDeleteRecursively stamps a folder and everything
+ * inside it with the same trashExpiresAt, and a file can never be trashed into
+ * an already-trashed folder, so a folder always expires at or after its
+ * contents.
+ */
+folderSchema.statics.purgeExpired = async function (): Promise<number> {
+  const result = await this.deleteMany({
+    trashExpiresAt: { $lte: new Date() },
+    deletedAt: { $ne: null },
+  }).catch((error: unknown) => {
+    console.error("Failed to purge expired folders:", error);
+    return { deletedCount: 0 };
+  });
+  return result.deletedCount ?? 0;
 };
 
 folderSchema.methods.countContents = async function (): Promise<{
