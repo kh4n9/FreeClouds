@@ -136,7 +136,7 @@ export async function buildDownloadResponse(
       !clientRangeHeader && size >= RANGE_MIN_SIZE && size <= RANGE_MAX_SIZE;
 
     let fileStream: ReadableStream<Uint8Array>;
-    let rangeFetch: { start: number; end: number } | null = parsedRange;
+    const rangeFetch: { start: number; end: number } | null = parsedRange;
     try {
       if (canParallel) {
         let filePath = file.telegramFilePath || null;

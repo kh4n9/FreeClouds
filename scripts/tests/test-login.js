@@ -1,4 +1,5 @@
-const fetch = require('node-fetch');
+// Node 18+ provides a global fetch; node-fetch was never declared in
+// package.json, so requiring it made this script fail on line 1.
 require('dotenv').config({ path: '.env.local' });
 
 console.log('🧪 Testing Login Flow...\n');

@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "scripts/**",
+    // Vendored third-party bundles: opencv.js (9.9MB wasm glue) is copied
+    // verbatim from upstream, and *-player-script.js are ytdl debug dumps.
+    // Linting them produced ~227k problems that buried the real source signal.
+    "public/**",
+    "*-player-script.js",
   ]),
 ]);
 
