@@ -47,12 +47,32 @@ import {
 import VideoConverter from "./preview/VideoConverter";
 import WordPreview from "./preview/WordPreview";
 import { useTranslation, commonTranslations } from "./LanguageSwitcher";
-import * as pdfjsLib from "pdfjs-dist";
+import type { PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+/**
+ * pdfjs is loaded on demand, not at module scope.
+ *
+ * A static `import * as pdfjsLib from "pdfjs-dist"` pulled the whole library
+ * (plus its worker) into the chunk that renders every preview — images, video,
+ * text, spreadsheets — even though PDFs are a minority of previews. xlsx,
+ * mammoth and ffmpeg are already dynamic; this brings pdfjs in line.
+ */
+type PdfJsModule = typeof import("pdfjs-dist");
+
+let pdfjsPromise: Promise<PdfJsModule> | null = null;
+
+function loadPdfJs(): Promise<PdfJsModule> {
+  if (!pdfjsPromise) {
+    pdfjsPromise = import("pdfjs-dist").then((mod) => {
+      mod.GlobalWorkerOptions.workerSrc = new URL(
+        "pdfjs-dist/build/pdf.worker.min.mjs",
+        import.meta.url,
+      ).toString();
+      return mod;
+    });
+  }
+  return pdfjsPromise;
+}
 
 interface FileData {
   id: string;
@@ -95,6 +115,17 @@ export default function FilePreview({
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const pdfCanvasRef = useRef<HTMLCanvasElement>(null);
+  // The parsed PDF, cached for the currently-open file. Both effects below need
+  // it, and the render effect re-runs on every page turn — without this the
+  // document was downloaded and re-parsed from scratch each time, and the page
+  // count was computed by a second, redundant full download.
+  const pdfDocRef = useRef<{
+    url: string;
+    doc: PDFDocumentProxy;
+    // pdfjs v6 removes PDFDocumentProxy.destroy(); the worker and network
+    // requests are torn down through the loading task instead.
+    task: PDFDocumentLoadingTask;
+  } | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const convertedUrlRef = useRef<string | null>(null);
 
@@ -442,7 +473,8 @@ export default function FilePreview({
     [pdfPage, pdfTotalPages],
   );
 
-  // Load PDF document once and count real pages
+  // Load the PDF once per file: parse it, count pages, and cache the document.
+  // The page count used to come from a separate full download of its own.
   useEffect(() => {
     if (!isOpen || !file || !isPDF || !fileContent) {
       return;
@@ -450,11 +482,31 @@ export default function FilePreview({
     let cancelled = false;
 
     const loadPdf = async () => {
+      // Reuse the cached parse when the same document is still open.
+      const cached = pdfDocRef.current;
+      if (cached?.url === fileContent) {
+        setPdfTotalPages(cached.doc.numPages);
+        return;
+      }
+
       try {
+        const pdfjsLib = await loadPdfJs();
         const response = await fetch(fileContent);
         const arrayBuffer = await response.arrayBuffer();
-        const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        if (cancelled) return;
+        const task = pdfjsLib.getDocument({ data: arrayBuffer });
+        const doc = await task.promise;
+        if (cancelled) {
+          await task.destroy().catch(() => {});
+          return;
+        }
+
+        // Drop the previous document so pdf.js releases its worker/buffers.
+        const previous = pdfDocRef.current;
+        if (previous && previous.url !== fileContent) {
+          await previous.task.destroy().catch(() => {});
+        }
+
+        pdfDocRef.current = { url: fileContent, doc, task };
         setPdfTotalPages(doc.numPages);
         setPdfPage(1);
       } catch (err) {
@@ -468,6 +520,17 @@ export default function FilePreview({
     };
   }, [isOpen, file?.id, isPDF, fileContent]);
 
+  // Release the cached document when the preview closes or the file changes.
+  useEffect(() => {
+    return () => {
+      const cached = pdfDocRef.current;
+      if (cached) {
+        cached.task.destroy().catch(() => {});
+        pdfDocRef.current = null;
+      }
+    };
+  }, [isOpen, file?.id]);
+
   // Render current PDF page to canvas
   useEffect(() => {
     if (!isOpen || !file || !isPDF || !fileContent || !pdfCanvasRef.current) {
@@ -477,9 +540,23 @@ export default function FilePreview({
 
     const renderPage = async () => {
       try {
-        const response = await fetch(fileContent);
-        const arrayBuffer = await response.arrayBuffer();
-        const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        // Reuse the parsed document instead of re-downloading and re-parsing
+        // the whole PDF on every page turn.
+        let cached = pdfDocRef.current;
+        if (!cached || cached.url !== fileContent) {
+          const pdfjsLib = await loadPdfJs();
+          const response = await fetch(fileContent);
+          const arrayBuffer = await response.arrayBuffer();
+          const task = pdfjsLib.getDocument({ data: arrayBuffer });
+          const doc = await task.promise;
+          if (cancelled) {
+            await task.destroy().catch(() => {});
+            return;
+          }
+          cached = { url: fileContent, doc, task };
+          pdfDocRef.current = cached;
+        }
+        const doc = cached.doc;
         if (cancelled || pdfPage > doc.numPages) return;
         const page = await doc.getPage(pdfPage);
 
@@ -508,7 +585,9 @@ export default function FilePreview({
           transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : undefined,
         });
         await renderTask.promise;
-        await doc.cleanup();
+        // No cleanup() here: it would drop the cached document's page data and
+        // force a re-parse on the next turn. The document is destroyed when the
+        // preview closes (see the effect above).
       } catch (err) {
         console.error("Failed to render PDF page:", err);
       }
