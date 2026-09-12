@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
-import { requireAuth, AuthError, createAuthResponse } from "@/lib/auth";
+import {
+  requireAuth,
+  AuthError,
+  createAuthResponse,
+  validateOrigin,
+  createCsrfError,
+} from "@/lib/auth";
 import { rateLimit } from "@/lib/ratelimit";
 import {
   isValidEmail,
@@ -19,6 +25,7 @@ const verifySchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    if (!validateOrigin(request)) return createCsrfError();
     const user = await requireAuth(request);
     await connectToDatabase();
 

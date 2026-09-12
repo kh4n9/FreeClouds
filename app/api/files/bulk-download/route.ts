@@ -6,6 +6,8 @@ import {
   AuthError,
   createAuthResponse,
   verifyOwnership,
+  validateOrigin,
+  createCsrfError,
 } from "@/lib/auth";
 import { getFileDownloadStream } from "@/lib/download-utils";
 
@@ -34,6 +36,8 @@ import type archiver from "archiver";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!validateOrigin(request)) return createCsrfError();
+
     // Require authenticated user
     const user = await requireAuth(request);
 

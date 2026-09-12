@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
-import { requireAdmin, AuthError, createAuthResponse } from "@/lib/auth";
+import {
+  requireAdmin,
+  AuthError,
+  createAuthResponse,
+  validateOrigin,
+  createCsrfError,
+} from "@/lib/auth";
 import { User, type IUser } from "@/models/User";
 import { File } from "@/models/File";
 import { Folder } from "@/models/Folder";
@@ -257,6 +263,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!validateOrigin(request)) return createCsrfError();
     // Verify admin authentication
     const adminUser = await requireAdmin(request);
 

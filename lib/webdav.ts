@@ -6,6 +6,7 @@ import { User, type IUser } from "@/models/User";
 import { Folder, type IFolder } from "@/models/Folder";
 import { File, type IFile } from "@/models/File";
 import { telegramAPI } from "./telegram";
+import { checkRateLimitByIdentifier, RATE_LIMITS } from "./ratelimit";
 
 export const WEBDAV_PREFIX = "/webdav";
 
@@ -96,6 +97,20 @@ export async function authenticateWebDav(req: IncomingMessage): Promise<IUser> {
   const email = decoded.slice(0, sep).trim().toLowerCase();
   const token = decoded.slice(sep + 1);
   if (!email || !token) throw new DavError("Invalid authorization header", 401);
+
+  // Throttle by the account being attacked, not by client IP: the WebDAV
+  // handler had no rate limiting at all, leaving bcrypt.compare below open to
+  // unthrottled brute force. Keying on the email also means a spoofed
+  // X-Forwarded-For cannot be rotated to bypass the limit.
+  const limit = checkRateLimitByIdentifier(
+    email,
+    RATE_LIMITS.WEBDAV,
+    "webdav-auth",
+  );
+  if (!limit.allowed) {
+    console.error(`WebDAV auth rate limit exceeded for ${email}`);
+    throw new DavError("Too many authentication attempts", 429);
+  }
 
   await connectToDatabase();
   const user = await User.findByEmail(email);
@@ -338,13 +353,18 @@ export async function streamFileBody(
   // Instead of buffering the entire file in memory, we stream chunks
   // sequentially so memory usage stays bounded regardless of file size.
   if (chunked) {
+    // HEAD never writes a body; GET must still send the headers computed above,
+    // otherwise the response is an implicit 200 with no Content-Type,
+    // Content-Disposition, Content-Length, ETag or Accept-Ranges, and a ranged
+    // request is answered 200 instead of 206 (so resumable reads — the whole
+    // point of mounting a drive — silently break for every file over 50MB).
     if (res.req.method === "HEAD") {
       res.writeHead(status, headers);
       res.end();
       return;
     }
     try {
-      await streamChunkedFile(res, file, parsedRange);
+      await streamChunkedFile(res, file, parsedRange, status, headers);
       return;
     } catch (error) {
       if (error instanceof DavError) throw error;
@@ -414,6 +434,8 @@ async function streamChunkedFile(
   res: ServerResponse,
   file: IFile,
   parsedRange: { start: number; end: number } | null,
+  status: number,
+  headers: Record<string, string>,
 ): Promise<void> {
   const chunks = await File.find({
     chunkedId: file.chunkedId!,
@@ -470,6 +492,11 @@ async function streamChunkedFile(
       }
     }
   };
+
+  // Headers only once the chunk set is known to be complete: a DavError thrown
+  // above still needs to reach the caller's error handler so it can send a
+  // proper 404 rather than a half-written response.
+  res.writeHead(status, headers);
 
   if (parsedRange) {
     const rangeLen = parsedRange.end - parsedRange.start + 1;

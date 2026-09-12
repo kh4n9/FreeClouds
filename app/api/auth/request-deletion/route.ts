@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
+import { isDevelopment } from "@/lib/env";
 import { rateLimit } from "@/lib/ratelimit";
-import { getUserFromRequest } from "@/lib/auth";
+import {
+  getUserFromRequest,
+  validateOrigin,
+  createCsrfError,
+} from "@/lib/auth";
 import {
   generateVerificationCode,
   sendAccountDeletionEmail,
@@ -11,6 +16,7 @@ import VerificationCode from "@/models/VerificationCode";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!validateOrigin(request)) return createCsrfError();
     // Rate limiting
     const rateLimitResult = await rateLimit(request, 3, 60 * 60 * 1000, "request-deletion"); // 3 requests per hour
     if (!rateLimitResult.success) {
@@ -73,16 +79,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log for debugging (remove in production)
-    console.log(`Account deletion code sent to ${userEmail}: ${code}`);
+    // Never log the code — it is the only thing standing between an attacker
+    // with log access and deleting an arbitrary account.
+    console.log(`Account deletion code sent to ${userEmail}`);
 
     return NextResponse.json(
       {
         success: true,
         message:
           "A confirmation code has been sent to your email. Please check your inbox to proceed with account deletion.",
-        // For development only - remove in production
-        ...(process.env.NODE_ENV === "development" && { code }),
+        // Development only, behind the validated env.
+        ...(isDevelopment && { code }),
       },
       { status: 200 },
     );

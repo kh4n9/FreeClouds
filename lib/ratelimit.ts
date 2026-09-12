@@ -139,6 +139,34 @@ export function checkRateLimit(
   };
 }
 
+/**
+ * Rate limit by an explicit identifier rather than by request IP.
+ *
+ * The WebDAV handler runs in the Pages Router and only has an
+ * `IncomingMessage`, which `checkRateLimit(request)` cannot consume. It also
+ * needs to key on the account being attacked (the Basic-auth email) rather
+ * than on the client IP, which is attacker-controlled when X-Forwarded-For is
+ * trusted — otherwise rotating that header bypasses the limit entirely.
+ */
+export function checkRateLimitByIdentifier(
+  identifier: string,
+  config: { maxRequests: number; windowMs: number },
+  bucket: string = "default",
+): { allowed: boolean; remaining: number; resetTime: number | null } {
+  const key = `${bucket}:${identifier}`;
+  const allowed = rateLimiter.check(
+    key,
+    config.maxRequests,
+    config.windowMs,
+  );
+
+  return {
+    allowed,
+    remaining: rateLimiter.getRemainingRequests(key, config.maxRequests),
+    resetTime: rateLimiter.getResetTime(key),
+  };
+}
+
 export function createRateLimitResponse(
   remaining: number,
   resetTime: number | null,

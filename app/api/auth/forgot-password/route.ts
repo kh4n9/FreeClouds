@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
+import { isDevelopment } from '@/lib/env';
 import { rateLimit } from '@/lib/ratelimit';
 import { isValidEmail, generateVerificationCode, sendPasswordResetEmail } from '@/lib/email';
 import { User } from '@/models/User';
@@ -82,15 +83,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log for debugging (remove in production)
-    console.log(`Password reset code sent to ${email}: ${code}`);
+    // Never log the code: this used to print plaintext password-reset codes
+    // in production, so anyone with log access could take over any account.
+    console.log(`Password reset code sent to ${email}`);
 
     return NextResponse.json(
       {
         success: true,
         message: "If this email is registered, you will receive a password reset code shortly.",
-        // For development only - remove in production
-        ...(process.env.NODE_ENV === 'development' && { code })
+        // Development only, behind the validated env: exposing the code in the
+        // response body would defeat the email round-trip entirely.
+        ...(isDevelopment && { code })
       },
       { status: 200 }
     );

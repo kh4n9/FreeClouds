@@ -1,3 +1,4 @@
+import { randomInt } from "crypto";
 import nodemailer from "nodemailer";
 
 interface EmailOptions {
@@ -25,9 +26,16 @@ const createTransporter = () => {
   });
 };
 
-// Generate 6-digit verification code
+/**
+ * Generate a 6-digit verification code.
+ *
+ * Uses a CSPRNG: Math.random() is seeded predictably enough that an attacker
+ * who can observe a few issued codes can narrow the search space for the next
+ * one. Combined with an IP-based rate limiter that trusts a client-supplied
+ * X-Forwarded-For, randomness here is the real defence.
+ */
 export function generateVerificationCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return randomInt(100000, 1000000).toString();
 }
 
 // Send email

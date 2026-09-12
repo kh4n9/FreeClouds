@@ -42,6 +42,11 @@ export class TelegramError extends Error {
     message: string,
     public errorCode?: number,
     public description?: string,
+    /**
+     * Seconds Telegram asked us to wait (`parameters.retry_after` on a 429).
+     * Surfaced so callers can back off correctly instead of hammering.
+     */
+    public retryAfter?: number,
   ) {
     super(message);
     this.name = "TelegramError";
@@ -116,10 +121,39 @@ class TelegramAPI {
       const result = await response.json();
 
       if (!result.ok) {
+        const retryAfter = (result.parameters as { retry_after?: number } | undefined)
+          ?.retry_after;
+
+        // Telegram's 429 is the one error worth waiting out rather than
+        // failing: it tells us exactly how long to wait. Previously this threw
+        // immediately and only the *browser-side* chunk uploader honoured
+        // retry_after, so multi-part uploads and large downloads through the
+        // server failed avoidably under rate limiting.
+        if (result.error_code === 429 && retryAfter && retryAfter > 0) {
+          const waitMs = Math.min(retryAfter, 60) * 1000;
+          console.warn(
+            `Telegram rate limit hit (${method}); retrying in ${waitMs / 1000}s`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, waitMs));
+
+          const retryResponse = await this.fetchWithRetry(url, options);
+          const retryResult = await retryResponse.json();
+          if (retryResult.ok) return retryResult;
+
+          throw new TelegramError(
+            retryResult.description || "Telegram API error",
+            retryResult.error_code,
+            retryResult.description,
+            (retryResult.parameters as { retry_after?: number } | undefined)
+              ?.retry_after,
+          );
+        }
+
         throw new TelegramError(
           result.description || "Telegram API error",
           result.error_code,
           result.description,
+          retryAfter,
         );
       }
 

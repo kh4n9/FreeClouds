@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
+import { isDevelopment } from "@/lib/env";
 import { Folder } from "@/models/Folder";
 import VerificationCode from "@/models/VerificationCode";
 import {
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "A recovery code has been sent to your email.",
-        ...(process.env.NODE_ENV === "development" ? { code } : {}),
+        ...(isDevelopment ? { code } : {}),
       },
       { status: 200 },
     );

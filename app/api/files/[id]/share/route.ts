@@ -11,6 +11,8 @@ import {
   AuthError,
   createAuthResponse,
   verifyOwnership,
+  validateOrigin,
+  createCsrfError,
 } from "@/lib/auth";
 import { isFolderUnlocked } from "@/lib/vault";
 
@@ -31,6 +33,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    if (!validateOrigin(request)) return createCsrfError();
     const user = await requireAuth(request);
     await connectToDatabase();
 
@@ -109,6 +112,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    if (!validateOrigin(request)) return createCsrfError();
     const user = await requireAuth(request);
     await connectToDatabase();
 

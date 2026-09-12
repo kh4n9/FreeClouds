@@ -20,7 +20,6 @@ const INTERVAL_MS = 60 * 60 * 1000;
 // Module-level guard: Next dev re-evaluates modules on hot reload, which would
 // otherwise stack a new interval on every edit.
 declare global {
-  // eslint-disable-next-line no-var
   var __freecloudsMaintenanceTimer: NodeJS.Timeout | undefined;
 }
 

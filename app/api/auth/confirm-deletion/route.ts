@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { rateLimit } from "@/lib/ratelimit";
-import { getUserFromRequest } from "@/lib/auth";
+import {
+  getUserFromRequest,
+  validateOrigin,
+  createCsrfError,
+} from "@/lib/auth";
 import { User } from "@/models/User";
 import { File } from "@/models/File";
 import { Folder } from "@/models/Folder";
@@ -10,6 +14,8 @@ import VerificationCode from "@/models/VerificationCode";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!validateOrigin(request)) return createCsrfError();
+
     // Rate limiting
     const rateLimitResult = await rateLimit(request, 5, 60 * 60 * 1000, "confirm-deletion"); // 5 requests per hour
     if (!rateLimitResult.success) {

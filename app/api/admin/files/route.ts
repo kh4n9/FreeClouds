@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { File, type IFile } from "@/models/File";
-import { requireAuth, AuthError, createAuthResponse } from "@/lib/auth";
+import {
+  requireAdmin,
+  AuthError,
+  createAuthResponse,
+  validateOrigin,
+  createCsrfError,
+} from "@/lib/auth";
 import { logAction } from "@/lib/activity-log";
 import mongoose from "mongoose";
 import type { FilterQuery, PipelineStage } from "mongoose";
@@ -32,14 +38,7 @@ const querySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     // Authentication required - admin only
-    const user = await requireAuth(request);
-
-    if (user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Access denied. Admin privileges required." },
-        { status: 403 },
-      );
-    }
+    await requireAdmin(request);
 
     // Connect to database
     await connectToDatabase();
@@ -283,15 +282,9 @@ export async function GET(request: NextRequest) {
 // Delete multiple files (admin only)
 export async function DELETE(request: NextRequest) {
   try {
+    if (!validateOrigin(request)) return createCsrfError();
     // Authentication required - admin only
-    const user = await requireAuth(request);
-
-    if (user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Access denied. Admin privileges required." },
-        { status: 403 },
-      );
-    }
+    const user = await requireAdmin(request);
 
     // Connect to database
     await connectToDatabase();
@@ -368,15 +361,9 @@ export async function DELETE(request: NextRequest) {
 // Restore multiple files (admin only)
 export async function PATCH(request: NextRequest) {
   try {
+    if (!validateOrigin(request)) return createCsrfError();
     // Authentication required - admin only
-    const user = await requireAuth(request);
-
-    if (user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Access denied. Admin privileges required." },
-        { status: 403 },
-      );
-    }
+    const user = await requireAdmin(request);
 
     // Connect to database
     await connectToDatabase();
