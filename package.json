@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit",
     "create-admin": "node scripts/create-admin.js",
     "setup": "npm run create-admin",
+    "migrate": "node scripts/migrate-folder-trash-index.js",
     "test": "node scripts/run-tests.js",
     "test:login": "node scripts/run-tests.js login",
     "test:admin": "node scripts/run-tests.js admin",

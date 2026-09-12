@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { requireAdmin, AuthError, createAuthResponse, validateOrigin, createCsrfError } from "@/lib/auth";
 import { File, type IFile } from "@/models/File";
-import { telegramAPI } from "@/lib/telegram";
+import { Folder } from "@/models/Folder";
 import { logAction } from "@/lib/activity-log";
 import type { FilterQuery, Types } from "mongoose";
 
@@ -110,6 +110,13 @@ export async function POST(request: NextRequest) {
     if (action === "restore") {
       for (const file of files) {
         await file.restore();
+
+        // Files trashed as part of a folder delete have a still-soft-deleted
+        // parent chain; without this they come back invisible.
+        if (file.folder) {
+          await Folder.restoreAncestors(file.folder, file.owner);
+        }
+
         if (file.chunkedId && (file.totalChunks ?? 0) > 1) {
           await File.updateMany(
             { chunkedId: file.chunkedId, chunkIndex: { $gte: 0 }, deletedAt: { $ne: null } },
@@ -126,26 +133,10 @@ export async function POST(request: NextRequest) {
       });
     } else if (action === "delete") {
       for (const file of files) {
-        if (file.blobCacheUrl) {
-          try {
-            const { del } = await import("@vercel/blob");
-            await del(file.blobCacheUrl);
-          } catch {}
-        }
-        if (file.telegramMessageId) {
-          await telegramAPI.deleteMessage(file.telegramMessageId).catch(() => {});
-        }
-        if (file.chunkedId && (file.totalChunks ?? 0) > 1) {
-          const chunkDocs = await File.find({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } });
-          for (const c of chunkDocs) {
-            if (c.telegramMessageId) {
-              await telegramAPI.deleteMessage(c.telegramMessageId).catch(() => {});
-            }
-          }
-          await File.deleteMany({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
-        }
-        await File.findByIdAndDelete(file._id).catch(() => {});
-        count++;
+        // Single purge primitive — reclaims Telegram docs, Blob cache, chunk
+        // parts and version rows, then drops the row.
+        const result = await File.deletePermanently(file._id);
+        if (result.ok) count++;
       }
       await logAction("admin.trash.delete", {
         userId: admin.id,

@@ -85,7 +85,7 @@ export async function sumFolderSize(
   folderId: string,
 ): Promise<number> {
   const [subFolders, subFiles] = await Promise.all([
-    Folder.find({ owner: ownerId, parent: folderId }),
+    Folder.find({ owner: ownerId, parent: folderId, deletedAt: null }),
     File.find({
       owner: ownerId,
       folder: folderId,
@@ -110,7 +110,10 @@ export async function referenceCopyFolder(
   destParentId: string | null,
   destName?: string,
 ): Promise<string> {
-  const source = await Folder.findById(sourceFolderId);
+  const source = await Folder.findOne({
+    _id: sourceFolderId,
+    deletedAt: null,
+  });
   if (!source) throw new Error("Source folder not found");
 
   const dest = new Folder({
@@ -122,7 +125,7 @@ export async function referenceCopyFolder(
   const destId = dest._id.toString();
 
   const [subFolders, subFiles] = await Promise.all([
-    Folder.find({ owner: ownerId, parent: source._id }),
+    Folder.find({ owner: ownerId, parent: source._id, deletedAt: null }),
     File.find({
       owner: ownerId,
       folder: source._id,

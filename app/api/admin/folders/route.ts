@@ -329,7 +329,7 @@ export async function DELETE(request: NextRequest) {
 
         if (recursive) {
           // Recursive deletion
-          const stats = await folder.deleteRecursively();
+          const stats = await folder.softDeleteRecursively();
           totalFoldersDeleted += stats.foldersDeleted;
           totalFilesDeleted += stats.filesDeleted;
           errors.push(...stats.errors);
@@ -341,6 +341,7 @@ export async function DELETE(request: NextRequest) {
           });
           const subfolderCount = await Folder.countDocuments({
             parent: folderId,
+            deletedAt: null,
           });
 
           if (fileCount > 0 || subfolderCount > 0) {

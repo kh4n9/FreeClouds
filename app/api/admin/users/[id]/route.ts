@@ -4,6 +4,7 @@ import { requireAdmin, AuthError, createAuthResponse } from "@/lib/auth";
 import { User } from "@/models/User";
 import { File } from "@/models/File";
 import { Folder } from "@/models/Folder";
+import { FileVersion } from "@/models/FileVersion";
 import { logAction } from "@/lib/activity-log";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
@@ -65,6 +66,7 @@ export async function GET(
     // Get user's folder count
     const folderCount = await Folder.countDocuments({
       owner: user._id.toString(),
+      deletedAt: null,
     });
 
     // Get recent files
@@ -302,30 +304,35 @@ export async function DELETE(
       );
     }
 
+    // Collect the parent file documents BEFORE the rows disappear. The old
+    // code just ran deleteMany and never reclaimed the underlying storage, so
+    // every Telegram document and cached Blob this user owned was orphaned
+    // (billed forever, unreachable). Only top-level rows: purgeStoredResources
+    // sweeps each parent's chunk parts itself.
+    const ownedFiles = await File.find({
+      owner: id,
+      $or: [{ chunkedId: null }, { chunkIndex: -1 }],
+    });
+
     // Start transaction for user deletion
     const session = await User.startSession();
 
     try {
       await session.withTransaction(async () => {
-        // Delete all user's files
-        const userFiles = await File.find({ owner: id });
-        const fileCount = userFiles.length;
-
-        if (fileCount > 0) {
-          await File.deleteMany({ owner: id }, { session });
-        }
-
-        // Delete all user's folders
-        const userFolders = await Folder.find({ owner: id });
-        const folderCount = userFolders.length;
-
-        if (folderCount > 0) {
-          await Folder.deleteMany({ owner: id }, { session });
-        }
+        await File.deleteMany({ owner: id }, { session });
+        await Folder.deleteMany({ owner: id }, { session });
+        await FileVersion.deleteMany({ owner: id }, { session });
 
         // Delete the user account
         await User.findByIdAndDelete(id, { session });
       });
+
+      // Reclaim storage only after the transaction committed: if this fails we
+      // are left with an orphaned document to sweep, never a row pointing at
+      // bytes that no longer exist.
+      for (const file of ownedFiles) {
+        await File.purgeStoredResources(file);
+      }
     } catch (transactionError) {
       console.error(
         "Transaction failed during admin user deletion:",

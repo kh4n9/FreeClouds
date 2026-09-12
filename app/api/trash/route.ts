@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
+import { Folder } from "@/models/Folder";
 import {
   requireAuth,
   AuthError,
@@ -10,19 +11,16 @@ import {
 } from "@/lib/auth";
 import { getInaccessibleFolderIds } from "@/lib/vault";
 
-// Guard so expired-trash cleanup (incl. Telegram message deletion) runs at most once per hour per instance
-let lastCleanupRun = 0;
-
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request);
     await connectToDatabase();
 
-    // Opportunistic cleanup of expired trash + Telegram messages
-    if (Date.now() - lastCleanupRun > 60 * 60 * 1000) {
-      lastCleanupRun = Date.now();
-      File.cleanupExpiredTrash().catch(() => {});
-    }
+    // Expired trash is purged by the housekeeping sweep in lib/maintenance.ts,
+    // which is the single owner of trash expiry. It used to be triggered from
+    // here as a fire-and-forget side effect, which meant expiry only happened
+    // if a user happened to open this page — and raced a Mongo TTL index that
+    // deleted rows without their Telegram documents.
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
@@ -67,6 +65,14 @@ export async function POST(request: NextRequest) {
       });
       for (const file of files) {
         await file.restore();
+
+        // Files trashed as part of a folder delete have a parent chain that is
+        // still soft-deleted. Without this the file would be "restored" into a
+        // hidden folder — technically live, but unreachable in the UI.
+        if (file.folder) {
+          await Folder.restoreAncestors(file.folder, user.id);
+        }
+
         if (file.chunkedId && file.totalChunks! > 1) {
           await File.updateMany(
             { chunkedId: file.chunkedId, chunkIndex: { $gte: 0 }, deletedAt: { $ne: null } },

@@ -67,6 +67,12 @@ export async function connectToDatabase(): Promise<mongoose.Connection> {
 
     cached!.promise = mongoose.connect(env.DATABASE_URL, opts).then((mongoose) => {
       console.log("✅ Connected to MongoDB");
+      // Once we know Mongo is reachable, start the trash/share housekeeping
+      // sweep. Lazy dynamic import keeps this module free of a static cycle
+      // (maintenance -> models -> db).
+      void import("./maintenance")
+        .then((m) => m.startMaintenance())
+        .catch((error) => console.error("Failed to start maintenance:", error));
       return mongoose.connection;
     }).catch((error) => {
       console.error("❌ MongoDB connection error:", error);

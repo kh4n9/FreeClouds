@@ -28,6 +28,14 @@ interface RouteParams {
 const CHUNKED_PARENT_PREFIX = "chunked_parent_";
 
 /**
+ * How many historical versions to retain per file. Versions occupy real
+ * Telegram storage and are counted against the owner's quota, so an unbounded
+ * history silently consumed a user's quota forever. The oldest versions beyond
+ * this are deleted, messages included.
+ */
+const MAX_VERSIONS_PER_FILE = 10;
+
+/**
  * Creates a FileVersion record from the current state of a File document.
  * Caller is responsible for saving the file afterwards.
  */
@@ -54,6 +62,37 @@ async function snapshotCurrentFile(file: InstanceType<typeof File>) {
       }
       throw err;
     });
+
+    await pruneOldVersions(file._id);
+  }
+}
+
+/**
+ * Keep only the newest MAX_VERSIONS_PER_FILE versions for a file. Deleting the
+ * rows is not enough — each version holds its own Telegram document, so the
+ * message has to go too or we trade a quota leak for a storage leak.
+ */
+async function pruneOldVersions(fileId: unknown) {
+  const stale = await FileVersion.find({ file: fileId })
+    .sort({ version: -1 })
+    .skip(MAX_VERSIONS_PER_FILE)
+    .select("_id telegramMessageId");
+
+  for (const version of stale) {
+    if (version.telegramMessageId) {
+      try {
+        await telegramAPI.deleteMessage(version.telegramMessageId);
+      } catch (error) {
+        console.error(
+          `Failed to delete pruned version message ${version.telegramMessageId}:`,
+          error,
+        );
+      }
+    }
+  }
+
+  if (stale.length > 0) {
+    await FileVersion.deleteMany({ _id: { $in: stale.map((v) => v._id) } });
   }
 }
 
@@ -128,6 +167,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
     if (!(await verifyOwnership(user.id, existing))) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    // Chunked files (>50MB) are assembled from many Telegram parts. Replacing
+    // the content would mean re-chunking the new upload and swapping the whole
+    // part set, which this endpoint does not do. Previously it set `fileId` to
+    // a single new document while leaving chunkedId/totalChunks intact, so the
+    // download path kept serving the OLD bytes while size/fileId claimed the
+    // new ones — a silent no-op that also orphaned the uploaded document.
+    // Refusing loudly is better than pretending to succeed.
+    if (existing.chunkedId && (existing.totalChunks ?? 0) > 1) {
+      return NextResponse.json(
+        {
+          error: "Versioning is not supported for files larger than 50MB",
+          code: "CHUNKED_VERSION_UNSUPPORTED",
+        },
+        { status: 400 },
+      );
     }
 
     // Quota: only the delta (new size - old size) counts toward the limit

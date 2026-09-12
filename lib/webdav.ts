@@ -140,6 +140,7 @@ export async function resolvePath(
       parent: parentId,
       name: seg,
       isHidden: { $ne: true },
+      deletedAt: null,
     });
     if (!folder) return { kind: "missing", parentId, name: seg };
     parentId = folder._id.toString();
@@ -151,6 +152,9 @@ export async function resolvePath(
     parent: parentId,
     name,
     isHidden: { $ne: true },
+    // Soft-deleted folders are in the trash: a mounted drive must not resolve
+    // them, or a DELETE'd collection would stay reachable over WebDAV.
+    deletedAt: null,
   });
   if (folder) return { kind: "folder", folder };
 

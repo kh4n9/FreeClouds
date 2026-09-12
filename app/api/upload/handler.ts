@@ -54,7 +54,7 @@ export async function handleUpload(request: NextRequest) {
     }
 
     if (folderId) {
-      const folder = await Folder.findById(folderId);
+      const folder = await Folder.findOne({ _id: folderId, deletedAt: null });
       if (!folder || !(await verifyOwnership(user.id, folder)))
         return NextResponse.json({ error: "Folder not found or access denied" }, { status: 404 });
     }

@@ -312,6 +312,7 @@ export async function getVaultEntries(
     owner: ownerId,
     parent: null,
     isHidden: true,
+    deletedAt: null,
   }).sort({ name: 1 });
 
   const unlocked = readVaultFolderIds(request);

@@ -95,7 +95,7 @@ function shouldOverwrite(req: NextApiRequest): boolean {
 
 async function deleteTargetFolder(userId: string, folderId: string) {
   const folder = await Folder.findOne({ _id: folderId, owner: userId });
-  if (folder) await folder.deleteRecursively();
+  if (folder) await folder.softDeleteRecursively();
 }
 
 async function deleteTargetFile(fileId: string) {
@@ -175,7 +175,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           if (depth === "1" || depth === "infinity") {
             const parentId = isRoot ? null : folder!._id.toString();
             const [subFolders, subFiles] = await Promise.all([
-              Folder.find({ owner: userId, parent: parentId, isHidden: { $ne: true } }).sort({ name: 1 }),
+              Folder.find({
+                owner: userId,
+                parent: parentId,
+                isHidden: { $ne: true },
+                // Soft-deleted collections live in the trash and must not show
+                // up in a mounted drive's directory listing.
+                deletedAt: null,
+              }).sort({ name: 1 }),
               File.find({
                 owner: userId,
                 folder: parentId,
@@ -430,7 +437,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           throw new DavError("Not found", 404);
         }
         if (resolved.kind === "folder") {
-          await resolved.folder.deleteRecursively();
+          await resolved.folder.softDeleteRecursively();
         } else if (resolved.kind === "file") {
           await resolved.file.softDelete();
         } else {
@@ -694,7 +701,7 @@ async function resolveParentId(
   let parentId: string | null = null;
   for (const name of segments.slice(0, -1)) {
     // Hidden folders are invisible to WebDAV (PIN-gated vault).
-    const folder: IFolder | null = await Folder.findOne({ owner: userId, parent: parentId, name, isHidden: { $ne: true } });
+    const folder: IFolder | null = await Folder.findOne({ owner: userId, parent: parentId, name, isHidden: { $ne: true }, deletedAt: null });
     if (!folder) throw new DavError("Parent collection not found", 409);
     parentId = folder._id.toString();
   }

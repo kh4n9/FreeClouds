@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
+import { TRASH_RETENTION_MS } from "./File";
 
 export interface IFolder extends Document {
   _id: Types.ObjectId;
@@ -12,12 +13,20 @@ export interface IFolder extends Document {
   isHidden: boolean;
   pinHash?: string | null;
 
+  // Trash support. Folders are soft-deleted, never hard-deleted from the UI:
+  // deleting a folder used to destroy every file inside it irreversibly while
+  // leaking the underlying Telegram documents.
+  deletedAt: Date | null;
+  trashExpiresAt: Date | null;
+
   // Instance methods (defined on schema)
   getFullPath(): Promise<string>;
   hasChild(childName: string): Promise<boolean>;
   getChildren(): Promise<IFolder[]>;
   canBeDeleted(): Promise<{ canDelete: boolean; reason?: string }>;
-  deleteRecursively(): Promise<{
+  softDelete(): Promise<IFolder>;
+  restore(): Promise<IFolder>;
+  softDeleteRecursively(): Promise<{
     foldersDeleted: number;
     filesDeleted: number;
     errors: string[];
@@ -30,6 +39,15 @@ export interface IFolderModel extends mongoose.Model<IFolder> {
   findByPath(ownerId: string, folderPath: string[]): Promise<IFolder | null>;
   getFolderTree(ownerId: string): Promise<FolderTreeEntry[]>;
   getFolderPath(folderId: string | Types.ObjectId): Promise<string[]>;
+  /**
+   * Re-live the soft-deleted ancestor chain of a folder. Called when a file is
+   * restored from trash, so it doesn't come back into a folder that is still
+   * hidden (which would make the restored file unreachable).
+   */
+  restoreAncestors(
+    folderId: string | Types.ObjectId,
+    ownerId: string | Types.ObjectId,
+  ): Promise<string[]>;
 }
 
 interface FolderTreeEntry {
@@ -82,12 +100,30 @@ const folderSchema = new Schema<IFolder>({
     type: String,
     default: null,
   },
+  deletedAt: {
+    type: Date,
+    default: null,
+  },
+  trashExpiresAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 // Compound indexes for better query performance
-folderSchema.index({ owner: 1, parent: 1 });
-folderSchema.index({ owner: 1, name: 1, parent: 1 }, { unique: true });
+folderSchema.index({ owner: 1, parent: 1, deletedAt: 1 });
+// deletedAt is part of the unique key so a name freed by trashing a folder can
+// be reused immediately: live folders all share deletedAt === null and still
+// collide with each other, while a trashed folder carries a distinct timestamp.
+// Migration for existing deployments: drop the old { owner, name, parent }
+// unique index and let this one build.
+folderSchema.index(
+  { owner: 1, name: 1, parent: 1, deletedAt: 1 },
+  { unique: true },
+);
 folderSchema.index({ owner: 1, isHidden: 1 });
+folderSchema.index({ owner: 1, deletedAt: 1 });
+folderSchema.index({ trashExpiresAt: 1 });
 folderSchema.index({ createdAt: -1 });
 
 // Virtual for id
@@ -171,7 +207,8 @@ folderSchema.statics.findByOwner = function (
   const query: {
     owner: string;
     parent?: string | null;
-  } = { owner: ownerId };
+    deletedAt: null;
+  } = { owner: ownerId, deletedAt: null };
 
   // If parentId is provided, filter by parent
   if (parentId !== undefined) {
@@ -195,6 +232,7 @@ folderSchema.statics.findByPath = async function (
       owner: ownerId,
       parent: currentParent,
       name: folderName,
+      deletedAt: null,
     });
 
     if (!folder) return null;
@@ -205,7 +243,10 @@ folderSchema.statics.findByPath = async function (
 };
 
 folderSchema.statics.getFolderTree = async function (ownerId: string) {
-  const folders = await this.find({ owner: ownerId }).sort({ name: 1 });
+  const folders = await this.find({
+    owner: ownerId,
+    deletedAt: null,
+  }).sort({ name: 1 });
 
   const folderMap = new Map<string, FolderTreeEntry>();
   const rootFolders: FolderTreeEntry[] = [];
@@ -269,6 +310,7 @@ folderSchema.methods.hasChild = async function (
     parent: this._id,
     name: childName,
     owner: this.owner,
+    deletedAt: null,
   });
   return !!child;
 };
@@ -278,8 +320,50 @@ folderSchema.methods.getChildren = function () {
     .find({
       parent: this._id,
       owner: this.owner,
+      deletedAt: null,
     })
     .sort({ name: 1 });
+};
+
+folderSchema.methods.softDelete = function (this: IFolder) {
+  const now = new Date();
+  this.deletedAt = now;
+  this.trashExpiresAt = new Date(now.getTime() + TRASH_RETENTION_MS);
+  return this.save();
+};
+
+folderSchema.methods.restore = function (this: IFolder) {
+  this.deletedAt = null;
+  this.trashExpiresAt = null;
+  return this.save();
+};
+
+/**
+ * Re-live the soft-deleted ancestor chain of `folderId`.
+ *
+ * Used when a file is restored from trash: the file's parent folder may still
+ * be soft-deleted (from a folder delete), and restoring the file alone would
+ * leave it pointing into a hidden folder — present in the DB, invisible in the
+ * UI. Walks up only while ancestors are actually deleted.
+ */
+folderSchema.statics.restoreAncestors = async function (
+  folderId: string | Types.ObjectId,
+  ownerId: string | Types.ObjectId,
+): Promise<string[]> {
+  const restored: string[] = [];
+  let current = await this.findOne({ _id: folderId, owner: ownerId });
+
+  while (current && current.deletedAt) {
+    current.deletedAt = null;
+    current.trashExpiresAt = null;
+    await current.save();
+    restored.push(current._id.toString());
+    current = current.parent
+      ? await this.findOne({ _id: current.parent, owner: ownerId })
+      : null;
+  }
+
+  return restored;
 };
 
 folderSchema.methods.canBeDeleted = async function (): Promise<{
@@ -290,7 +374,23 @@ folderSchema.methods.canBeDeleted = async function (): Promise<{
   return { canDelete: true };
 };
 
-folderSchema.methods.deleteRecursively = async function (): Promise<{
+/**
+ * Move this folder and everything inside it to the trash.
+ *
+ * This replaces the old deleteRecursively(), which did a bare
+ * `File.deleteMany({ folder })` — no soft delete, no telegramAPI.deleteMessage,
+ * no FileVersion cleanup and no Blob cleanup. Deleting a folder therefore
+ * destroyed every file inside it irreversibly AND orphaned all of their
+ * Telegram documents (billed storage that could never be reclaimed).
+ *
+ * Every folder and file in the subtree is stamped with ONE trashExpiresAt so
+ * the whole subtree expires together; see the invariant documented on
+ * File.cleanupExpiredTrash.
+ *
+ * The returned counters keep their historical names so existing callers and
+ * log lines keep working, but "deleted" now means "moved to trash".
+ */
+folderSchema.methods.softDeleteRecursively = async function (): Promise<{
   foldersDeleted: number;
   filesDeleted: number;
   errors: string[];
@@ -301,51 +401,75 @@ folderSchema.methods.deleteRecursively = async function (): Promise<{
     errors: [] as string[],
   };
 
-  // First, get all child folders
-  const childFolders = await (this.constructor as unknown as IFolderModel).find({
-    parent: this._id,
-  });
+  const FolderModel = this.constructor as unknown as IFolderModel;
+  const File = mongoose.model("File");
+  const now = new Date();
+  const trashExpiresAt = new Date(now.getTime() + TRASH_RETENTION_MS);
 
-  // Recursively delete all child folders
-  for (const childFolder of childFolders) {
-    try {
-      const childStats = await childFolder.deleteRecursively();
-      stats.foldersDeleted += childStats.foldersDeleted;
-      stats.filesDeleted += childStats.filesDeleted;
-      stats.errors.push(...childStats.errors);
-    } catch (error) {
-      const errorMsg = `Failed to delete child folder ${childFolder.name}: ${error instanceof Error ? error.message : "Unknown error"}`;
-      console.error(errorMsg);
-      stats.errors.push(errorMsg);
+  try {
+    // Walk the subtree breadth-first, collecting ids. One pass per collection
+    // beats the old recursive per-folder recursion (which was O(n) queries
+    // and failed halfway, leaving the subtree partly destroyed).
+    const subtreeIds: Types.ObjectId[] = [this._id as Types.ObjectId];
+    const queue: Types.ObjectId[] = [this._id as Types.ObjectId];
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const children = await FolderModel.find({
+        parent: current,
+        owner: this.owner,
+      }).select("_id");
+
+      for (const child of children) {
+        subtreeIds.push(child._id);
+        queue.push(child._id);
+      }
     }
-  }
 
-  // Delete all files in this folder from database
-  try {
-    const File = mongoose.model("File");
-    const filesInFolder = await File.find({
-      folder: this._id,
-    });
-
-    const deletedFilesResult = await File.deleteMany({
-      folder: this._id,
-    });
-
-    stats.filesDeleted += deletedFilesResult.deletedCount || 0;
-  } catch (error) {
-    const errorMsg = `Could not delete files in folder ${this.name}: ${error instanceof Error ? error.message : "Unknown error"}`;
-    console.warn(errorMsg);
-    stats.errors.push(errorMsg);
-  }
-
-  // Finally, delete this folder
-  try {
-    await (this.constructor as unknown as IFolderModel).findByIdAndDelete(
-      this._id,
+    // Trash the folder subtree. `deletedAt: null` keeps a repeated delete from
+    // extending the retention window of folders already in the trash.
+    const folderResult = await FolderModel.updateMany(
+      { _id: { $in: subtreeIds }, owner: this.owner, deletedAt: null },
+      { $set: { deletedAt: now, trashExpiresAt } },
     );
-    stats.foldersDeleted += 1;
+    stats.foldersDeleted = folderResult.modifiedCount ?? 0;
+
+    // Trash the files. Only live ones are touched, so files the user trashed
+    // separately keep their own (earlier) expiry.
+    const files = await File.find({
+      folder: { $in: subtreeIds },
+      owner: this.owner,
+      deletedAt: null,
+    }).select("_id chunkedId");
+
+    if (files.length > 0) {
+      await File.updateMany(
+        { _id: { $in: files.map((f) => f._id) } },
+        { $set: { deletedAt: now, trashExpiresAt } },
+      );
+
+      // Chunk parts are separate documents keyed by chunkedId (chunkIndex >= 0
+      // for parts, -1 for the parent); they must move to trash with the parent
+      // or downloads break while the parent claims to be restorable.
+      const chunkedIds = files
+        .map((f) => f.chunkedId)
+        .filter((id): id is string => Boolean(id));
+
+      if (chunkedIds.length > 0) {
+        await File.updateMany(
+          {
+            chunkedId: { $in: chunkedIds },
+            chunkIndex: { $gte: 0 },
+            deletedAt: null,
+          },
+          { $set: { deletedAt: now, trashExpiresAt } },
+        );
+      }
+
+      stats.filesDeleted = files.length;
+    }
   } catch (error) {
-    const errorMsg = `Could not delete folder ${this.name}: ${error instanceof Error ? error.message : "Unknown error"}`;
+    const errorMsg = `Could not trash folder ${this.name}: ${error instanceof Error ? error.message : "Unknown error"}`;
     console.error(errorMsg);
     stats.errors.push(errorMsg);
   }
@@ -360,9 +484,10 @@ folderSchema.methods.countContents = async function (): Promise<{
   let totalFolders = 0;
   let totalFiles = 0;
 
-  // Count child folders recursively
+  // Count child folders recursively (trashed folders don't count as contents)
   const childFolders = await (this.constructor as unknown as IFolderModel).find({
     parent: this._id,
+    deletedAt: null,
   });
 
   totalFolders += childFolders.length;

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { File } from "@/models/File";
-import { FileVersion } from "@/models/FileVersion";
-import { telegramAPI } from "@/lib/telegram";
+import { Folder } from "@/models/Folder";
 import { logAction } from "@/lib/activity-log";
 import {
   requireAuth,
@@ -29,40 +28,18 @@ export async function POST(request: NextRequest) {
 
     let deleted = 0;
     for (const file of trashedFiles) {
-      // Delete cached blob if exists
-      if (file.blobCacheUrl) {
-        try {
-          const { del } = await import("@vercel/blob");
-          await del(file.blobCacheUrl);
-        } catch {}
-      }
-
-      // Delete the actual file from Telegram (best-effort)
-      if (file.telegramMessageId) {
-        await telegramAPI.deleteMessage(file.telegramMessageId).catch(() => {});
-      }
-
-      // Delete stored versions (best-effort)
-      const versionDocs = await FileVersion.find({ file: file._id });
-      for (const v of versionDocs) {
-        if (v.telegramMessageId) {
-          await telegramAPI.deleteMessage(v.telegramMessageId).catch(() => {});
-        }
-      }
-      await FileVersion.deleteMany({ file: file._id }).catch(() => {});
-
-      if (file.chunkedId && file.totalChunks! > 1) {
-        const chunkDocs = await File.find({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } });
-        for (const c of chunkDocs) {
-          if (c.telegramMessageId) {
-            await telegramAPI.deleteMessage(c.telegramMessageId).catch(() => {});
-          }
-        }
-        await File.deleteMany({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
-      }
-      await File.findByIdAndDelete(file._id).catch(() => {});
-      deleted++;
+      // Single purge primitive: Telegram message, Blob cache, chunk parts,
+      // version rows and their messages, then the row itself.
+      const result = await File.deletePermanently(file._id);
+      if (result.ok) deleted++;
     }
+
+    // Trashed folders whose contents are now gone (this is a user-initiated
+    // "empty trash", so they don't get to linger until their retention date).
+    await Folder.deleteMany({
+      owner: user.id,
+      deletedAt: { $ne: null },
+    });
 
     await logAction("trash.empty", {
       userId: user.id,

@@ -141,7 +141,10 @@ export async function POST(request: NextRequest) {
 
     // Verify parent folder ownership if parent is specified
     if (parent) {
-      const parentFolder = await Folder.findById(parent).catch(() => null);
+      const parentFolder = await Folder.findOne({
+        _id: parent,
+        deletedAt: null,
+      }).catch(() => null);
       if (
         !parentFolder ||
         !(await verifyOwnership(user.id, parentFolder))
@@ -176,6 +179,7 @@ export async function POST(request: NextRequest) {
       owner: user.id,
       parent: parent || null,
       name: name,
+      deletedAt: null,
     });
 
     if (existingFolder) {

@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { rateLimit } from "@/lib/ratelimit";
 import { getUserFromRequest } from "@/lib/auth";
-import { User, type IUser } from "@/models/User";
-import { File, type IFile } from "@/models/File";
-import { Folder, type IFolder } from "@/models/Folder";
+import { User } from "@/models/User";
+import { File } from "@/models/File";
+import { Folder } from "@/models/Folder";
+import { FileVersion } from "@/models/FileVersion";
 import VerificationCode from "@/models/VerificationCode";
-import type { FilterQuery } from "mongoose";
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,30 +75,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Collect parent file documents BEFORE the rows are removed so their
+    // Telegram documents and cached Blobs can be reclaimed afterwards.
+    // Only top-level rows: purgeStoredResources sweeps chunk parts itself.
+    const ownedFiles = await File.find({
+      owner: userId,
+      $or: [{ chunkedId: null }, { chunkIndex: -1 }],
+    });
+
     // Start transaction for account deletion
     const session = await User.startSession();
 
     try {
       await session.withTransaction(async () => {
-        // Delete all user's files
-        const userFiles = await File.find({ userId } as FilterQuery<IFile>);
-        const fileCount = userFiles.length;
-
-        if (fileCount > 0) {
-          // In a real implementation, you would also delete the actual files from storage
-          // For now, we'll just delete the database records
-          await File.deleteMany({ userId } as FilterQuery<IFile>, { session });
-          console.log(`Deleted ${fileCount} files for user ${userEmail}`);
-        }
-
-        // Delete all user's folders
-        const userFolders = await Folder.find({ userId } as FilterQuery<IFolder>);
-        const folderCount = userFolders.length;
-
-        if (folderCount > 0) {
-          await Folder.deleteMany({ userId } as FilterQuery<IFolder>, { session });
-          console.log(`Deleted ${folderCount} folders for user ${userEmail}`);
-        }
+        // NOTE: the field is `owner`, not `userId`. This used to filter on
+        // `userId`, which is not a path on either schema — Mongoose passes the
+        // unknown key through and it matched ZERO documents, so the transaction
+        // deleted the User and committed while every file, folder, version and
+        // Telegram document survived, unreachable by any UI.
+        await File.deleteMany({ owner: userId }, { session });
+        await Folder.deleteMany({ owner: userId }, { session });
+        await FileVersion.deleteMany({ owner: userId }, { session });
 
         // Delete all verification codes for this user
         await VerificationCode.deleteMany(
@@ -111,6 +108,13 @@ export async function POST(request: NextRequest) {
 
         console.log(`Account deletion completed for user: ${userEmail}`);
       });
+
+      // Reclaim storage only after the transaction committed: a failure here
+      // leaves an orphaned document to sweep, never a row pointing at bytes
+      // that no longer exist.
+      for (const file of ownedFiles) {
+        await File.purgeStoredResources(file);
+      }
 
       // Mark verification code as used (if transaction succeeded)
       verificationCode.used = true;

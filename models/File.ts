@@ -93,8 +93,17 @@ export interface IFileModel extends mongoose.Model<IFile>, IFileStatics {
   findTrashByOwner(ownerId: string): Promise<IFile[]>;
   findTrashByOwnerWithCount(ownerId: string, page?: number, limit?: number): Promise<{ files: IFile[]; total: number; page: number; limit: number; totalPages: number }>;
   cleanupExpiredTrash(): Promise<number>;
+  purgeStoredResources(file: IFile): Promise<number>;
   deletePermanently(fileId: string | Types.ObjectId): Promise<{ ok: boolean; deleted: number }>;
 }
+
+/**
+ * How long a trashed item stays recoverable before the cleanup sweep purges
+ * it. Shared with models/Folder.ts so a folder and the files inside it that
+ * were trashed together expire on the same schedule.
+ */
+export const TRASH_RETENTION_DAYS = 30;
+export const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
 const fileSchema = new Schema<IFile>({
   name: {
@@ -204,7 +213,13 @@ fileSchema.index({ createdAt: -1 });
 fileSchema.index({ deletedAt: 1, createdAt: -1 });
 fileSchema.index({ chunkedId: 1, chunkIndex: 1 }, { unique: true, partialFilterExpression: { chunkIndex: { $gte: 0 } } });
 fileSchema.index({ owner: 1, trashExpiresAt: 1 });
-fileSchema.index({ trashExpiresAt: 1 }, { expireAfterSeconds: 0 });
+// NOTE: deliberately NO TTL index on trashExpiresAt. A TTL index makes the
+// mongod TTL monitor delete the document on its own schedule, which races
+// cleanupExpiredTrash() and skips telegramAPI.deleteMessage — every file a
+// user trashed and never revisited would orphan its Telegram document (and
+// its FileVersion rows) permanently. Expiry is driven solely by
+// cleanupExpiredTrash(); see lib/maintenance.ts.
+// Migration for existing deployments: db.files.dropIndex({ trashExpiresAt: 1 })
 
 // Virtual for id
 fileSchema.virtual("id").get(function (this: IFile) {
@@ -406,10 +421,12 @@ fileSchema.statics.findByOwnerWithCount = async function (
 };
 
 fileSchema.statics.getStorageUsage = async function (ownerId: string) {
+  const owner = new mongoose.Types.ObjectId(ownerId);
+
   const result = await this.aggregate([
     {
       $match: {
-        owner: new mongoose.Types.ObjectId(ownerId),
+        owner,
         deletedAt: null,
         $or: [
           { chunkedId: null },
@@ -426,7 +443,34 @@ fileSchema.statics.getStorageUsage = async function (ownerId: string) {
     },
   ]);
 
-  return result[0] || { totalSize: 0, totalFiles: 0 };
+  // Retained versions occupy real Telegram storage too. Without this they were
+  // invisible to quota enforcement, so a user could hold unbounded history for
+  // free. Only versions whose parent file is still live count, matching the
+  // live-file rule above.
+  const { FileVersion } = await import("@/models/FileVersion");
+  const versionResult = await FileVersion.aggregate([
+    { $match: { owner } },
+    {
+      $lookup: {
+        from: this.collection.name,
+        localField: "file",
+        foreignField: "_id",
+        as: "parent",
+      },
+    },
+    { $match: { "parent.0": { $exists: true }, "parent.deletedAt": null } },
+    { $group: { _id: null, totalSize: { $sum: "$size" } } },
+  ]);
+
+  const base = result[0] as
+    | { totalSize: number; totalFiles: number }
+    | undefined;
+  const versionSize = (versionResult[0]?.totalSize as number | undefined) ?? 0;
+
+  return {
+    totalSize: (base?.totalSize ?? 0) + versionSize,
+    totalFiles: base?.totalFiles ?? 0,
+  };
 };
 
 fileSchema.statics.findDuplicates = function (ownerId: string) {
@@ -453,7 +497,7 @@ fileSchema.statics.findDuplicates = function (ownerId: string) {
 // Instance methods
 fileSchema.methods.softDelete = function () {
   this.deletedAt = new Date();
-  this.trashExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  this.trashExpiresAt = new Date(Date.now() + TRASH_RETENTION_MS);
   return this.save();
 };
 
@@ -538,67 +582,150 @@ fileSchema.statics.findTrashByOwnerWithCount = async function (ownerId: string, 
   return { files, total, page, limit, totalPages: Math.ceil(total / limit) };
 };
 
+/**
+ * Purge trashed files and folders whose retention window has elapsed.
+ *
+ * This is the ONLY thing that expires trash. There is deliberately no TTL
+ * index (see the note by the indexes above): the mongod TTL monitor would
+ * delete rows without running any of the Telegram/Blob cleanup below.
+ *
+ * Invariant that makes the file-then-folder order safe: softDeleteRecursively
+ * stamps every folder and file in a subtree with the same trashExpiresAt, and
+ * a file can never be trashed into an already-trashed folder (it is hidden).
+ * So a folder always expires at or after everything inside it.
+ */
 fileSchema.statics.cleanupExpiredTrash = async function () {
-  const { telegramAPI } = await import("@/lib/telegram");
+  const model = this.constructor as unknown as IFileModel;
   const now = new Date();
-  const expired = await this.find({ trashExpiresAt: { $lte: now }, deletedAt: { $ne: null } });
+
+  // Only top-level rows: deletePermanently() sweeps each parent's chunks itself.
+  const expired = await this.find({
+    trashExpiresAt: { $lte: now },
+    deletedAt: { $ne: null },
+    $or: [{ chunkedId: null }, { chunkIndex: -1 }],
+  });
+
   let count = 0;
   for (const file of expired) {
-    if (file.telegramMessageId) {
-      await telegramAPI.deleteMessage(file.telegramMessageId).catch(() => {});
-    }
-    if (file.chunkedId && file.totalChunks > 1) {
-      const chunkDocs = await this.find({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } });
-      for (const c of chunkDocs) {
-        if (c.telegramMessageId) {
-          await telegramAPI.deleteMessage(c.telegramMessageId).catch(() => {});
-        }
-      }
-      await this.deleteMany({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
-    }
-    await this.findByIdAndDelete(file._id).catch(() => {});
-    count++;
+    const result = await model.deletePermanently(file._id);
+    if (result.ok) count++;
   }
-  return count;
+
+  // Folders expire after their contents (see invariant above), so by now every
+  // file that was inside them is already gone.
+  const Folder = mongoose.model("Folder");
+  const expiredFolders = await Folder.deleteMany({
+    trashExpiresAt: { $lte: now },
+    deletedAt: { $ne: null },
+  }).catch((error) => {
+    console.error("Failed to purge expired folders:", error);
+    return { deletedCount: 0 };
+  });
+
+  return count + (expiredFolders.deletedCount ?? 0);
 };
 
-fileSchema.statics.deletePermanently = async function (
-  fileId: string | Types.ObjectId,
-): Promise<{ ok: boolean; deleted: number }> {
+/**
+ * Reclaim the underlying storage for a file document: its Telegram message,
+ * cached Blob, chunk parts (messages + rows) and version rows (messages + rows).
+ *
+ * Does NOT delete the File row itself — callers that need that use
+ * deletePermanently(). Kept separate so paths that delete rows themselves
+ * (the admin bulk user-delete, which runs inside a transaction) can still
+ * reclaim storage afterwards.
+ *
+ * Lives here as the single implementation because the trash-empty route, the
+ * admin-trash route, deletePermanently and the account-deletion routes each
+ * used to re-implement a different subset, and every one of them leaked
+ * whatever it forgot.
+ */
+fileSchema.statics.purgeStoredResources = async function (
+  file: IFile,
+): Promise<number> {
   const { telegramAPI } = await import("@/lib/telegram");
-  const file = await this.findById(fileId);
-  if (!file) return { ok: false, deleted: 0 };
+  const { FileVersion } = await import("@/models/FileVersion");
 
-  let deleted = 0;
-  const purge = async (doc: IFile) => {
+  let purged = 0;
+
+  const purgeDoc = async (doc: IFile) => {
     if (doc.telegramMessageId) {
-      await telegramAPI.deleteMessage(doc.telegramMessageId).catch(() => {});
+      try {
+        await telegramAPI.deleteMessage(doc.telegramMessageId);
+      } catch (error) {
+        // Don't fail the purge, but make the orphan findable — silently
+        // swallowing this is how storage leaks go unnoticed for months.
+        console.error(
+          `Failed to delete Telegram message ${doc.telegramMessageId}:`,
+          error,
+        );
+      }
     }
+    if (doc.blobCacheUrl) {
+      try {
+        const { del } = await import("@vercel/blob");
+        await del(doc.blobCacheUrl);
+      } catch (error) {
+        console.error(`Failed to delete blob ${doc.blobCacheUrl}:`, error);
+      }
+    }
+    purged += 1;
   };
 
-  await purge(file);
-  deleted += 1;
+  await purgeDoc(file);
 
-  if (file.chunkedId && file.totalChunks > 1) {
-    const chunkDocs = await this.find({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } });
+  if (file.chunkedId && file.totalChunks && file.totalChunks > 1) {
+    const chunkDocs = await this.find({
+      chunkedId: file.chunkedId,
+      chunkIndex: { $gte: 0 },
+    });
     for (const c of chunkDocs) {
-      await purge(c);
-      deleted += 1;
+      await purgeDoc(c);
     }
-    await this.deleteMany({ chunkedId: file.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+    await this.deleteMany({
+      chunkedId: file.chunkedId,
+      chunkIndex: { $gte: 0 },
+    }).catch((error: unknown) => {
+      console.error(`Failed to delete chunks for ${file.chunkedId}:`, error);
+    });
   }
 
-  // Clean up version records + their Telegram messages
-  const { FileVersion } = await import("@/models/FileVersion");
   const versionDocs = await FileVersion.find({ file: file._id });
   for (const v of versionDocs) {
     if (v.telegramMessageId) {
-      await telegramAPI.deleteMessage(v.telegramMessageId).catch(() => {});
+      try {
+        await telegramAPI.deleteMessage(v.telegramMessageId);
+      } catch (error) {
+        console.error(
+          `Failed to delete version message ${v.telegramMessageId}:`,
+          error,
+        );
+      }
     }
   }
-  await FileVersion.deleteMany({ file: file._id }).catch(() => {});
+  await FileVersion.deleteMany({ file: file._id }).catch((error) => {
+    console.error(`Failed to delete versions for file ${file._id}:`, error);
+  });
 
-  await this.findByIdAndDelete(file._id).catch(() => {});
+  return purged;
+};
+
+/**
+ * Delete a file forever: reclaim its storage, then drop the row.
+ * The single purge primitive for every "delete forever" path (trash empty,
+ * trash single-delete, admin trash, expired-trash sweep, account deletion).
+ */
+fileSchema.statics.deletePermanently = async function (
+  fileId: string | Types.ObjectId,
+): Promise<{ ok: boolean; deleted: number }> {
+  const model = this.constructor as unknown as IFileModel;
+  const file = await this.findById(fileId);
+  if (!file) return { ok: false, deleted: 0 };
+
+  const deleted = await model.purgeStoredResources(file);
+
+  await this.findByIdAndDelete(file._id).catch((error: unknown) => {
+    console.error(`Failed to delete file row ${file._id}:`, error);
+  });
   return { ok: true, deleted };
 };
 

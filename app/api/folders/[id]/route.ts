@@ -219,6 +219,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         target = await Folder.findOne({
           _id: targetFolderId,
           owner: user.id,
+          deletedAt: null,
         });
         if (!target) {
           return NextResponse.json(
@@ -271,6 +272,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         owner: user.id,
         parent: targetFolderId,
         name: folder.name,
+        deletedAt: null,
       });
       if (existingFolder) {
         return NextResponse.json(
@@ -343,6 +345,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       owner: user.id,
       parent: folder.parent,
       name: name,
+      deletedAt: null,
     });
 
     if (existingFolder) {
@@ -441,7 +444,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Recursively delete the folder and all its contents
-    const deletionStats = await folder.deleteRecursively();
+    const deletionStats = await folder.softDeleteRecursively();
 
     console.log(
       `Folder "${folder.name}" deletion completed: ${deletionStats.foldersDeleted} folders, ${deletionStats.filesDeleted} files deleted`,

@@ -211,6 +211,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         const targetFolder = await Folder.findOne({
           _id: targetFolderId,
           owner: user.id,
+          deletedAt: null,
         });
         if (!targetFolder) {
           return NextResponse.json({ error: "Target folder not found" }, { status: 404 });
@@ -236,7 +237,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       if (!(await verifyOwnership(user.id, file))) return NextResponse.json({ error: "Access denied" }, { status: 403 });
       if (targetFolderId) {
         const { Folder } = await import("@/models/Folder");
-        const targetFolder = await Folder.findOne({ _id: targetFolderId, owner: user.id });
+        const targetFolder = await Folder.findOne({
+          _id: targetFolderId,
+          owner: user.id,
+          deletedAt: null,
+        });
         if (!targetFolder) {
           return NextResponse.json({ error: "Target folder not found" }, { status: 404 });
         }

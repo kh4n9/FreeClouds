@@ -64,7 +64,10 @@ export async function GET(request: NextRequest) {
 
     // Get storage statistics
     const storageStats = await File.getStorageUsage(user.id);
-    const folderCount = await Folder.countDocuments({ owner: user.id });
+    const folderCount = await Folder.countDocuments({
+      owner: user.id,
+      deletedAt: null,
+    });
     const { storageLimit, customStorageLimit } = await getStorageLimitInfo(
       user.id,
     );
