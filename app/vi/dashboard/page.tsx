@@ -8,13 +8,14 @@ import {
   HardDrive, FileIcon, FolderIcon, LogOut, Settings, Grid3X3,
   List, ChevronLeft, ChevronRight, ChevronDown, Sidebar, Trash2, FileText,
   RotateCcw, Clock, Star, Sun, Moon, FolderOpen, Download, Copy,
-  Youtube, Shield,
+  Youtube, Shield, ScanLine,
   type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 const DynamicFileGrid = dynamic(() => import("@/components/FileGrid"), { ssr: false });
 const DynamicUploadDropzone = dynamic(() => import("@/components/UploadDropzone"), { ssr: false });
 const DynamicYoutubeModal = dynamic(() => import("@/components/YoutubeModal"), { ssr: false });
+const DynamicDocumentScanner = dynamic(() => import("@/components/scanner/DocumentScanner"), { ssr: false });
 const DynamicUserProfile = dynamic(() => import("@/components/UserProfile"), { ssr: false });
 const DynamicShareModal = dynamic(() => import("@/components/ShareModal"), { ssr: false });
 const DynamicMoveModal = dynamic(() => import("@/components/MoveModal"), { ssr: false });
@@ -262,6 +263,12 @@ export default function DashboardPage() {
   const [emptyingTrash, setEmptyingTrash] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [showYoutube, setShowYoutube] = useState(false);
+  // Document scanner. This wiring existed only on the English dashboard, so the
+  // feature was entirely missing for Vietnamese users.
+  const [scannerState, setScannerState] = useState<{
+    open: boolean;
+    files: FileData[];
+  }>({ open: false, files: [] });
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showVault, setShowVault] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
@@ -470,6 +477,16 @@ export default function DashboardPage() {
     await loadFiles(selectedFolderId, debouncedSearch, false);
     setShowUpload(false);
   };
+
+  const handleScanDone = useCallback((saved: { images: number; pdf: boolean; names: string[] }) => {
+    fileCache.current.clear();
+    void loadFiles(selectedFolderId, debouncedSearch, false);
+    const parts: string[] = [];
+    if (saved.images > 0) parts.push(`${saved.images} ảnh`);
+    if (saved.pdf) parts.push("1 PDF");
+    setToast({ type: "success", message: `Đã lưu: ${parts.join(" + ")}` });
+    setTimeout(() => setToast(null), 3000);
+  }, [selectedFolderId, debouncedSearch, loadFiles]);
 
   const handleDeleteFile = (fileId: string) => {
     const file = files.find((f) => f.id === fileId);
@@ -732,6 +749,10 @@ export default function DashboardPage() {
                     className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-accent/10 border border-accent/25 text-accent hover:bg-accent/20 hover:border-accent/30 transition-all text-sm font-medium min-h-[44px]">
                     <Upload className="w-4 h-4" /> Tải lên
                   </button>
+                  <button onClick={() => { setScannerState({ open: true, files: [] }); setSidebarOpen(false); }}
+                    className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-accent/10 border border-accent/25 text-accent hover:bg-accent/20 hover:border-accent/30 transition-all text-sm font-medium min-h-[44px]">
+                    <ScanLine className="w-4 h-4" /> Quét tài liệu
+                  </button>
                   <button onClick={() => { setShowYoutube(true); setSidebarOpen(false); }}
                     className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-card border border-line text-foreground hover:bg-card-hover hover:border-line-hover transition-all text-sm font-medium min-h-[44px]">
                     <Youtube className="w-4 h-4 text-error" /> YouTube
@@ -816,6 +837,11 @@ export default function DashboardPage() {
               <button onClick={() => setShowUpload(true)}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-accent hover:bg-card-hover transition-all" title="Tải lên">
                 <Upload className="w-4 h-4" />
+              </button>
+              <button onClick={() => setScannerState({ open: true, files: [] })}
+                aria-label="Quét tài liệu"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-accent hover:bg-card-hover transition-all" title="Quét tài liệu">
+                <ScanLine className="w-4 h-4" />
               </button>
               <button onClick={() => setShowYoutube(true)}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-all" title="Tải từ YouTube">
@@ -912,6 +938,10 @@ export default function DashboardPage() {
                     className="btn-secondary px-3 py-2 rounded-xl text-sm flex items-center gap-2 border-line hover:border-line-hover">
                     <RefreshCw className={`w-4 h-4 ${filesLoading || foldersLoading ? "animate-spin" : ""}`} />
                     <span className="hidden sm:inline">Làm mới</span>
+                  </button>
+                  <button onClick={() => setScannerState({ open: true, files: [] })}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-sky-400/30 bg-accent/10 text-accent hover:bg-accent/20 transition-colors">
+                    <ScanLine className="w-4 h-4" /> <span className="hidden sm:inline">Quét</span>
                   </button>
                   <button onClick={() => setShowYoutube(true)}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-line bg-card text-foreground hover:bg-card-hover hover:border-line-hover transition-colors">
@@ -1202,6 +1232,7 @@ export default function DashboardPage() {
                     onShare={handleShare} onMove={handleMove} onVersions={handleVersions}
                     onSearch={setSearchQuery} searchQuery={searchQuery}
                     onToggleFavorite={handleToggleFavorite} onOpenFolder={handleOpenFolder}
+                    onScan={(selected) => setScannerState({ open: true, files: selected })}
                     viewMode={viewMode} onViewModeChange={setViewMode} />
 
                   {files.length > 0 && filesPage < filesTotalPages && (
@@ -1253,6 +1284,15 @@ export default function DashboardPage() {
           onUploaded={() => { fileCache.current.clear(); loadFiles(selectedFolderId, debouncedSearch, false); refreshFolders(); }}
         />
       </Modal>
+      {scannerState.open && (
+        <DynamicDocumentScanner
+          key={`scanner-${scannerState.open}-${scannerState.files.length}`}
+          files={scannerState.files}
+          folderId={selectedFolderId}
+          onClose={() => setScannerState({ open: false, files: [] })}
+          onDone={handleScanDone}
+        />
+      )}
       <Modal show={showUserProfile} onClose={() => setShowUserProfile(false)} title="Thông tin cá nhân">
         <Suspense fallback={<div className="text-center py-4 text-muted">Đang tải...</div>}>
           <DynamicUserProfile isOpen={showUserProfile} onClose={() => setShowUserProfile(false)} user={user!} onUserUpdate={handleUserUpdate} />
