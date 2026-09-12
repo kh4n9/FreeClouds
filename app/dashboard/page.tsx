@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useState, useEffect, useSyncExternalStore, useCallback, useRef, Suspense } from "react";
+import { themeStore } from "@/lib/theme-store";
 import { useRouter } from "next/navigation";
 import {
   FolderPlus, Upload, RefreshCw, AlertCircle, X, Cloud, Search,
@@ -283,9 +284,15 @@ export default function DashboardPage() {
   const [recentFiles, setRecentFiles] = useState<FileData[]>([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [recentLoading, setRecentLoading] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">(() =>
-    typeof window !== "undefined" && localStorage.getItem("theme") === "dark" ? "dark" : "light"
+  // Read through an external store rather than a useState initialiser: the
+  // server has no localStorage, so initialising from it produced a hydration
+  // mismatch (server "light", first client render "dark"). See lib/theme-store.
+  const theme = useSyncExternalStore(
+    themeStore.subscribe,
+    themeStore.getSnapshot,
+    themeStore.getServerSnapshot,
   );
+  const setTheme = themeStore.setTheme;
   const showTrash = activeView === "trash";
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [trashFiles, setTrashFiles] = useState<TrashFileData[]>([]);
@@ -304,7 +311,6 @@ export default function DashboardPage() {
   const [createFolderParent, setCreateFolderParent] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
   useEffect(() => {
     const check = () => setSidebarOpen(window.innerWidth >= 1024);
     check();
@@ -329,10 +335,9 @@ export default function DashboardPage() {
     return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
   }, [searchQuery]);
 
-  // Persist theme preference and apply to <html>
+  // Apply to <html>; persisting is handled by the theme store's setTheme().
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    try { localStorage.setItem("theme", theme); } catch { /* ignore */ }
   }, [theme]);
 
   useEffect(() => {

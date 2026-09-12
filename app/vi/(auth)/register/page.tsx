@@ -42,7 +42,8 @@ export default function RegisterPage() {
     try {
       const response = await fetch("/api/auth/me");
       if (response.ok) {
-        router.push("/dashboard");
+        // Stay in the Vietnamese tree.
+        router.push("/vi/dashboard");
       }
     } catch (error) {
       // User not logged in, continue with register page
@@ -141,8 +142,8 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Registration successful, redirect to dashboard
-        router.push("/dashboard");
+        // Registration successful, redirect to the Vietnamese dashboard.
+        router.push("/vi/dashboard");
       } else {
         // Handle registration error
         if (data.details) {

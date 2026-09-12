@@ -42,7 +42,8 @@ export default function ForgotPasswordPage() {
     try {
       const response = await fetch("/api/auth/me");
       if (response.ok) {
-        router.push("/dashboard");
+        // Already signed in — stay in the Vietnamese tree.
+        router.push("/vi/dashboard");
       }
     } catch (error) {
       // User not logged in, continue with forgot password page

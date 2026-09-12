@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Download,
   Trash2,
@@ -175,6 +175,15 @@ function FileItem({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
+  // Thumbnail failures must be remembered: the effect depends on imageLoading,
+  // so a failed fetch (imageUrl stays null, loading flips back to false) used to
+  // re-trigger itself forever, hammering /api/files/:id/download for every
+  // broken image on the page.
+  const thumbnailFailedRef = useRef(false);
+  // Tracks which file the failure flag belongs to, so it is cleared when a new
+  // file is rendered — but NOT on every effect run, which would clear it
+  // immediately after a failure and reinstate the retry loop.
+  const thumbnailFileIdRef = useRef<string | null>(null);
   const { t } = useTranslation();
 
   const displayName = file.displayName || file.name;
@@ -246,21 +255,39 @@ function FileItem({
   // Load image thumbnail automatically for images
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
 
-    if (isImage && !imageUrl && !imageLoading) {
+    // A new file id is a fresh chance, even if the previous one failed.
+    if (thumbnailFileIdRef.current !== file.id) {
+      thumbnailFileIdRef.current = file.id;
+      thumbnailFailedRef.current = false;
+    }
+
+    if (isImage && !imageUrl && !imageLoading && !thumbnailFailedRef.current) {
       const loadImageThumbnail = async () => {
         setImageLoading(true);
         try {
           const response = await fetch(`/api/files/${file.id}/download`);
+          if (cancelled) return;
           if (response.ok) {
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);
+            if (cancelled) {
+              URL.revokeObjectURL(url);
+              return;
+            }
             setImageUrl(url);
+          } else {
+            // Give up on this file rather than retrying on every render.
+            thumbnailFailedRef.current = true;
           }
         } catch (error) {
-          console.error("Failed to load image thumbnail:", error);
+          if (!cancelled) {
+            thumbnailFailedRef.current = true;
+            console.error("Failed to load image thumbnail:", error);
+          }
         } finally {
-          setImageLoading(false);
+          if (!cancelled) setImageLoading(false);
         }
       };
 
@@ -270,11 +297,13 @@ function FileItem({
 
     // Always return a cleanup function so all code paths return a value
     return () => {
+      cancelled = true;
       if (timer) {
         clearTimeout(timer);
       }
     };
   }, [file.id, isImage, imageUrl, imageLoading]);
+
 
   // Cleanup blob URL when component unmounts
   useEffect(() => {

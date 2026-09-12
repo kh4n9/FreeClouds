@@ -37,7 +37,9 @@ export default function VietnameseLoginPage() {
         router.replace(
           getSafeRedirect(
             getRedirectParam(),
-            user.role === "admin" ? "/vi/admin" : "/dashboard",
+            // Both branches must stay inside the Vietnamese tree — this used to
+            // send non-admin VI users to the English dashboard.
+            user.role === "admin" ? "/vi/admin" : "/vi/dashboard",
           ),
         );
       }
@@ -81,7 +83,7 @@ export default function VietnameseLoginPage() {
       router.replace(
         getSafeRedirect(
           getRedirectParam(),
-          user.role === "admin" ? "/vi/admin" : "/dashboard",
+          user.role === "admin" ? "/vi/admin" : "/vi/dashboard",
         ),
       );
     } else if (!error) {
