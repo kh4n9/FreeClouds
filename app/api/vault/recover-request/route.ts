@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
+import {
+  checkRateLimitByIdentifier,
+  createRateLimitResponse,
+} from "@/lib/ratelimit";
 import { isDevelopment } from "@/lib/env";
 import { Folder } from "@/models/Folder";
 import VerificationCode from "@/models/VerificationCode";
@@ -10,8 +14,6 @@ import {
   createAuthResponse,
   validateOrigin,
   createCsrfError,
-  checkRateLimit,
-  createRateLimitError,
   getClientIp,
 } from "@/lib/auth";
 import { generateVerificationCode, sendVaultPinResetEmail } from "@/lib/email";
@@ -24,14 +26,13 @@ export async function POST(request: NextRequest) {
   try {
     if (!validateOrigin(request)) return createCsrfError();
 
-    if (
-      !checkRateLimit(
-        `vault-recover:${getClientIp(request)}`,
-        3,
-        15 * 60 * 1000,
-      )
-    ) {
-      return createRateLimitError();
+    const limit = checkRateLimitByIdentifier(
+      getClientIp(request),
+      { maxRequests: 3, windowMs: 15 * 60 * 1000 },
+      "vault-recover",
+    );
+    if (!limit.allowed) {
+      return createRateLimitResponse(limit.remaining, limit.resetTime);
     }
 
     const user = await requireAuth(request);

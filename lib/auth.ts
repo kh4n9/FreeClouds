@@ -151,48 +151,13 @@ export async function verifyOwnership<T extends { owner: { toString(): string } 
   return resource.owner.toString() === userId;
 }
 
-// Rate limiting helpers
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-export function checkRateLimit(
-  identifier: string,
-  maxRequests: number,
-  windowMs: number,
-): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(identifier);
-
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(identifier, {
-      count: 1,
-      resetTime: now + windowMs,
-    });
-    return true;
-  }
-
-  if (record.count >= maxRequests) {
-    return false;
-  }
-
-  record.count++;
-  return true;
-}
-
-export function createRateLimitError() {
-  return new Response(
-    JSON.stringify({
-      error: "Rate limit exceeded",
-      code: "RATE_LIMIT_EXCEEDED",
-    }),
-    {
-      status: 429,
-      headers: {
-        "Content-Type": "application/json",
-        "Retry-After": "300",
-      },
-    },
-  );
-}
+// Rate limiting lives in lib/ratelimit.ts.
+//
+// This module used to carry a second, independent limiter
+// (checkRateLimit/createRateLimitError over its own in-memory Map) alongside
+// it. Two implementations meant two behaviours and two error shapes, and only
+// one of them was reachable from most routes. getClientIp() below is kept here
+// because lib/ratelimit.ts imports it.
 
 export function getClientIp(request: Request): string {
   const xForwardedFor = request.headers.get("x-forwarded-for");

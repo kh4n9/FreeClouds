@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
+import {
+  checkRateLimitByIdentifier,
+  createRateLimitResponse,
+} from "@/lib/ratelimit";
 import { Folder } from "@/models/Folder";
 import {
   requireAuth,
@@ -8,8 +12,6 @@ import {
   createAuthResponse,
   validateOrigin,
   createCsrfError,
-  checkRateLimit,
-  createRateLimitError,
   getClientIp,
 } from "@/lib/auth";
 import {
@@ -41,14 +43,13 @@ export async function POST(request: NextRequest) {
   try {
     if (!validateOrigin(request)) return createCsrfError();
 
-    if (
-      !checkRateLimit(
-        `vault-unlock:${getClientIp(request)}`,
-        20,
-        60 * 1000,
-      )
-    ) {
-      return createRateLimitError();
+    const limit = checkRateLimitByIdentifier(
+      getClientIp(request),
+      { maxRequests: 20, windowMs: 60 * 1000 },
+      "vault-unlock",
+    );
+    if (!limit.allowed) {
+      return createRateLimitResponse(limit.remaining, limit.resetTime);
     }
 
     const user = await requireAuth(request);
