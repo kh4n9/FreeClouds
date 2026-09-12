@@ -623,13 +623,13 @@ export function parseProppatchProps(body: string): string[] {
   const seen = new Set<string>();
 
   // Non-greedy match of each <prefix:prop ...> ... </prefix:prop> block.
-  const propBlock = /<\s*([\w-]+:)?prop[^>]*>([\s\S]*?)<\s*\/\s*?prop\s*>/gi;
+  const propBlock = /<\s*([\w-]+:)?prop\b[^>]*>([\s\S]*?)<\s*\/\s*\1?prop\s*>/gi;
   let block: RegExpExecArray | null;
 
   while ((block = propBlock.exec(body)) !== null) {
     const inner = block[2] ?? "";
     // Direct children: either self-closing or with content.
-    const child = /<\s*([\w-]+(?::[\w-]+)?)[^>]*?\/?\s*>/g;
+    const child = /<\s*([\w-]+(?::[\w-]+)?)\b[^>]*?\/?\s*>/g;
     let el: RegExpExecArray | null;
     while ((el = child.exec(inner)) !== null) {
       const name = el[1]!;

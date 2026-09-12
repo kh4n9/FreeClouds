@@ -17,7 +17,7 @@ import { getDict, Lang } from "./i18n";
  * function), keeping the short "B" unit the admin UI renders.
  */
 export const formatFileSize = (bytes: number): string =>
-  formatFileSizeShared(bytes).replace(/Bytes/, "B");
+  formatFileSizeShared(bytes).replace(/\bBytes\b/, "B");
 
 export const formatDate = (
   dateString: string | null | undefined,
