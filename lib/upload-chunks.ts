@@ -91,25 +91,36 @@ export async function uploadBodyToTelegram(
     }
   }
 
-  for await (const part of splitBody()) {
-    if (lastError) break;
-    while (inFlight >= concurrency) {
-      await sleep(25);
+  try {
+    for await (const part of splitBody()) {
       if (lastError) break;
+      while (inFlight >= concurrency) {
+        await sleep(25);
+        if (lastError) break;
+      }
+      if (lastError) break;
+      inFlight++;
+      const name = `${fileName}.part${jobs.length + 1}`;
+      jobs.push(
+        uploadOnePart(part, name, mimeType)
+          .catch((error) => {
+            lastError = error;
+            throw error;
+          })
+          .finally(() => {
+            inFlight--;
+          }),
+      );
     }
-    if (lastError) break;
-    inFlight++;
-    const name = `${fileName}.part${jobs.length + 1}`;
-    jobs.push(
-      uploadOnePart(part, name, mimeType)
-        .catch((error) => {
-          lastError = error;
-          throw error;
-        })
-        .finally(() => {
-          inFlight--;
-        }),
-    );
+  } catch (error) {
+    // splitBody() throws PAYLOAD_TOO_LARGE mid-stream; without this the parts
+    // that already completed would stay in the channel forever, because the
+    // throw escaped before the Promise.all cleanup below could run.
+    while (inFlight > 0) {
+      await sleep(25);
+    }
+    await purgeUploadedParts(jobs);
+    throw error;
   }
 
   // Drain remaining in-flight uploads, then propagate the first failure.
@@ -121,6 +132,11 @@ export async function uploadBodyToTelegram(
   try {
     meta = await Promise.all(jobs);
   } catch {
+    // Delete whatever parts did upload. The old code threw straight out and the
+    // successful parts stayed in the Telegram channel permanently — the WebDAV
+    // PUT handler turned this into a 413/502 with no cleanup, so an over-limit
+    // or interrupted upload silently consumed storage that nothing referenced.
+    await purgeUploadedParts(jobs);
     throw new Error(
       lastError instanceof Error ? lastError.message : "Telegram part upload failed",
     );
@@ -131,4 +147,27 @@ export async function uploadBodyToTelegram(
   }
 
   return { totalBytes, meta };
+}
+
+/**
+ * Best-effort deletion of the parts that completed before a failure. Uses
+ * allSettled so one already-failed job does not mask the successful ones.
+ */
+async function purgeUploadedParts(
+  jobs: Promise<TelegramPartMeta>[],
+): Promise<void> {
+  const settled = await Promise.allSettled(jobs);
+  for (const outcome of settled) {
+    if (outcome.status !== "fulfilled") continue;
+    const messageId = outcome.value.telegramMessageId;
+    if (!messageId) continue;
+    try {
+      await telegramAPI.deleteMessage(messageId);
+    } catch (error) {
+      console.error(
+        `Failed to clean up orphaned part message ${messageId}:`,
+        error,
+      );
+    }
+  }
 }

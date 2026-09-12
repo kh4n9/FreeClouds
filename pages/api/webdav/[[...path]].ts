@@ -106,6 +106,54 @@ async function deleteTargetFolder(userId: string, folderId: string) {
   if (folder) await folder.softDeleteRecursively();
 }
 
+/**
+ * Drop the parts of a chunked file being overwritten — their Telegram
+ * documents first, then their rows.
+ *
+ * Deleting only the rows (as this used to) orphaned every part of the previous
+ * version in the channel: billed storage with no record left to find it by.
+ * The assembled-Blob cache for the old content is dropped too.
+ */
+async function purgeExistingChunks(existing: {
+  chunkedId?: string | null;
+  blobCacheUrl?: string | null;
+}): Promise<void> {
+  if (existing.blobCacheUrl) {
+    try {
+      const { del } = await import("@vercel/blob");
+      await del(existing.blobCacheUrl);
+    } catch (error) {
+      console.error("Failed to delete stale blob cache:", error);
+    }
+  }
+
+  if (!existing.chunkedId) return;
+
+  const oldChunks = await File.find({
+    chunkedId: existing.chunkedId,
+    chunkIndex: { $gte: 0 },
+  }).select("_id telegramMessageId");
+
+  for (const oldChunk of oldChunks) {
+    if (!oldChunk.telegramMessageId) continue;
+    try {
+      await telegramAPI.deleteMessage(oldChunk.telegramMessageId);
+    } catch (error) {
+      console.error(
+        `Failed to delete overwritten part ${oldChunk.telegramMessageId}:`,
+        error,
+      );
+    }
+  }
+
+  await File.deleteMany({
+    chunkedId: existing.chunkedId,
+    chunkIndex: { $gte: 0 },
+  }).catch((error: unknown) => {
+    console.error("Failed to delete overwritten chunk rows:", error);
+  });
+}
+
 async function deleteTargetFile(fileId: string) {
   const file = await File.findById(fileId);
   if (file) await file.softDelete();
@@ -345,7 +393,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const part = result.meta[0]!;
           if (existing) {
             if (wasChunked) {
-              await File.deleteMany({ chunkedId: existing.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+              await purgeExistingChunks(existing);
             }
             existing.name = fileName;
             existing.size = result.totalBytes;
@@ -403,7 +451,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           if (existing) {
             if (wasChunked) {
-              await File.deleteMany({ chunkedId: existing.chunkedId, chunkIndex: { $gte: 0 } }).catch(() => {});
+              await purgeExistingChunks(existing);
             }
             existing.name = fileName;
             existing.size = result.totalBytes;

@@ -30,6 +30,26 @@ const uploadSchema = z.object({
   folderId: z.string().optional().nullable(),
 });
 
+/**
+ * Best-effort deletion of Telegram documents uploaded by a failed multi-part
+ * upload, so the parts already sent do not become unreachable orphans.
+ */
+async function purgeOrphanedChunkUploads(
+  results: Array<{ message_id: number } | null>,
+): Promise<void> {
+  for (const result of results) {
+    if (!result?.message_id) continue;
+    try {
+      await telegramAPI.deleteMessage(String(result.message_id));
+    } catch (error) {
+      console.error(
+        `Failed to clean up orphaned part message ${result.message_id}:`,
+        error,
+      );
+    }
+  }
+}
+
 export async function handleUpload(request: NextRequest) {
   try {
     if (!validateOrigin(request)) return createCsrfError();
@@ -160,6 +180,10 @@ export async function handleUpload(request: NextRequest) {
 
     const failedChunks = chunkResults.some((r) => r === null);
     if (failedChunks) {
+      // Delete the parts that DID upload. Returning here used to leave every
+      // already-uploaded part in the Telegram channel forever — billed storage
+      // no File row referenced, so nothing could ever clean it up.
+      await purgeOrphanedChunkUploads(chunkResults);
       return NextResponse.json({ error: `Failed to upload some chunks. Please try again.` }, { status: 500 });
     }
 
