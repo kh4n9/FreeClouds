@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, CheckCircle, Cloud } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -8,7 +8,6 @@ import AuthShell from "@/components/AuthShell";
 
 interface RegisterForm { name: string; email: string; password: string; confirmPassword: string; }
 interface RegisterError { message: string; field?: string; }
-interface ValidationState { name: boolean; email: boolean; password: boolean; confirmPassword: boolean; }
 
 export default function RegisterPage() {
   const [form, setForm] = useState<RegisterForm>({ name: "", email: "", password: "", confirmPassword: "" });
@@ -17,8 +16,10 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<RegisterError | null>(null);
   const [success, setSuccess] = useState(false);
-  const [validation, setValidation] = useState<ValidationState>({ name: false, email: false, password: false, confirmPassword: false });
   const router = useRouter();
+  // The post-registration redirect timer, so it can be cleared if the user
+  // navigates away during the 2s countdown.
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -29,13 +30,20 @@ export default function RegisterPage() {
     })();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
     setError(null);
-    if (value.trim()) {
-      setValidation(prev => ({ ...prev, [name]: true }));
-    }
+    // The previous `setValidation(prev => ...)` write had no reader: the state
+    // existed but nothing rendered it, so the live per-field indicator the VI
+    // page shows was never wired up here. Removed rather than left as
+    // scaffolding that looks like it does something.
   };
 
   const validateForm = (): RegisterError | null => {
@@ -69,7 +77,7 @@ export default function RegisterPage() {
         return;
       }
       setSuccess(true);
-      setTimeout(() => router.push("/login"), 2000);
+      redirectTimerRef.current = setTimeout(() => router.push("/login"), 2000);
     } catch {
       setError({ message: "Network error. Please try again." });
     } finally {

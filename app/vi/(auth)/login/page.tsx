@@ -3,14 +3,11 @@
 import { useState, useEffect } from "react";
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Cloud } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Head from "next/head";
 import Script from "next/script";
 import AuthShell from "@/components/AuthShell";
 import { generateBreadcrumbs } from "@/lib/seo/utils";
-import { BASE_URL } from "@/lib/seo/config";
 import {
   useAuth,
-  validateLoginForm,
   createInputChangeHandler,
   getSafeRedirect,
   type LoginForm,
@@ -100,30 +97,6 @@ export default function VietnameseLoginPage() {
 
   return (
     <>
-      {/* Enhanced SEO Head */}
-      <Head>
-        <title>Đăng Nhập - Free Clouds | Lưu Trữ Đám Mây An Toàn</title>
-        <meta
-          name="description"
-          content="Đăng nhập vào tài khoản Free Clouds và truy cập lưu trữ đám mây an toàn. Quản lý file nhanh chóng, đáng tin cậy và bảo mật cấp doanh nghiệp."
-        />
-        <meta
-          name="keywords"
-          content="đăng nhập, sign in, đăng nhập cloud storage, free clouds login, đăng nhập an toàn, truy cập file storage"
-        />
-        <link rel="canonical" href={`${BASE_URL}/vi/login`} />
-        <meta
-          property="og:title"
-          content="Đăng Nhập - Free Clouds | Lưu Trữ Đám Mây An Toàn"
-        />
-        <meta
-          property="og:description"
-          content="Đăng nhập vào tài khoản Free Clouds và truy cập lưu trữ đám mây an toàn."
-        />
-        <meta property="og:url" content={`${BASE_URL}/vi/login`} />
-        <meta name="robots" content="noindex, nofollow" />
-      </Head>
-
       {/* Structured Data */}
       <Script
         id="login-breadcrumb"

@@ -45,7 +45,7 @@ export default function RegisterPage() {
         // Stay in the Vietnamese tree.
         router.push("/vi/dashboard");
       }
-    } catch (error) {
+    } catch {
       // User not logged in, continue with register page
     }
   };

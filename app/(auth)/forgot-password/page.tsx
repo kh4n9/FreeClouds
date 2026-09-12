@@ -128,7 +128,10 @@ export default function ForgotPasswordPage() {
       </div>
 
       <div className="modal-content p-8">
-        {error && !error.field && (
+        {/* Guard on `error` alone: requiring !error.field made the success
+            branch below unreachable, so "New verification code sent!" never
+            rendered after a resend. */}
+        {error && (
           <div className={`p-4 rounded-xl flex items-start gap-3 mb-6 ${
             error.field === 'success' ? 'bg-success/10 border border-success/25' : 'bg-error/10 border border-error/25'
           }`}>

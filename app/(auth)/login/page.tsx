@@ -11,7 +11,6 @@ import {
   createInputChangeHandler,
   getSafeRedirect,
   type LoginForm,
-  type LoginError,
 } from "@/utils/auth-helpers";
 
 const getRedirectParam = () =>

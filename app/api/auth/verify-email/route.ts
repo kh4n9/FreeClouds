@@ -17,7 +17,6 @@ import {
 import { User } from "@/models/User";
 import VerificationCode from "@/models/VerificationCode";
 
-const sendSchema = z.object({ action: z.literal("send") });
 const verifySchema = z.object({
   action: z.literal("verify"),
   code: z.string().length(6),

@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
         // Already signed in — stay in the Vietnamese tree.
         router.push("/vi/dashboard");
       }
-    } catch (error) {
+    } catch {
       // User not logged in, continue with forgot password page
     }
   };
@@ -169,7 +169,7 @@ export default function ForgotPasswordPage() {
         const data = await response.json();
         setError({ message: data.error || "Không thể gửi lại mã" });
       }
-    } catch (error) {
+    } catch {
       setError({ message: "Lỗi mạng. Vui lòng thử lại." });
     } finally {
       setLoading(false);
